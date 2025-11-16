@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RHS SYNC - 9:16</title>
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #050505;
+            --panel-bg: rgba(25, 25, 25, 0.5);
+            --border-color: rgba(255, 255, 255, 0.1);
+            --text-primary: #e0e0e0;
+            --text-secondary: #888;
+            --accent-color: #fff;
+            --error-color: #e74c3c;
+            --font-main: 'Share Tech Mono', monospace;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            font-family: var(--font-main);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+            /* Ini untuk mensimulasikan tampilan 9:16 di desktop */
+            /* Di HP, ini akan otomatis full screen */
+        }
+
+        /* Latar belakang "Orb" yang bernapas */
+        .background-orb {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            width: 800px;
+            height: 800px;
+            background: radial-gradient(
+                circle,
+                rgba(100, 100, 100, 0.1),
+                transparent 60%
+            );
+            transform: translate(-50%, -50%);
+            filter: blur(50px);
+            animation: breathe 8s infinite ease-in-out, spin 20s infinite linear;
+        }
+
+        @keyframes breathe {
+            0%, 100% { opacity: 0.3; transform: translate(-50%, -50%) scale(0.8); }
+            50% { opacity: 0.6; transform: translate(-50%, -50%) scale(1.1); }
+        }
+        @keyframes spin {
+            from { transform: translate(-50%, -50%) rotate(0deg); }
+            to { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+
+
+        /* Kontainer utama untuk simulasi 9:16 */
+        .device-wrapper {
+            width: 100%;
+            height: 100%;
+            max-width: 420px; /* Lebar umum HP */
+            max-height: 90vh; /* Sisakan sedikit margin */
+            border: 1px solid var(--border-color);
+            border-radius: 24px;
+            background: #000;
+            box-shadow: 0 0 40px rgba(255, 255, 255, 0.05);
+            overflow: hidden; /* Penting! */
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Semua panel "kaca" */
+        .panel {
+            background: var(--panel-bg);
+            border: 1px solid var(--border-color);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+
+        /* --- 1. LAYAR LOGIN --- */
+        #login-screen {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+            padding: 2rem;
+            gap: 1.5rem;
+            z-index: 10;
+        }
+
+        #login-screen h3 {
+            font-size: 1.2rem;
+            letter-spacing: 2px;
+            color: var(--text-primary);
+        }
+
+        .login-panel {
+            width: 100%;
+            padding: 2rem;
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        
+        #password-input {
+            font-family: var(--font-main);
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 0.8rem;
+            color: var(--text-primary);
+            font-size: 1.1rem;
+            text-align: center;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+        #password-input:focus {
+            outline: none;
+            border-color: var(--accent-color);
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
+        }
+
+        #submit-button {
+            font-family: var(--font-main);
+            background: var(--accent-color);
+            color: #000;
+            border: none;
+            padding: 0.8rem;
+            font-size: 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            letter-spacing: 1px;
+            transition: all 0.2s;
+        }
+        #submit-button:hover {
+            background: var(--text-primary);
+        }
+
+        #error-message {
+            color: var(--error-color);
+            font-size: 0.9rem;
+            text-align: center;
+        }
+
+        /* Animasi "shake" untuk password salah */
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-8px); }
+            40%, 80% { transform: translateX(8px); }
+        }
+        .shake {
+            animation: shake 0.4s ease-in-out;
+        }
+
+
+        /* --- 2. INTERFACE UTAMA (Setelah Login) --- */
+        #main-interface {
+            display: flex; /* Diubah oleh JS */
+            flex-direction: column;
+            height: 100%;
+            gap: 1rem;
+            padding: 1rem;
+            z-index: 5;
+        }
+
+        .panel-header {
+            padding: 0.8rem 1.2rem;
+            border-radius: 12px;
+            flex-shrink: 0; /* Jangan menyusut */
+        }
+        .panel-header .status-light {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            background: #00ff41; /* Hijau matrix sbg aksen */
+            border-radius: 50%;
+            animation: pulse-green 2s infinite;
+            margin-right: 8px;
+        }
+        @keyframes pulse-green {
+            0%, 100% { box-shadow: 0 0 2px #00ff41; }
+            50% { box-shadow: 0 0 10px #00ff41; }
+        }
+
+
+        .panel-nav {
+            padding: 0.8rem;
+            border-radius: 12px;
+            flex-shrink: 0;
+            display: flex;
+            justify-content: space-around; /* Navigasi horizontal */
+        }
+        .nav-item {
+            cursor: pointer;
+            padding: 0.5rem;
+            color: var(--text-secondary);
+        }
+        .nav-item.active {
+            color: var(--text-primary);
+            font-weight: bold;
+            border-bottom: 2px solid var(--accent-color);
+        }
+
+        .panel-main {
+            border-radius: 12px;
+            flex-grow: 1; /* Panel ini mengisi sisa ruang */
+            overflow-y: auto; /* Konten bisa di-scroll */
+            padding: 1rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Placeholder kosongan */
+        .placeholder-text {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            text-align: center;
+            border: 2px dashed var(--border-color);
+            padding: 2rem;
+            border-radius: 8px;
+        }
+
+        /* Class utilitas */
+        .hidden {
+            display: none !important;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="background-orb"></div>
+
+    <div class="device-wrapper">
+
+        <div id="login-screen">
+            <h3>SISTEM AUTENTIKASI</h3>
+
+            <div class="panel login-panel" id="login-panel">
+                <label for="password-input" style="color: var(--text-secondary); font-size: 0.8rem;">KODE OTORISASI:</label>
+                <input type="password" id="password-input" placeholder="***-**-***">
+                <button id="submit-button">SINKRONKAN</button>
+                <p id="error-message" class="hidden">[ AKSES DITOLAK ]</p>
+            </div>
+
+            <span style="color: var(--text-secondary); font-size: 0.8rem;">STATUS: MENUNGGU KONEKSI...</span>
+        </div>
+
+        <div id="main-interface" class="hidden">
+
+            <section class="panel panel-header">
+                <div><span class="status-light"></span>STATUS: ONLINE // AGENT: UNKNOWN</div>
+            </section>
+
+            <section class="panel panel-nav">
+                <div class="nav-item active" id="nav-dashboard">DASHBOARD</div>
+                <div class="nav-item" id="nav-logs">LOGS</div>
+                <div class="nav-item" id="nav-system">SYSTEM</div>
+            </section>
+
+            <section class="panel panel-main">
+                <div class="placeholder-text">
+                    [ MODUL DASHBOARD DIMUAT ]
+                    <br><br>
+                    // Menunggu perintah...
+                </div>
+            </section>
+
+        </div>
+
+    </div>
+
+    <script>
+        const loginScreen = document.getElementById('login-screen');
+        const mainInterface = document.getElementById('main-interface');
+        const loginPanel = document.getElementById('login-panel');
+        const inputEl = document.getElementById('password-input');
+        const submitBtn = document.getElementById('submit-button');
+        const errorMsg = document.getElementById('error-message');
+
+        const correctCode = "XMD-V4-RHS";
+
+        function attemptLogin() {
+            const userInput = inputEl.value.trim().toUpperCase();
+
+            if (userInput === correctCode) {
+                // Sukses
+                loginScreen.style.opacity = '0'; // Mulai fade out
+                setTimeout(() => {
+                    loginScreen.classList.add('hidden'); // Sembunyikan total
+                    mainInterface.classList.remove('hidden'); // Tampilkan interface
+                    mainInterface.style.opacity = '0';
+                    setTimeout(() => {
+                        mainInterface.style.transition = 'opacity 0.5s ease-in';
+                        mainInterface.style.opacity = '1'; // Fade in
+                    }, 50); // Delay kecil untuk trigger transisi
+                }, 500); // Tunggu animasi fade out selesai
+
+            } else {
+                // Gagal
+                loginPanel.classList.add('shake');
+                errorMsg.classList.remove('hidden');
+                inputEl.value = ""; // Kosongkan input
+
+                // Hapus animasi & pesan error setelah selesai
+                setTimeout(() => {
+                    loginPanel.classList.remove('shake');
+                }, 400);
+                setTimeout(() => {
+                    errorMsg.classList.add('hidden');
+                }, 2000);
+            }
+        }
+
+        // Trigger login dengan tombol
+        submitBtn.addEventListener('click', attemptLogin);
+
+        // Trigger login dengan tombol 'Enter'
+        inputEl.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                attemptLogin();
+            }
+        });
+
+    </script>
+</body>
+</html>

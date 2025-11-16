@@ -1,0 +1,1195 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SHADOW | Kode Challenge (v3.2)</title>
+    
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-okaidia.min.css" rel="stylesheet" />
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    <style>
+        /* --- CSS INTI (Sidebar, Modal, Tombol) --- */
+        :root {
+            --bg-color: #0d0d0d;
+            --container-bg: rgba(26, 26, 26, 0.9);
+            --input-bg: #222222;
+            --border-color: #333;
+            --text-color: #e0e0e0;
+            --primary-color: #ffffff;
+            --primary-glow: rgba(255, 255, 255, 0.3);
+            --success-color: #2ecc71;
+            --danger-color: #e74c3c;
+            --coin-color: #f1c40f; 
+            --sidebar-width: 250px; 
+            --border-radius-main: 16px;
+            --border-radius-small: 8px;
+            --border-radius-pill: 50px;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color); color: var(--text-color);
+            display: flex; justify-content: center; align-items: center;
+            min-height: 100vh; overflow-x: hidden; flex-direction: column;
+            transition: margin-left 0.3s ease, font-family 0.3s ease; 
+        }
+        #sidebar {
+            position: fixed; top: 0; left: 0; height: 100%;
+            width: var(--sidebar-width); background-color: rgba(10, 10, 10, 0.95);
+            padding-top: 60px; box-shadow: 2px 0 10px rgba(0, 0, 0, 0.5);
+            transform: translateX(-100%); transition: transform 0.3s ease;
+            z-index: 100; backdrop-filter: blur(5px); overflow-y: auto;
+        }
+        #sidebar.open { transform: translateX(0); }
+        .menu-header {
+            position: absolute; top: 0; left: 0; width: 100%;
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 10px 20px; background: #111; z-index: 101;
+        }
+        .menu-header h3 { color: var(--primary-color); margin: 0; font-size: 1.2rem; border-bottom: none; }
+        .menu-header button { width: auto; padding: 5px 10px; text-transform: none; background: #333; color: #fff; border:none; cursor: pointer; }
+        .sidebar-nav a, .sidebar-nav button {
+            display: block; width: 100%; text-align: left; padding: 15px 20px;
+            text-decoration: none; color: var(--text-color); background: none;
+            border: none; cursor: pointer; font-size: 1rem;
+            transition: background-color 0.3s, color 0.3s; position: relative;
+        }
+        .sidebar-nav a:hover, .sidebar-nav button:hover, .sidebar-nav a.active {
+            background-color: var(--primary-color); color: var(--bg-color);
+        }
+        .sidebar-nav a.active { font-weight: bold; }
+        .sidebar-nav a i, .sidebar-nav button i { margin-right: 10px; }
+        .sidebar-close {
+            position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+            font-size: 0.8rem; color: #aaa; opacity: 0; transition: opacity 0.2s;
+        }
+        .sidebar-nav button:hover .sidebar-close, .sidebar-nav a:hover .sidebar-close { opacity: 1; }
+        #menu-toggle, #settings-toggle {
+            position: fixed; top: 20px; z-index: 102;
+            border: none; padding: 10px 15px; border-radius: var(--border-radius-small);
+            font-size: 1.2rem; cursor: pointer; transition: all 0.3s; width: auto;
+        }
+        #menu-toggle { left: 20px; background: var(--primary-color); color: var(--bg-color); box-shadow: 0 0 10px var(--primary-glow); }
+        #settings-toggle { right: 20px; background: #222; color: var(--primary-color); border: 1px solid var(--border-color); box-shadow: 0 0 10px rgba(0,0,0,0.5); }
+        #sidebar-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 99; display: none; }
+        .container {
+            width: 90%; max-width: 1200px; background-color: var(--container-bg);
+            border-radius: var(--border-radius-main); padding: 2rem;
+            margin: 2rem 0; z-index: 10; backdrop-filter: blur(10px);
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.8); border: 1px solid var(--border-color);
+        }
+        h1 {
+            font-size: 2.5rem; font-weight: bold; letter-spacing: 2px;
+            background: linear-gradient(90deg, #888, #fff, #888, #fff);
+            background-size: 200% auto; color: transparent;
+            -webkit-background-clip: text; background-clip: text;
+            animation: text-shine 5s linear infinite;
+            text-align: center; margin-bottom: 0.5rem;
+        }
+        @keyframes text-shine { to { background-position: -200% center; } }
+        h2 { font-size: 1.8rem; color: var(--primary-color); text-align: center; margin-bottom: 1.5rem; }
+        h3 { font-size: 1.4rem; color: var(--text-color); border-bottom: 1px solid var(--primary-color); padding-bottom: 5px; margin-bottom: 1rem; }
+        button {
+            width: 100%; padding: 0.8rem; font-size: 1rem; border-radius: var(--border-radius-pill);
+            background-color: var(--primary-color); color: #000; font-weight: bold;
+            border: none; cursor: pointer; text-transform: uppercase; letter-spacing: 1px;
+            transition: all 0.3s ease; position: relative; font-family: inherit;
+        }
+        button:hover { box-shadow: 0 0 15px var(--primary-glow); filter: brightness(1.2); transform: translateY(-2px); }
+        button:disabled { background-color: #555; color: #999; cursor: not-allowed; box-shadow: none; transform: none; }
+        button.secondary { background-color: transparent; border: 1px solid var(--primary-color); color: var(--primary-color); }
+        button.secondary:hover { background-color: var(--primary-color); color: #000; }
+        button.danger { background-color: var(--danger-color); border-color: var(--danger-color); color: white; }
+        #modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.7); z-index: 199;
+            display: none; opacity: 0; transition: opacity 0.3s ease;
+        }
+        #settings-modal, .game-modal {
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.95);
+            width: 90%; max-width: 500px; max-height: 80vh; overflow-y: auto;
+            background: var(--container-bg); border-radius: var(--border-radius-main);
+            border: 1px solid var(--border-color); box-shadow: 0 0 30px rgba(0,0,0,0.8);
+            z-index: 200; display: none; opacity: 0; transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+        #settings-modal.open, .game-modal.open, #modal-overlay.open { display: block; opacity: 1; }
+        #settings-modal.open, .game-modal.open { transform: translate(-50%, -50%) scale(1); }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; padding: 1rem 1.5rem; border-bottom: 1px solid var(--border-color); }
+        .modal-header h2 { margin: 0; font-size: 1.5rem; }
+        .modal-header button { width: auto; padding: 5px 10px; background: transparent; color: var(--text-color); border: none; font-size: 1.5rem; cursor: pointer;}
+        .modal-body { padding: 1.5rem; text-align: center; }
+        .modal-body .game-option-group { text-align: left; }
+        .setting-group { margin-bottom: 1.5rem; }
+        .setting-group h3 { font-size: 1.1rem; color: var(--primary-color); border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem; margin-bottom: 1rem; }
+        .setting-item { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+        .setting-item label { margin: 0; font-size: 1rem; }
+        .toggle-switch { position: relative; display: inline-block; width: 50px; height: 28px; }
+        .toggle-switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #333; transition: .4s; border-radius: 34px; }
+        .slider:before { position: absolute; content: ""; height: 20px; width: 20px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: var(--primary-color); }
+        input:checked + .slider:before { background-color: #000; transform: translateX(22px); }
+        canvas#stars { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; pointer-events: none; }
+        body.stars-hidden canvas#stars { display: none; }
+        footer.dev-contact { text-align: center; margin-top: 2rem; padding-top: 1rem; border-top: 1px solid var(--border-color); font-size: 0.9rem; color: #888; }
+        .notification {
+            text-align: center; padding: 0.8rem; margin-bottom: 1rem;
+            border-radius: var(--border-radius-small); display: none;
+            font-size: 0.9rem; border: 1px solid;
+        }
+        .notification.success { background-color: #0f3d1b; color: #8affab; border-color: #1a7431; }
+        .notification.error { background-color: #3d0f0f; color: #ffa8a8; border-color: #741a1a; }
+        .notification.info { background-color: #0f2a3d; color: #a8dfff; border-color: #1a5674; }
+        
+        /* --- CSS KHUSUS HALAMAN KODE CHALLENGE --- */
+        
+        .coin-balance-display {
+            text-align: center; font-size: 1.3rem; font-weight: 700;
+            color: var(--coin-color); text-shadow: 0 0 10px rgba(241, 196, 15, 0.5);
+            margin: 0.5rem auto 1.5rem auto; padding: 10px;
+            background: rgba(0,0,0,0.3); border-radius: var(--border-radius-pill);
+            border: 1px solid var(--coin-color); max-width: 300px;
+            transition: all 0.3s ease;
+        }
+        .coin-balance-display i { margin-right: 10px; }
+        
+        .challenge-container {
+            background: var(--input-bg);
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius-main);
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        .challenge-container h3 {
+            text-align: center;
+            border: none;
+            margin-top: 0;
+            color: var(--primary-color);
+        }
+        .challenge-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #111;
+            border-radius: var(--border-radius-small);
+            padding: 1rem;
+            border-left: 4px solid var(--primary-color);
+        }
+        .challenge-details p { font-size: 1rem; margin: 0; }
+        .challenge-details span { font-size: 0.9rem; color: #aaa; }
+        .challenge-reward { font-weight: bold; color: var(--coin-color); font-size: 1.1rem; }
+        .challenge-claim-btn { width: 100px; padding: 0.6rem; font-size: 0.9rem; }
+        .challenge-claim-btn:disabled { background: var(--success-color); color: #fff; }
+        
+        .challenge-header {
+            text-align: center;
+            margin-bottom: 2rem;
+            margin-top: 1rem;
+        }
+        .challenge-header a button {
+            width: auto;
+            padding: 0.6rem 1.2rem;
+        }
+        
+        .challenge-layout {
+            display: grid;
+            grid-template-columns: 1fr; /* 1 Kolom 9:16 */
+            gap: 2rem;
+            max-width: 1200px; 
+            margin: 0 auto;
+        }
+        
+        .code-container {
+            background: #272822; 
+            border-radius: var(--border-radius-main);
+            border: 1px solid var(--border-color);
+            padding: 1.5rem;
+            max-height: 70vh;
+            overflow-y: auto;
+            order: 2; 
+        }
+        
+        pre[class*="language-"] {
+            background: transparent !important;
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+        
+        .code-line {
+            display: flex;
+            align-items: flex-start;
+            transition: background-color 0.3s;
+        }
+        .code-line:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+        .line-number {
+            display: inline-block;
+            width: 40px;
+            text-align: right;
+            padding-right: 15px;
+            color: #888;
+            user-select: none;
+            font-family: 'Courier New', Courier, monospace;
+        }
+        .line-content {
+            flex: 1;
+            font-family: 'Courier New', Courier, monospace;
+            cursor: pointer;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        
+        .line-correct { animation: flash-green 1s; }
+        .line-wrong { animation: shake 0.5s; }
+        
+        @keyframes flash-green {
+            0%, 100% { background-color: var(--success-color); }
+            50% { background-color: transparent; }
+        }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); background-color: var(--danger-color); }
+            25% { transform: translateX(-5px); }
+            50% { background-color: transparent; }
+            75% { transform: translateX(5px); }
+        }
+        
+        .controls-container {
+            background: var(--input-bg);
+            border-radius: var(--border-radius-main);
+            border: 1px solid var(--border-color);
+            padding: 1.5rem;
+            order: 1; 
+        }
+        
+        .status-box {
+            background: #111;
+            padding: 1rem;
+            border-radius: var(--border-radius-small);
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+        #challenge-level { font-size: 1.5rem; font-weight: bold; color: var(--primary-color); }
+        #challenge-timer { font-size: 1.2rem; color: #aaa; margin-top: 5px; }
+        #challenge-status {
+            font-size: 1.1rem;
+            font-weight: 500;
+            min-height: 20px;
+            margin-top: 10px;
+        }
+        
+        #challenge-info {
+            background: #111;
+            padding: 1rem;
+            border-radius: var(--border-radius-small);
+        }
+        #challenge-title { font-size: 1.2rem; color: var(--primary-color); }
+        #challenge-desc { font-size: 0.9rem; color: #ccc; margin-top: 10px; }
+        
+        @media (min-width: 900px) {
+            .container { max-width: 1200px; } 
+            .challenge-layout {
+                grid-template-columns: 1fr 350px; /* 2 kolom */
+            }
+            .controls-container {
+                order: 2; /* Kontrol kembali ke kanan */
+            }
+            .code-container {
+                order: 1; /* Kode kembali ke kiri */
+            }
+        }
+        
+        .modal-body .exp-gain {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--primary-color);
+            margin: 1rem 0;
+            animation: pulse-gold 1s infinite alternate;
+        }
+        .modal-body .exp-gain span {
+            display: block;
+            margin-top: 0.5rem;
+        }
+        @keyframes pulse-gold {
+            from { color: var(--coin-color); }
+            to { color: #fff; }
+        }
+        .modal-footer {
+            padding: 1rem 1.5rem;
+            border-top: 1px solid var(--border-color);
+            text-align: center;
+        }
+
+    </style>
+</head>
+<body class="stars-hidden"> <canvas id="stars"></canvas>
+
+    <audio id="coin-sfx" src="https://files.catbox.moe/kge8er.mp3"></audio>
+    <audio id="levelup-sfx" src="https://files.catbox.moe/rgt6e6.mp3"></audio>
+    
+    <div id="splash-screen" style="display: none;"></div>
+    
+    <audio id="bg-music" loop>
+        <source src="https://files.catbox.moe/exgp8t.mp4" type="audio/mpeg">
+    </audio>
+    
+    <button id="menu-toggle"><i class="fas fa-bars"></i></button>
+    <button id="settings-toggle"><i class="fas fa-cog"></i></button>
+    <div id="sidebar-overlay"></div>
+    
+    <div id="sidebar">
+        <div class="menu-header">
+            <h3>NAVIGASI</h3>
+            <button class="secondary" id="sidebar-close-btn"><i class="fas fa-times"></i></button>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="index.html" class="tab-link"><i class="fas fa-satellite-dish"></i> LOBBY <span class="sidebar-close">x</span></a>
+            <a href="attack.html" class="tab-link"><i class="fas fa-bolt"></i> ATTACK <span class="sidebar-close">x</span></a>
+            <a href="store.html" class="tab-link"><i class="fas fa-store"></i> STORE <span class="sidebar-close">x</span></a>
+            <a href="missions.html" class="tab-link"><i class="fas fa-tasks"></i> MISI <span class="sidebar-close">x</span></a>
+            <a href="profile.html" class="tab-link"><i class="fas fa-user-astronaut"></i> PROFILE <span class="sidebar-close">x</span></a>
+            <a href="ai.html" class="tab-link"><i class="fas fa-robot"></i> AI CHAT <span class="sidebar-close">x</span></a>
+            <a href="quotes.html" class="tab-link"><i class="fas fa-feather-alt"></i> QUOTES GEN <span class="sidebar-close">x</span></a>
+            <a href="logs.html" class="tab-link"><i class="fas fa-history"></i> LOGS <span class="sidebar-close">x</span></a>
+            <a href="tools.html" class="tab-link" id="tools-tab-button" style="display: none;"><i class="fas fa-tools"></i> TOOLS <span class="sidebar-close">x</span></a>
+            
+            <a href="game.html" class="tab-link active"><i class="fas fa-gamepad"></i> GAME HUB <span class="sidebar-close">x</span></a>
+            
+            <a href="admin.html" class="tab-link" id="admin-tab-button" style="display: none;"><i class="fas fa-user-cog"></i> ADMIN <span class="sidebar-close">x</span></a>
+            <button id="sidebar-settings-button" class="tab-link"><i class="fas fa-cog"></i> SETTINGS <span class="sidebar-close">x</span></button>
+        </nav>
+        <footer class="dev-contact" style="position: absolute; bottom: 10px; width: 100%; background: #111; padding: 10px 0;">
+            <p>v3.1 (Code) by zexxo.</p>
+        </footer>
+    </div>
+
+    <div id="code-challenge-page" class="container">
+        <h1><i class="fas fa-bug"></i> Temukan Bug</h1>
+        
+        <div class="coin-balance-display">
+            <i class="fas fa-coins"></i> <span id="user-coin-balance">...</span> Coins
+        </div>
+        
+        <div class="challenge-container">
+            <h3><i class="fas fa-star"></i> Tantangan Harian: Kode</h3>
+            <div id="daily-challenge-list">
+                <p style="text-align: center; color: #888;">Memuat tantangan...</p>
+            </div>
+        </div>
+        
+        <div id="hub-notification" class="notification"></div>
+        
+        <div class="challenge-header">
+             <a href="game.html" id="back-to-hub-btn" style="text-decoration: none;">
+                <button class="secondary">
+                    <i class="fas fa-arrow-left"></i> Kembali ke Game Hub
+                </button>
+            </a>
+        </div>
+       
+        <div class="challenge-layout">
+            
+            <div class="code-container" id="code-container">
+                <h3 style="color: #888; text-align: center;">Memuat Soal...</h3>
+            </div>
+            
+            <div class="controls-container">
+                
+                <div class="status-box">
+                    <div id="challenge-level">Level 1</div>
+                    <div id="challenge-timer">0.0s</div>
+                    <div id="challenge-status">Klik baris yang error!</div>
+                </div>
+                
+                <div id="challenge-info">
+                    <h3 id="challenge-title">Memuat...</h3>
+                    <p id="challenge-desc">Memuat...</p>
+                </div>
+                
+                <button id="next-challenge-btn" style="margin-top: 1.5rem; display: none;">Level Selanjutnya</button>
+            </div>
+            
+        </div>
+    </div>
+    
+
+    <div id="modal-overlay"></div>
+    
+    <div id="settings-modal">
+        <div class="modal-header">
+            <h2>Settings</h2>
+            <button class="modal-close-btn"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="modal-body" style="text-align: left;">
+            <div class="setting-group">
+                <h3><i class="fas fa-paint-brush"></i> Tampilan</h3>
+                <div class="setting-item">
+                    <label for="setting-accent-color">Warna Aksen</label>
+                    <select id="setting-accent-color" name="setting-accent-color">
+                        <option value="#ffffff">Default (Putih)</option>
+                        <option value="#3498db">Biru</option>
+                        <option value="#2ecc71">Hijau</option>
+                        <option value="#e74c3c">Merah</option>
+                        <option value="#cccccc">Abu-abu</option>
+                    </select>
+                </div>
+             </div>
+             <div class="setting-group">
+                <h3><i class="fas fa-volume-up"></i> Audio & Feedback</h3>
+                 <div class="setting-item">
+                    <label for="setting-music-toggle">Musik Latar</label>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="setting-music-toggle">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <div class="setting-item">
+                    <label for="setting-music-volume">Volume</label>
+                    <input type="range" id="setting-music-volume" min="0" max="1" step="0.1">
+                </div>
+             </div>
+             <div class="setting-group">
+                <h3><i class="fas fa-cog"></i> Sistem</h3>
+                 <div class="setting-item">
+                    <label>Logout dari Akun</label>
+                    <button class="danger" id="setting-logout-button" style="width: auto; padding: 5px 10px; font-size: 0.9rem; border-radius: var(--border-radius-pill);">Logout</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div id="challenge-result-modal" class="game-modal">
+        <div class="modal-header">
+            <h2>Benar!</h2>
+            <button class="modal-close-btn"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="modal-body">
+            <h2 id="challenge-result-title">Level 1 Selesai!</h2>
+            <p id="challenge-result-exp-gain" class="exp-gain" style="display: none;">
+                +150 EXP
+                <span style="color: var(--coin-color);"><i class="fas fa-coins"></i> +30 Koin</span>
+            </p>
+        </div>
+        <div class="modal-footer">
+            <button id="challenge-modal-next-btn">Level Selanjutnya</button>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
+
+
+    <script>
+        // --- PENGATURAN GITLAB (LENGKAP) ---
+        const GITLAB_TOKEN = 'glpat-9cZaOPR0hBHj-qiqIqzT9W86MQp1Omlsc2xiCw.01.120onr34s';
+        const GITLAB_PROJECT_ID = '75681438';
+        const GITLAB_BRANCH = 'main';
+        
+        const USERS_FILE = 'users.json';
+        const LEADERBOARD_FILE = 'leaderboard.json';
+        const CODE_CHALLENGES_FILE = 'code_challenges.json'; 
+        const CHALLENGES_FILE = 'challenges.json';
+        
+        const GITLAB_BASE_URL = `https://gitlab.com/api/v4/projects/${GITLAB_PROJECT_ID}/repository/files/`;
+        const GITLAB_USERS_URL = `${GITLAB_BASE_URL}${encodeURIComponent(USERS_FILE)}`;
+        const GITLAB_LEADERBOARD_URL = `${GITLAB_BASE_URL}${encodeURIComponent(LEADERBOARD_FILE)}`;
+        const GITLAB_CODE_CHALLENGES_URL = `${GITLAB_BASE_URL}${encodeURIComponent(CODE_CHALLENGES_FILE)}`;
+        const GITLAB_CHALLENGES_URL = `${GITLAB_BASE_URL}${encodeURIComponent(CHALLENGES_FILE)}`;
+        // --- AKHIR PENGATURAN GITLAB ---
+
+        // --- DOM Elements (Global) ---
+        const sidebar = document.getElementById('sidebar');
+        const sidebarOverlay = document.getElementById('sidebar-overlay');
+        const menuToggle = document.getElementById('menu-toggle');
+        const sidebarCloseBtn = document.getElementById('sidebar-close-btn');
+        const toolsTabButton = document.getElementById('tools-tab-button');
+        const settingsToggle = document.getElementById('settings-toggle');
+        const sidebarSettingsButton = document.getElementById('sidebar-settings-button');
+        const modalOverlay = document.getElementById('modal-overlay');
+        const settingsModal = document.getElementById('settings-modal');
+        const settingsModalCloseBtn = document.querySelector('#settings-modal .modal-close-btn');
+        const bgMusic = document.getElementById('bg-music');
+        const globalUserCoinBalance = document.getElementById('user-coin-balance');
+        const hubNotification = document.getElementById('hub-notification');
+        
+        const sfx = {
+            coin: document.getElementById('coin-sfx'),
+            levelUp: document.getElementById('levelup-sfx')
+        };
+        
+        let USER_INFO = null;
+        let SETTINGS = {};
+        
+        // --- DOM Elements Challenge ---
+        const codeContainer = document.getElementById('code-container');
+        const challengeLevelEl = document.getElementById('challenge-level');
+        const challengeTimerEl = document.getElementById('challenge-timer');
+        const challengeStatusEl = document.getElementById('challenge-status');
+        const challengeTitleEl = document.getElementById('challenge-title');
+        const challengeDescEl = document.getElementById('challenge-desc');
+        
+        const challengeResultModal = document.getElementById('challenge-result-modal');
+        const challengeResultTitle = document.getElementById('challenge-result-title');
+        const challengeResultExpGain = document.getElementById('challenge-result-exp-gain');
+        const challengeModalNextBtn = document.getElementById('challenge-modal-next-btn');
+        const dailyChallengeList = document.getElementById('daily-challenge-list'); 
+
+        
+        // ===============================================================
+        // --- LOGIKA GAME KODE CHALLENGE ---
+        // ===============================================================
+        
+        let allChallenges = [];
+        let currentChallenge = null;
+        let gameLevel = 1;
+        let timerInterval = null;
+        let startTime = 0;
+        let gameActive = false;
+        let challengesToday = 0; 
+
+        const initialSoal = [
+            { "id": 1, "level": 1, "language": "javascript", "title": "Kesalahan Sintaks Dasar", "description": "Ada yang salah dengan deklarasi variabel ini. Klik baris yang error.", "code": "let user = 'Zexxo';\nconsole.log(user);\nlet pass = '12345;\nconsole.log(pass);", "correctLine": 3 },
+            { "id": 2, "level": 1, "language": "css", "title": "Typo Properti CSS", "description": "Tombol ini seharusnya berwarna merah, tapi tidak. Temukan baris yang salah ketik.", "code": ".button-merah {\n  background: #fff;\n  coler: red;\n  border: none;\n}", "correctLine": 3 },
+            { "id": 3, "level": 1, "language": "javascript", "title": "Logika Perbandingan", "description": "Kode ini seharusnya memberi tahu 'Akses Ditolak', tapi malah 'Diterima'. Di mana letak kesalahannya?", "code": "let role = 'guest';\n\nif (role = 'admin') {\n  console.log('Akses Diterima');\n} else {\n  console.log('Akses Ditolak');\n}", "correctLine": 3 }
+        ];
+
+        async function createInitialSoal() {
+            console.log("File code_challenges.json tidak ditemukan. Membuat file baru...");
+            const fileUrl = GITLAB_CODE_CHALLENGES_URL;
+            try {
+                await updateGitLabFile(
+                    fileUrl,
+                    "FEAT: Create initial code_challenges.json",
+                    { challenges: initialSoal },
+                    null, null
+                );
+                console.log("Berhasil membuat code_challenges.json di GitLab.");
+                return initialSoal;
+            } catch (e) {
+                console.error("Gagal membuat code_challenges.json:", e);
+                challengeStatusEl.textContent = "Gagal membuat file soal.";
+                return [];
+            }
+        }
+
+        async function loadMainChallenges() {
+            challengeStatusEl.textContent = "Memuat soal dari server...";
+            const fileUrl = GITLAB_CODE_CHALLENGES_URL;
+            try {
+                const { data } = await getGitLabFile(fileUrl);
+                if (!data.challenges || data.challenges.length === 0) {
+                    allChallenges = await createInitialSoal();
+                } else {
+                    allChallenges = data.challenges;
+                }
+            } catch (e) {
+                console.error(`Error fetching ${CODE_CHALLENGES_FILE}:`, e);
+                if (e.message.includes('404')) {
+                    allChallenges = await createInitialSoal();
+                } else {
+                    challengeStatusEl.textContent = "Error: Gagal memuat soal.";
+                    return;
+                }
+            }
+            
+            gameLevel = USER_INFO.level || 1;
+            displayChallenge(gameLevel);
+        }
+
+        function displayChallenge(level) {
+            let challengesForLevel = allChallenges.filter(c => c.level === level);
+            if (challengesForLevel.length === 0) {
+                console.warn(`Tidak ada soal Level ${level}. Menggunakan soal Level ${level-1}`);
+                challengesForLevel = allChallenges.filter(c => c.level === (level - 1));
+            }
+            if (challengesForLevel.length === 0) {
+                challengesForLevel = allChallenges.filter(c => c.level === 1);
+            }
+            
+            currentChallenge = challengesForLevel[Math.floor(Math.random() * challengesForLevel.length)];
+            
+            if (!currentChallenge) {
+                challengeStatusEl.textContent = "Error: Tidak ada soal ditemukan.";
+                return;
+            }
+
+            challengeLevelEl.textContent = `Level ${currentChallenge.level}`;
+            challengeTitleEl.textContent = currentChallenge.title;
+            challengeDescEl.textContent = currentChallenge.description;
+            
+            codeContainer.innerHTML = '';
+            const lines = currentChallenge.code.split('\n');
+            lines.forEach((line, index) => {
+                const lineNumber = index + 1;
+                const lineEl = document.createElement('div');
+                lineEl.className = 'code-line';
+                lineEl.innerHTML = `
+                    <span class="line-number">${lineNumber}</span>
+                    <pre class="line-content"><code class="language-${currentChallenge.language}">${line || '\n'}</code></pre>
+                `;
+                lineEl.querySelector('.line-content').addEventListener('click', () => {
+                    handleLineClick(lineNumber, lineEl);
+                });
+                codeContainer.appendChild(lineEl);
+            });
+            
+            Prism.highlightAllUnder(codeContainer);
+            startTimer();
+            gameActive = true;
+            challengeStatusEl.textContent = "Klik baris yang error!";
+        }
+
+        function startTimer() {
+            stopTimer();
+            startTime = Date.now();
+            timerInterval = setInterval(() => {
+                const timeTaken = (Date.now() - startTime) / 1000;
+                challengeTimerEl.textContent = `${timeTaken.toFixed(1)}s`;
+            }, 100);
+        }
+        
+        function stopTimer() {
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+            }
+        }
+
+        async function handleLineClick(lineNumber, lineElement) {
+            if (!gameActive) return;
+            
+            document.querySelectorAll('.line-wrong').forEach(el => el.classList.remove('line-wrong'));
+            
+            if (lineNumber === currentChallenge.correctLine) {
+                vibrate();
+                stopTimer();
+                gameActive = false;
+                challengesToday++;
+                
+                lineElement.classList.add('line-correct');
+                challengeStatusEl.textContent = "BENAR!";
+                
+                const timeTaken = (Date.now() - startTime) / 1000;
+                
+                const baseExp = 50 * currentChallenge.level;
+                const timeBonus = Math.max(0, 50 - Math.floor(timeTaken));
+                const totalExp = baseExp + timeBonus;
+                const totalCoins = Math.floor(totalExp / 5);
+                
+                playSound('coin');
+                
+                challengeResultTitle.textContent = `Level ${currentChallenge.level} Selesai!`;
+                challengeResultExpGain.innerHTML = `+${totalExp} EXP
+                    <span style="color: var(--coin-color);"><i class="fas fa-coins"></i> +${totalCoins} Koin</span>`;
+                challengeResultExpGain.style.display = 'block';
+                
+                modalOverlay.classList.add('open');
+                challengeResultModal.classList.add('open');
+                
+                try {
+                    await saveGameData('code', totalExp, totalCoins, totalExp);
+                } catch (e) {
+                    challengeStatusEl.textContent = "Error menyimpan skor!";
+                }
+                
+            } else {
+                vibrate();
+                lineElement.classList.add('line-wrong');
+                challengeStatusEl.textContent = "Salah, coba lagi!";
+                setTimeout(() => {
+                    lineElement.classList.remove('line-wrong');
+                }, 500);
+            }
+        }
+        
+        challengeModalNextBtn.addEventListener('click', () => {
+            modalOverlay.classList.remove('open');
+            challengeResultModal.classList.remove('open');
+            gameLevel = USER_INFO.level || 1; 
+            displayChallenge(gameLevel);
+        });
+        
+        
+        // --- LOGIKA QUEST HARIAN ---
+        
+        async function loadDailyChallenges() {
+            const container = document.getElementById('daily-challenge-list');
+            if (!container) return;
+            container.innerHTML = '<p style="text-align: center; color: #888;">Memuat tantangan...</p>';
+            
+            try {
+                let allDailies = [];
+                try {
+                    const { data: serverChallenges } = await getGitLabFile(GITLAB_CHALLENGES_URL);
+                    if (serverChallenges && serverChallenges.daily) {
+                        allDailies = serverChallenges.daily;
+                    } else { throw new Error("Format challenges.json tidak valid."); }
+                } catch (e) {
+                    console.warn("Gagal fetch challenges.json:", e.message);
+                    container.innerHTML = `<p style="text-align: center; color: #888;">Gagal memuat tantangan harian.</p>`;
+                    return;
+                }
+                
+                const codeDailies = allDailies.filter(ch => ch.game === 'code');
+                if (codeDailies.length === 0) {
+                     container.innerHTML = '<p style="text-align: center; color: #888;">Tidak ada tantangan harian untuk game ini.</p>';
+                     return;
+                }
+                
+                if (!USER_INFO.challenge_progress) USER_INFO.challenge_progress = {};
+                const todayKey = new Date().toISOString().split('T')[0];
+                
+                container.innerHTML = '';
+                codeDailies.forEach(ch => {
+                    const challengeKey = `${ch.id}_${todayKey}`;
+                    const isClaimed = USER_INFO.challenge_progress[challengeKey] === 'claimed';
+                    
+                    const item = document.createElement('div');
+                    item.className = 'challenge-item';
+                    item.innerHTML = `
+                        <div class="challenge-details">
+                            <p>${ch.title}</p>
+                            <span class="challenge-reward"><i class="fas fa-coins"></i> +${ch.reward} Koin</span>
+                        </div>
+                        <button class="challenge-claim-btn secondary" id="btn-ch-${ch.id}" ${isClaimed ? 'disabled' : ''}>
+                            ${isClaimed ? 'Selesai' : 'Klaim'}
+                        </button>
+                    `;
+                    
+                    if (!isClaimed) {
+                        item.querySelector('button').addEventListener('click', (e) => handleChallengeClaim(e, ch, challengeKey));
+                    }
+                    container.appendChild(item);
+                });
+                
+            } catch (error) {
+                container.innerHTML = `<p style="text-align: center; color: var(--danger-color);">${error.message}</p>`;
+            }
+        }
+        
+        async function handleChallengeClaim(e, challenge, challengeKey) {
+            const btn = e.currentTarget;
+            disableButton(btn);
+            hideAllNotifications();
+            
+            try {
+                const progress = checkChallengeProgress(challenge);
+                if (!progress.completed) {
+                    throw new Error(`Belum selesai! (Progres: ${progress.current} / ${challenge.target})`);
+                }
+                
+                await addCoins(challenge.reward, `Klaim Tantangan: ${challenge.title}`);
+                
+                const fileUrl = GITLAB_USERS_URL;
+                const { data: usersData, lastCommitId } = await getGitLabFile(fileUrl);
+                const userIndex = usersData.users.findIndex(u => u.username === USER_INFO.username);
+                
+                if (userIndex > -1) {
+                    if (!usersData.users[userIndex].challenge_progress) {
+                        usersData.users[userIndex].challenge_progress = {};
+                    }
+                    usersData.users[userIndex].challenge_progress[challengeKey] = 'claimed';
+                    
+                    await updateGitLabFile(
+                        fileUrl,
+                        `CHALLENGE: ${USER_INFO.username} claimed ${challenge.id}`,
+                        usersData, lastCommitId, null
+                    );
+                    
+                    USER_INFO = usersData.users[userIndex];
+                    localStorage.setItem('user', JSON.stringify(USER_INFO));
+                    
+                    btn.textContent = "Selesai";
+                    btn.disabled = true;
+                    showNotification('hub-notification', `+${challenge.reward} Koin! Tantangan Selesai!`, 'success');
+                    
+                } else {
+                    throw new Error("User tidak ditemukan di server.");
+                }
+                
+            } catch (error) {
+                showNotification('hub-notification', `Gagal Klaim: ${error.message}`, 'error');
+                enableButton(btn, "Klaim");
+            }
+        }
+        
+        function checkChallengeProgress(challenge) {
+            const currentProgress = challengesToday;
+            return {
+                current: currentProgress,
+                target: challenge.target,
+                completed: currentProgress >= challenge.target
+            };
+        }
+
+        
+        // --- (DIMODIFIKASI) FUNGSI SAVE DATA & KEUANGAN ---
+        
+        async function addCoins(amount, reason) {
+            if (amount === 0) return true;
+            console.log(`[TRANSAKSI] Menambah ${amount} koin untuk ${reason}`);
+            try {
+                const fileUrl = GITLAB_USERS_URL;
+                const { data: usersData, lastCommitId } = await getGitLabFile(fileUrl);
+                const userIndex = usersData.users.findIndex(u => u.username === USER_INFO.username);
+                if (userIndex === -1) throw new Error("User tidak ditemukan di server.");
+                
+                const serverUser = usersData.users[userIndex];
+                if (!serverUser.coins) serverUser.coins = 0;
+                serverUser.coins += amount;
+                
+                await updateGitLabFile(
+                    fileUrl,
+                    `AWARD: ${USER_INFO.username} received ${amount} coins for ${reason}`,
+                    usersData, lastCommitId, null
+                );
+                
+                USER_INFO = serverUser;
+                localStorage.setItem('user', JSON.stringify(USER_INFO));
+                updateCoinDisplay(USER_INFO.coins);
+                return true;
+            } catch (e) {
+                console.error("Gagal menambah koin:", e); throw e;
+            }
+        }
+
+        async function updateGlobalLeaderboard(gameName, score) {
+            if (!USER_INFO) return; 
+            let leaderboardData, commitId;
+            const fileUrl = GITLAB_LEADERBOARD_URL;
+            try {
+                const { data, lastCommitId } = await getGitLabFile(fileUrl);
+                leaderboardData = data; commitId = lastCommitId;
+            } catch (e) { console.error("Gagal ambil leaderboard:", e); throw e; }
+            
+            if (!leaderboardData[gameName]) leaderboardData[gameName] = [];
+            
+            let oldEntry = leaderboardData[gameName].find(e => e.user === USER_INFO.username);
+            let newScore = (oldEntry ? oldEntry.score : 0) + score;
+            
+            leaderboardData[gameName] = leaderboardData[gameName].filter(e => e.user !== USER_INFO.username);
+            leaderboardData[gameName].push({ user: USER_INFO.username, score: newScore, date: new Date().toISOString() });
+            leaderboardData[gameName].sort((a, b) => b.score - a.score);
+            leaderboardData[gameName] = leaderboardData[gameName].slice(0, 10);
+            
+            try {
+                await updateGitLabFile( fileUrl, `GAME: ${USER_INFO.username} new score ${newScore} in ${gameName}`, leaderboardData, commitId, null );
+                console.log("[Leaderboard] Score saved to GitLab!");
+            } catch (e) {
+                console.error("Gagal update leaderboard:", e); throw e;
+            }
+        }
+
+        async function saveGameData(gameName, score, coinsGained, expGained) {
+            if (!USER_INFO) return;
+            console.log(`[SAVE] Game: ${gameName}, Score: ${score}, Coins: ${coinsGained}, EXP: ${expGained}`);
+
+            if (expGained > 0) {
+                 try { await updateGlobalLeaderboard(gameName, expGained); } 
+                 catch (e) { console.error("Gagal update global leaderboard, tapi tetap lanjut.", e); }
+            }
+
+            try {
+                const fileUrl = GITLAB_USERS_URL;
+                const { data: usersData, lastCommitId } = await getGitLabFile(fileUrl);
+                const userIndex = usersData.users.findIndex(u => u.username === USER_INFO.username);
+                if (userIndex === -1) throw new Error("User tidak ditemukan di server.");
+                const serverUser = usersData.users[userIndex];
+                
+                if (!serverUser.level) serverUser.level = 1;
+                if (!serverUser.exp) serverUser.exp = 0;
+                if (!serverUser.history) serverUser.history = [];
+                if (!serverUser.coins) serverUser.coins = 0;
+
+                serverUser.coins += coinsGained;
+                serverUser.exp += expGained;
+                
+                serverUser.history.push({
+                    game: gameName, score: score, date: new Date().toISOString(),
+                    coins: coinsGained, exp: expGained
+                });
+                if (serverUser.history.length > 20) {
+                    serverUser.history = serverUser.history.slice(-20);
+                }
+
+                let expToNextLevel = serverUser.level * 1000;
+                let leveledUp = false;
+                while (serverUser.exp >= expToNextLevel) {
+                    serverUser.level++;
+                    serverUser.exp -= expToNextLevel;
+                    expToNextLevel = serverUser.level * 1000;
+                    leveledUp = true;
+                }
+                
+                await updateGitLabFile(
+                    fileUrl,
+                    `DATA: ${serverUser.username} finished ${gameName} (Lvl ${serverUser.level})`,
+                    usersData, lastCommitId, null
+                );
+                
+                console.log("[SAVE] User data (EXP, Koin, Level) saved to GitLab.");
+                
+                USER_INFO = serverUser;
+                localStorage.setItem('user', JSON.stringify(USER_INFO));
+                updateCoinDisplay(USER_INFO.coins);
+                
+                if (leveledUp) {
+                    playSound('levelup');
+                    challengeResultTitle.textContent = `NAIK LEVEL! (Lvl ${USER_INFO.level})`;
+                }
+
+            } catch (e) {
+                console.error("FATAL: Gagal save data user (EXP/Koin) ke GitLab:", e);
+                challengeResultExpGain.textContent = `Error: ${e.message}`;
+            }
+        }
+        
+        async function getGitLabFile(fileUrl) {
+            try {
+                const response = await fetch(`${fileUrl}?ref=${GITLAB_BRANCH}`, {
+                    method: 'GET', 
+                    headers: { 'Private-Token': GITLAB_TOKEN, 'Accept': 'application/json' }
+                });
+                const fileName = decodeURIComponent(fileUrl.split('/').pop().split('?')[0]);
+                const defaultData = {
+                    [USERS_FILE]: { settings: {}, users: [] },
+                    [LEADERBOARD_FILE]: { car: [], ttt: [], code: [], math: [] },
+                    [CHALLENGES_FILE]: { daily: [] },
+                    [CODE_CHALLENGES_FILE]: { challenges: initialSoal }
+                };
+                if (response.status === 404) {
+                    return { data: defaultData[fileName] || {}, lastCommitId: null };
+                }
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                const data = await response.json(); 
+                if (!data.content) {
+                    return { data: defaultData[fileName] || {}, lastCommitId: data.last_commit_id };
+                }
+                const content = JSON.parse(atob(data.content));
+                return { data: content, lastCommitId: data.last_commit_id };
+            } catch (error) { console.error("Failed to fetch GitLab file:", error); throw error; }
+        }
+        
+        // (PERBAIKAN) Menambahkan fungsi updateGitLabFile yang hilang
+        async function updateGitLabFile(fileUrl, commitMessage, dataObject, lastCommitId, btn) {
+            if(btn) disableButton(btn);
+            try {
+                const content = btoa(unescape(encodeURIComponent(JSON.stringify(dataObject, null, 2)))); 
+                const method = lastCommitId ? 'PUT' : 'POST';
+                // (FIXED) Gunakan 'file_path' untuk POST, dan URL lengkap untuk PUT
+                const payload = { branch: GITLAB_BRANCH, commit_message: commitMessage, content: content, encoding: 'base64' };
+                let url = fileUrl;
+                
+                if(method === 'POST') {
+                    // Untuk POST, kita perlu path file relatif, bukan URL lengkap
+                    payload.file_path = decodeURIComponent(fileUrl.split('/files/')[1]);
+                    url = `${GITLAB_BASE_URL}${encodeURIComponent(payload.file_path)}`;
+                }
+
+                const response = await fetch(url, {
+                    method: method, headers: { 'Private-Token': GITLAB_TOKEN, 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                
+                if (!response.ok) {
+                    const errData = await response.json();
+                    if (method === 'POST' && errData.message && errData.message.includes('already exists')) {
+                        console.warn("File already exists. Trying PUT instead...");
+                        const { lastCommitId: newCommitId } = await getGitLabFile(fileUrl);
+                        return await updateGitLabFile(fileUrl, commitMessage, dataObject, newCommitId, btn);
+                    }
+                    throw new Error(`GitLab Update Failed: ${errData.message || response.status}`);
+                }
+                return true;
+            } catch (error) { 
+                console.error("Failed to update GitLab file:", error); 
+                if(btn) enableButton(btn);
+                throw error; 
+            } 
+        }
+        
+        // --- Logika Halaman (Inti) ---
+        function showCodeChallengePage() {
+            document.getElementById('code-challenge-page').style.display = 'block';
+            menuToggle.style.display = 'block';
+            settingsToggle.style.display = 'block';
+            
+            updateCoinDisplay(USER_INFO.coins);
+            applySettings(); 
+            
+            loadDailyChallenges();
+            loadMainChallenges(); 
+            
+            refreshUserInfoFromServer(); 
+
+            const adminTab = document.getElementById('admin-tab-button');
+            if (adminTab && (USER_INFO.role === 'admin' || USER_INFO.role === 'developer')) {
+                adminTab.style.display = 'block';
+            }
+            if (window.innerWidth > 900) {
+                 document.body.style.marginLeft = 'var(--sidebar-width)';
+                 sidebar.classList.add('open');
+            }
+        }
+        
+        async function refreshUserInfoFromServer() {
+            if (!USER_INFO) return; 
+            try {
+                const { data: usersData } = await getGitLabFile(GITLAB_USERS_URL);
+                if (!usersData || !usersData.users) throw new Error('Data pengguna server tidak valid.');
+                const freshUserData = usersData.users.find(u => u.username === USER_INFO.username);
+                if (freshUserData) {
+                    if (JSON.stringify(freshUserData) !== JSON.stringify(USER_INFO)) {
+                        console.log('Data pengguna diperbarui dari server.');
+                        USER_INFO = freshUserData;
+                        localStorage.setItem('user', JSON.stringify(USER_INFO)); 
+                        updateCoinDisplay(USER_INFO.coins);
+                        loadDailyChallenges();
+                    }
+                } else {
+                    console.warn('Pengguna tidak ditemukan di server. Logout paksa.');
+                    logout(true);
+                }
+            } catch (error) {
+                console.error('Gagal menyinkronkan data pengguna:', error.message);
+            }
+        }
+        
+        function logout(force = false) {
+            vibrate();
+            if(force || confirm('Anda yakin ingin logout?')) {
+                localStorage.removeItem('user');
+                window.location.href = 'login.html';
+            }
+        }
+        
+        // --- Logika Efek Bintang ---
+        const canvas = document.getElementById("stars");
+        const starsCtx = canvas.getContext("2d"); 
+        let stars = []; 
+        let starsAnimationId;
+        function resizeCanvas() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; stars = []; for (let i = 0; i < 150; i++) { stars.push({ x: Math.random() * canvas.width, y: Math.random() * canvas.height, radius: Math.random() * 1.5, speed: Math.random() * 0.5 + 0.2 }); } }
+        function drawStars() { starsCtx.clearRect(0, 0, canvas.width, canvas.height); starsCtx.fillStyle = "#fff"; stars.forEach(star => { starsCtx.beginPath(); starsCtx.arc(star.x, star.y, star.radius, 0, Math.PI * 2); starsCtx.fill(); star.y += star.speed; if (star.y > canvas.height) star.y = 0; }); starsAnimationId = requestAnimationFrame(drawStars); }
+        window.addEventListener("resize", resizeCanvas);
+        function startStars() { document.body.classList.remove('stars-hidden'); resizeCanvas(); drawStars(); }
+        function stopStars() { document.body.classList.add('stars-hidden'); if (starsAnimationId) cancelAnimationFrame(starsAnimationId); }
+        
+        
+        /* --- BAGIAN SETTINGS (Global - XVCT) --- */
+        const defaultSettings = {
+            accentColor: '#ffffff', fontSize: '16px', fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif", 
+            textGlow: false, stars: true, music: true, musicVolume: 0.3,
+            vibration: true, devMode: false, skipSplash: false,
+        };
+        function saveSetting(key, value) { SETTINGS[key] = value; localStorage.setItem('XVCT_SETTINGS', JSON.stringify(SETTINGS)); }
+        function loadSettings() {
+            const saved = localStorage.getItem('XVCT_SETTINGS');
+            SETTINGS = saved ? JSON.parse(saved) : { ...defaultSettings };
+            for (const key in defaultSettings) { if (SETTINGS[key] === undefined) SETTINGS[key] = defaultSettings[key]; }
+            applySettings(); updateSettingsUI();
+        }
+        function applySettings() {
+            document.documentElement.style.setProperty('--primary-color', SETTINGS.accentColor);
+            const glow = SETTINGS.accentColor === '#ffffff' ? 'rgba(255, 255, 255, 0.3)' : SETTINGS.accentColor + '66';
+            document.documentElement.style.setProperty('--primary-glow', glow);
+            document.body.style.fontSize = SETTINGS.fontSize; 
+            document.body.style.fontFamily = SETTINGS.fontFamily; 
+            if (SETTINGS.textGlow) document.body.classList.add('text-glow'); else document.body.classList.remove('text-glow'); 
+            if (SETTINGS.stars) startStars(); else stopStars();
+            bgMusic.volume = SETTINGS.musicVolume;
+            if (SETTINGS.music) bgMusic.play().catch(() => {}); else bgMusic.pause();
+            if (toolsTabButton) toolsTabButton.style.display = SETTINGS.devMode ? 'block' : 'none';
+        }
+        function updateSettingsUI() {
+            const el = id => document.getElementById(id);
+            if(el('setting-accent-color')) el('setting-accent-color').value = SETTINGS.accentColor;
+            if(el('setting-font-size')) el('setting-font-size').value = SETTINGS.fontSize;
+            if(el('setting-font-family')) el('setting-font-family').value = SETTINGS.fontFamily; 
+            if(el('setting-text-glow')) el('setting-text-glow').checked = SETTINGS.textGlow;
+            if(el('setting-stars')) el('setting-stars').checked = SETTINGS.stars;
+            if(el('setting-music-toggle')) el('setting-music-toggle').checked = SETTINGS.music;
+            if(el('setting-music-volume')) el('setting-music-volume').value = SETTINGS.musicVolume;
+            if(el('setting-vibration')) el('setting-vibration').checked = SETTINGS.vibration;
+            if(el('setting-dev-mode')) el('setting-dev-mode').checked = SETTINGS.devMode; 
+            if(el('setting-skip-splash')) el('setting-skip-splash').checked = SETTINGS.skipSplash;
+        }
+        function vibrate() { if (SETTINGS.vibration && navigator.vibrate) navigator.vibrate(50); }
+        function playSound(id) {
+            if (!SETTINGS.music) return;
+            const sound = sfx[id];
+            if (sound) {
+                sound.currentTime = 0;
+                sound.volume = SETTINGS.musicVolume;
+                sound.play().catch(e => {});
+            }
+        }
+        
+        const el = id => document.getElementById(id);
+        if(el('setting-accent-color')) el('setting-accent-color').addEventListener('change', (e) => { saveSetting('accentColor', e.target.value); applySettings(); });
+        if(el('setting-font-size')) el('setting-font-size').addEventListener('change', (e) => { saveSetting('fontSize', e.target.value); applySettings(); });
+        if(el('setting-font-family')) el('setting-font-family').addEventListener('change', (e) => { saveSetting('fontFamily', e.target.value); applySettings(); });
+        if(el('setting-text-glow')) el('setting-text-glow').addEventListener('change', (e) => { saveSetting('textGlow', e.target.checked); applySettings(); });
+        if(el('setting-stars')) el('setting-stars').addEventListener('change', (e) => { saveSetting('stars', e.target.checked); applySettings(); });
+        if(el('setting-music-toggle')) el('setting-music-toggle').addEventListener('change', (e) => { saveSetting('music', e.target.checked); applySettings(); });
+        if(el('setting-music-volume')) el('setting-music-volume').addEventListener('input', (e) => { saveSetting('musicVolume', e.target.value); applySettings(); });
+        if(el('setting-vibration')) el('setting-vibration').addEventListener('change', (e) => { saveSetting('vibration', e.target.checked); });
+        if(el('setting-dev-mode')) el('setting-dev-mode').addEventListener('change', (e) => { saveSetting('devMode', e.target.checked); applySettings(); });
+        if(el('setting-skip-splash')) el('setting-skip-splash').addEventListener('change', (e) => { saveSetting('skipSplash', e.target.checked); });
+        if(el('setting-clear-cache')) el('setting-clear-cache').addEventListener('click', () => { if(confirm('Reset?')) { localStorage.removeItem('XVCT_SETTINGS'); window.location.reload(); } });
+        if(el('setting-logout-button')) el('setting-logout-button').addEventListener('click', () => logout(false));
+        /* --- AKHIR BAGIAN SETTINGS --- */
+        
+        function updateCoinDisplay(coins) {
+            if (globalUserCoinBalance) {
+                globalUserCoinBalance.textContent = (coins !== undefined) ? coins.toLocaleString('id-ID') : '...';
+            }
+        }
+        function showNotification(id, message, type) {
+            const el = document.getElementById(id);
+            if (!el) return;
+            el.textContent = message;
+            el.className = 'notification ' + type;
+            el.style.display = 'block';
+        }
+        function hideAllNotifications() { document.querySelectorAll('.notification').forEach(el => el.style.display = 'none'); }
+        function disableButton(btn) {
+            if (!btn) return; 
+            btn.disabled = true;
+            btn.setAttribute('data-original-text', btn.textContent);
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>'; 
+        }
+        function enableButton(btn, text) {
+            if (!btn) return; 
+            const originalText = btn.getAttribute('data-original-text');
+            btn.innerHTML = text || originalText || "Button";
+            btn.disabled = false;
+        }
+
+        // --- Fungsi Inisialisasi Utama (FIXED) ---
+        document.addEventListener('DOMContentLoaded', () => {
+             const splash = document.getElementById('splash-screen');
+             if (splash) splash.style.display = 'none';
+             loadSettings(); 
+             if (SETTINGS.music) bgMusic.play().catch(() => {});
+             init();
+        });
+
+        function init() {
+            const user = localStorage.getItem('user');
+            if (!user) {
+                alert("Sesi tidak ditemukan. Harap login kembali untuk bermain.");
+                window.location.href = 'login.html'; 
+                return;
+            }
+            
+            USER_INFO = JSON.parse(user);
+            showCodeChallengePage();
+        }
+    </script>
+</body>
+</html>

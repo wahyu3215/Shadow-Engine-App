@@ -1,0 +1,1713 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SHADOW | Login</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        /* SEMUA CSS DARI FILE ASLI DI-PASTE DI SINI 
+          Ini penting agar tampilan login tetap konsisten
+          dan setting (seperti warna aksen) bisa berfungsi.
+        */
+        :root {
+            --bg-color: #0d0d0d;
+            --container-bg: rgba(26, 26, 26, 0.9);
+            --input-bg: #222222;
+            --border-color: #333;
+            --text-color: #e0e0e0;
+            --primary-color: #ffffff;
+            --primary-glow: rgba(255, 255, 255, 0.3);
+            --success-color: #2ecc71;
+            --danger-color: #e74c3c;
+            --sidebar-width: 250px; 
+            --border-radius-main: 16px;
+            --border-radius-small: 8px;
+            --border-radius-pill: 50px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow-x: hidden;
+            flex-direction: column;
+            transition: margin-left 0.3s ease, font-family 0.3s ease; 
+        }
+
+        /* --- SIDEBAR (Kiri) --- */
+        /* (Style sidebar tetap ada, tapi HTML-nya dihapus dari file ini) */
+        #sidebar {
+            position: fixed;
+            top: 0;
+            left: 0; 
+            height: 100%;
+            width: var(--sidebar-width);
+            background-color: rgba(10, 10, 10, 0.95); 
+            padding-top: 60px;
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.5); 
+            transform: translateX(-100%); 
+            transition: transform 0.3s ease;
+            z-index: 100;
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+            overflow-y: auto; 
+        }
+
+        #sidebar.open {
+            transform: translateX(0); 
+        }
+
+        .menu-header {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 20px;
+            background: #111;
+            z-index: 101;
+        }
+
+        .menu-header h3 {
+            color: var(--primary-color); 
+            margin: 0;
+            font-size: 1.2rem;
+            border-bottom: none; 
+        }
+
+        .menu-header button {
+            width: auto;
+            padding: 5px 10px;
+            text-transform: none;
+        }
+
+        .sidebar-nav a, .sidebar-nav button {
+            display: block;
+            width: 100%;
+            text-align: left;
+            padding: 15px 20px;
+            text-decoration: none;
+            color: var(--text-color);
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background-color 0.3s, color 0.3s;
+            position: relative;
+        }
+
+        .sidebar-nav a:hover, .sidebar-nav button:hover, .sidebar-nav button.active {
+            background-color: var(--primary-color);
+            color: var(--bg-color); 
+        }
+
+        .sidebar-nav button.active {
+            font-weight: bold;
+        }
+
+        .sidebar-nav a i, .sidebar-nav button i {
+            margin-right: 10px;
+        }
+
+        .sidebar-close {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 0.8rem;
+            color: #aaa;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .sidebar-nav button:hover .sidebar-close {
+            opacity: 1;
+        }
+        
+        .sidebar-nav a:hover .sidebar-close {
+            opacity: 1;
+        }
+
+        /* Tombol Toggle Sidebar (Kiri) */
+        #menu-toggle {
+            position: fixed;
+            top: 20px;
+            left: 20px; 
+            z-index: 102;
+            background: var(--primary-color); 
+            color: var(--bg-color); 
+            border: none;
+            padding: 10px 15px;
+            border-radius: var(--border-radius-small);
+            font-size: 1.2rem;
+            cursor: pointer;
+            box-shadow: 0 0 10px var(--primary-glow); 
+            transition: background-color 0.3s, transform 0.2s;
+            display: none; 
+            width: auto;
+        }
+        
+        /* Tombol Settings (Kanan) */
+        #settings-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px; 
+            z-index: 102;
+            background: #222; 
+            color: var(--primary-color); 
+            border: 1px solid var(--border-color);
+            padding: 10px 15px;
+            border-radius: var(--border-radius-small);
+            font-size: 1.2rem;
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(0,0,0,0.5); 
+            transition: background-color 0.3s, transform 0.2s;
+            display: none; 
+            width: auto;
+        }
+        
+        #menu-toggle:hover, #settings-toggle:hover {
+            filter: brightness(1.2);
+            transform: scale(1.05);
+        }
+
+        #sidebar-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 99;
+            display: none;
+        }
+        /* --- AKHIR SIDEBAR --- */
+
+
+        #splash-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--bg-color);
+            z-index: 200;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            transition: opacity 1s ease-out, visibility 1s ease-out;
+            visibility: visible;
+            opacity: 1;
+        }
+        
+        #splash-screen.hidden {
+            opacity: 0;
+            visibility: hidden;
+        }
+
+        .modern-loader {
+            position: relative;
+            width: 150px;
+            height: 150px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .loader-logo {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: var(--primary-color); 
+            text-shadow: 0 0 15px var(--primary-glow); 
+            animation: pulse-glow 2s infinite ease-in-out;
+        }
+
+        .loader-ring {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            border-style: solid;
+            border-color: transparent;
+            animation: spin 2s linear infinite;
+        }
+
+        .ring-1 {
+            border-width: 3px;
+            border-top-color: var(--primary-color); 
+            animation-duration: 1.5s;
+        }
+
+        .ring-2 {
+            width: 120px;
+            height: 120px;
+            border-width: 2px;
+            border-right-color: var(--primary-glow); 
+            animation: spin-reverse 2s linear infinite;
+        }
+
+        .ring-3 {
+            width: 90px;
+            height: 90px;
+            border-width: 1px;
+            border-bottom-color: #fff;
+            animation-duration: 2.5s;
+        }
+        
+        #splash-loading-text {
+            color: #888;
+            margin-top: 20px;
+            font-size: 1rem;
+            transition: opacity 0.3s ease;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        @keyframes spin-reverse {
+            to { transform: rotate(-360deg); }
+        }
+
+        @keyframes pulse-glow {
+            0% { transform: scale(1); opacity: 1; text-shadow: 0 0 15px var(--primary-glow); }
+            50% { transform: scale(1.05); opacity: 0.9; text-shadow: 0 0 25px var(--primary-glow); }
+            100% { transform: scale(1); opacity: 1; text-shadow: 0 0 15px var(--primary-glow); }
+        }
+
+        .container {
+            width: 90%;
+            max-width: 1100px; 
+            background-color: var(--container-bg); 
+            border-radius: var(--border-radius-main);
+            padding: 2rem;
+            margin: 2rem 0;
+            z-index: 10;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.8);
+            border: 1px solid var(--border-color);
+        }
+        
+        /* (PERUBAHAN) Hanya .page yang di-display: none, .container tidak */
+        .page {
+            display: none;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: bold;
+            letter-spacing: 2px;
+            background: linear-gradient(90deg, #888, #fff, #888, #fff);
+            background-size: 200% auto;
+            color: transparent;
+            -webkit-background-clip: text;
+            background-clip: text;
+            animation: text-shine 5s linear infinite;
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+        
+        #dashboard-page h1 {
+            font-size: 2.8rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        body.text-glow h1,
+        body.text-glow h2,
+        body.text-glow .loader-logo,
+        body.text-glow .profile-detail strong,
+        body.text-glow .user-card-name,
+        body.text-glow #lobby-username {
+            text-shadow: 0 0 5px var(--primary-glow);
+        }
+
+        @keyframes text-shine {
+            to { background-position: -200% center; }
+        }
+
+        h2 {
+            font-size: 1.8rem;
+            color: var(--primary-color); 
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+        
+        h3 {
+             font-size: 1.4rem;
+             color: var(--text-color);
+             border-bottom: 1px solid var(--primary-color); 
+             padding-bottom: 5px;
+             margin-bottom: 1rem;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: #ccc;
+        }
+        
+        label i {
+            margin-right: 8px;
+            width: 16px;
+            text-align: center;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 0.8rem;
+            font-size: 1rem;
+            border-radius: var(--border-radius-small);
+            border: 1px solid var(--border-color);
+            background-color: var(--input-bg);
+            color: var(--text-color);
+            transition: all 0.3s ease;
+            font-family: inherit; 
+        }
+        
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--primary-color); 
+            box-shadow: 0 0 10px var(--primary-glow); 
+        }
+        
+        /* Custom Select Dropdown */
+        .custom-select-wrapper {
+            position: relative;
+            width: 100%;
+        }
+        .selected-option {
+            width: 100%;
+            padding: 0.8rem;
+            font-size: 1rem;
+            border-radius: var(--border-radius-small);
+            border: 1px solid var(--border-color);
+            background-color: var(--input-bg);
+            color: var(--text-color);
+            transition: all 0.3s ease;
+            font-family: inherit;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            text-transform: capitalize; 
+        }
+        .selected-option:focus, .custom-select-wrapper.open .selected-option {
+            outline: none;
+            border-color: var(--primary-color); 
+            box-shadow: 0 0 10px var(--primary-glow); 
+        }
+        .selected-option i {
+            transition: transform 0.3s ease;
+        }
+        .custom-select-wrapper.open .selected-option i {
+            transform: rotate(180deg);
+        }
+        .options-list {
+            position: absolute;
+            top: calc(100% + 5px);
+            left: 0;
+            width: 100%;
+            background: var(--input-bg);
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius-small);
+            z-index: 50;
+            max-height: 200px;
+            overflow-y: auto;
+            display: none;
+            opacity: 0;
+            transform: translateY(-10px);
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+        .custom-select-wrapper.open .options-list {
+            display: block;
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .option-item {
+            padding: 0.8rem;
+            color: var(--text-color);
+            cursor: pointer;
+            transition: background-color 0.3s;
+            text-transform: capitalize; 
+        }
+        .option-item:hover {
+            background-color: var(--primary-color);
+            color: var(--bg-color);
+        }
+        .option-item.selected {
+            background-color: #333;
+            font-weight: bold;
+        }
+        /* Akhir Custom Select */
+
+
+        button {
+            width: 100%;
+            padding: 0.8rem;
+            font-size: 1rem;
+            border-radius: var(--border-radius-pill);
+            background-color: var(--primary-color); 
+            color: #000; 
+            font-weight: bold;
+            border: none;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.3s ease;
+            position: relative;
+            font-family: inherit; 
+        }
+
+        button:hover {
+            box-shadow: 0 0 15px var(--primary-glow); 
+            filter: brightness(1.2);
+            transform: translateY(-2px);
+        }
+
+        button:disabled {
+            background-color: #555;
+            color: #999;
+            cursor: not-allowed;
+            box-shadow: none;
+            transform: none;
+        }
+
+        button.secondary {
+            background-color: transparent;
+            border: 1px solid var(--primary-color); 
+            color: var(--primary-color); 
+        }
+
+        button.secondary:hover {
+            background-color: var(--primary-color); 
+            color: #000; 
+        }
+        
+        button.danger {
+            background-color: var(--danger-color);
+            border-color: var(--danger-color);
+            color: white;
+        }
+        
+        button.danger:hover {
+            filter: brightness(1.2);
+            box-shadow: 0 0 15px rgba(231, 76, 60, 0.6);
+        }
+        
+        /* Style .tab-content tetap ada, tapi HTML-nya dihapus */
+        .tab-content {
+            display: none;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .tab-content.active {
+            display: block;
+            opacity: 1;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .form-group-l7 {
+            display: none;
+        }
+
+        .form-group-l7.active {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .dashboard-header {
+            width: 100%;
+            margin-bottom: 1.5rem;
+            position: relative;
+        }
+
+        .execute-video-wrapper {
+            width: 100%;
+            height: 150px;
+            overflow: hidden;
+            background: var(--bg-color);
+            position: relative;
+        }
+
+        #execute-video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            opacity: 0.45;
+        }
+        
+        .header-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 1rem;
+            background: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.6));
+        }
+        
+        .header-overlay #welcome-text {
+            text-align: center;
+            font-size: 1.1rem;
+            color: #ccc;
+        }
+        
+        .header-overlay #welcome-text strong {
+             color: var(--primary-color);
+             font-size: 1.2rem;
+        }
+        
+        .header-overlay #welcome-text span {
+            text-transform: capitalize;
+            color: #aaa;
+        }
+
+        .quick-nav-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        
+        .quick-nav-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: var(--input-bg);
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius-main);
+            padding: 1rem;
+            cursor: pointer;
+            color: var(--text-color);
+            transition: all 0.3s ease;
+            height: 100px;
+            text-decoration: none;
+        }
+        
+        .quick-nav-btn i {
+            font-size: 2rem;
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+            transition: all 0.3s ease;
+        }
+        
+        .quick-nav-btn span {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            font-weight: 500;
+        }
+        
+        .quick-nav-btn:hover {
+            background: var(--primary-color);
+            color: var(--bg-color);
+            box-shadow: 0 0 15px var(--primary-glow);
+            transform: translateY(-5px);
+        }
+        
+        .quick-nav-btn:hover i {
+            color: var(--bg-color);
+        }
+        
+        .promo-bar {
+            display: flex;
+            align-items: center;
+            background: var(--input-bg);
+            border-radius: var(--border-radius-main);
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+            text-decoration: none;
+            color: var(--text-color);
+            transition: all 0.3s ease;
+            border: 1px solid var(--border-color);
+        }
+        
+        .promo-bar:hover {
+            background-color: #2a2a2a;
+            box-shadow: 0 0 10px var(--primary-glow);
+        }
+        
+        .promo-bar i.icon {
+            font-size: 2rem;
+            color: #2aabee;
+            margin-right: 1rem;
+        }
+        
+        .promo-bar div {
+            flex-grow: 1;
+        }
+        
+        .promo-bar strong {
+            display: block;
+            color: var(--primary-color);
+        }
+        
+        .promo-bar span {
+            font-size: 0.9rem;
+            color: #aaa;
+        }
+        
+        .promo-bar i.arrow {
+            color: #555;
+            transition: transform 0.3s ease;
+        }
+        
+        .promo-bar:hover i.arrow {
+            transform: translateX(5px);
+        }
+
+        .notification {
+            text-align: center;
+            padding: 0.8rem;
+            margin-bottom: 1rem;
+            border-radius: var(--border-radius-small);
+            display: none;
+            font-size: 0.9rem;
+            white-space: pre-wrap;
+            border: 1px solid;
+        }
+        
+        .notification.success {
+            background-color: #0f3d1b;
+            color: #8affab;
+            border-color: #1a7431;
+        }
+
+        .notification.error {
+            background-color: #3d0f0f;
+            color: #ffa8a8;
+            border-color: #741a1a;
+        }
+        
+        .notification.info {
+            background-color: #0f2a3d;
+            color: #a8dfff;
+            border-color: #1a5674;
+        }
+        
+        /* Style-style lain (logs, profile, dll) tetap ada, tapi HTML-nya dihapus */
+        .logs-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+            margin-top: 10px;
+        }
+        .logs-table th, .logs-table td { padding: 10px; border: 1px solid #333; text-align: left; }
+        .logs-table th { background-color: #1a1a1a; color: var(--primary-color); }
+        .logs-table tr:nth-child(even) { background-color: #0d0d0d; }
+        .logs-table tr:hover { background-color: #222; }
+
+        .profile-card {
+            background-color: #111;
+            border-left: 3px solid var(--primary-color); 
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: var(--border-radius-main);
+            box-shadow: 0 0 10px var(--primary-glow);
+            text-align: center;
+        }
+        #profile-avatar {
+            width: 120px; height: 120px; border-radius: 50%;
+            border: 3px solid var(--primary-color); 
+            box-shadow: 0 0 15px var(--primary-glow); 
+            margin: 0 auto 1.5rem auto; display: block;
+            object-fit: cover; background-color: #222;
+        }
+        .profile-detail { margin-bottom: 10px; font-size: 1.1rem; }
+        .profile-detail strong { color: var(--primary-color); }
+
+        .telegram-section {
+            display: flex; flex-direction: column; align-items: center;
+            padding: 10px; background: #111;
+            border-radius: var(--border-radius-main); margin-top: 1.5rem;
+        }
+        .telegram-btn {
+            display: flex; align-items: center; justify-content: center;
+            width: 100%; background-color: #2aabee; color: white;
+            text-decoration: none; padding: 10px;
+            border-radius: var(--border-radius-pill); font-weight: bold;
+            margin-top: 10px; transition: all 0.3s;
+        }
+        .telegram-btn:hover { background-color: #1a9bdc; transform: translateY(-2px); }
+        .telegram-btn img { width: 20px; height: 20px; margin-right: 10px; filter: invert(1); }
+
+        footer.dev-contact {
+            text-align: center;
+            margin-top: 2rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border-color);
+            font-size: 0.9rem;
+            color: #888;
+        }
+        .dev-contact p { margin-bottom: 0.5rem; }
+        .dev-contact a {
+            color: var(--primary-color); 
+            text-decoration: none;
+            margin: 0 0.5rem;
+            transition: color 0.3s ease;
+        }
+        .dev-contact a:hover { text-decoration: underline; filter: brightness(1.2); }
+
+        #quotes-panel .form-group { margin-bottom: 1.2rem; }
+        #result { margin-top: 1.5rem; text-align: center; }
+        #resultImg {
+            max-width: 100%; border-radius: 12px;
+            box-shadow: 0 0 20px var(--primary-glow); 
+            margin: 1rem 0; display: none;
+        }
+        #downloadBtn {
+            display: none; margin-top: 1rem;
+            background: linear-gradient(45deg, #ccc, #fff);
+            color: #000; border: none; padding: 12px 24px;
+            border-radius: var(--border-radius-pill); font-weight: bold;
+            cursor: pointer; transition: all 0.3s;
+            box-shadow: 0 0 15px var(--primary-glow); 
+        }
+        #downloadBtn:hover { transform: translateY(-3px); box-shadow: 0 0 25px var(--primary-glow); }
+
+        .auto-fill { font-size: 0.8rem; color: #aaa; margin-top: 0.3rem; }
+        .settings-grid { display: grid; grid-template-columns: 1fr; gap: 1rem; margin-top: 1.5rem; }
+        .settings-card {
+            background-color: #111; padding: 1.5rem;
+            border-radius: var(--border-radius-main);
+            border-left: 3px solid var(--primary-color); 
+        }
+        .settings-card h3 { margin-top: 0; margin-bottom: 1rem; color: var(--primary-color); }
+        .settings-card p { color: #aaa; margin-bottom: 1rem; }
+        .settings-card button { margin-top: 0.5rem; }
+        
+        canvas#stars {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            pointer-events: none;
+        }
+        
+        body.stars-hidden canvas#stars {
+            display: none;
+        }
+        
+        #lobby-panel .developer-info-card {
+            margin-top: 2rem; background-color: rgba(0, 0, 0, 0.4);
+            border: 1px solid var(--border-color); padding: 1.5rem;
+            border-left: none; border-radius: var(--border-radius-main);
+            box-shadow: none;
+        }
+        #attack-panel { max-width: 600px; margin: 0 auto; }
+        #attack-panel h2 { text-align: center; }
+        
+        .developer-info-card h3 {
+            text-align: center; color: var(--primary-color);
+            margin-bottom: 1.5rem; border-bottom: none;
+        }
+        .dev-list { display: flex; justify-content: center; gap: 1.5rem; flex-wrap: wrap; }
+        .dev-item {
+            background: #111; padding: 1.5rem;
+            border-radius: var(--border-radius-main);
+            border: 1px solid var(--border-color);
+            width: 220px; text-align: center; transition: all 0.3s ease;
+        }
+        .dev-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 0 15px var(--primary-glow);
+            border-color: var(--primary-color);
+        }
+        .dev-item img {
+            width: 80px; height: 80px; border-radius: 50%;
+            border: 2px solid var(--primary-color);
+            margin-bottom: 1rem; object-fit: cover; background-color: #222;
+        }
+        .dev-name { font-weight: bold; color: var(--text-color); font-size: 1.1rem; }
+        .dev-role { font-size: 0.9rem; color: #aaa; margin-bottom: 1rem; }
+        .dev-links a { color: #ccc; margin: 0 0.5rem; font-size: 1.5rem; transition: color 0.3s ease; }
+        .dev-links a:hover { color: var(--primary-color); }
+        .system-stats-card {
+             background-color: #111; padding: 1.5rem;
+             border-radius: var(--border-radius-main);
+             border: 1px solid var(--border-color); margin-top: 1.5rem;
+        }
+        .system-stats-card h3 {
+             text-align: center; color: var(--primary-color);
+             margin-bottom: 1rem; border-bottom: none;
+        }
+
+        .spec-item {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 0.8rem 0; border-bottom: 1px solid var(--border-color);
+            font-size: 0.9rem;
+        }
+        .spec-item:last-child { border-bottom: none; }
+        .spec-item span:first-child { color: #ccc; }
+        .spec-item strong { color: var(--text-color); font-weight: 600; }
+        #lobby-network-status.online { color: var(--success-color); }
+        #lobby-network-status.offline { color: var(--danger-color); }
+        #lobby-battery-status i { margin-right: 5px; }
+
+        .store-button {
+            display: flex; align-items: center; justify-content: center;
+            width: 100%; padding: 0.8rem; font-size: 1rem;
+            border-radius: var(--border-radius-pill);
+            background-color: #333; color: #fff;
+            font-weight: bold; text-decoration: none; text-transform: uppercase;
+            letter-spacing: 1px; transition: all 0.3s ease;
+            margin-top: 1rem; border: 1px solid var(--border-color);
+        }
+        .store-button:hover {
+            background-color: #444; transform: translateY(-2px);
+            box-shadow: 0 0 15px var(--primary-glow);
+        }
+        .store-button i { margin-right: 8px; }
+        .store-button.l7 { background-color: #3498db; border-color: #3498db; }
+        .store-button.l7:hover { background-color: #2980b9; box-shadow: 0 0 15px rgba(52, 152, 219, 0.6); }
+
+        /* Modal Settings (Dibutuhkan untuk pop-up settings di halaman login) */
+        #modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 199;
+            display: none;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        #settings-modal {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.95);
+            width: 90%;
+            max-width: 500px;
+            max-height: 80vh;
+            overflow-y: auto;
+            background: var(--container-bg);
+            border-radius: var(--border-radius-main);
+            border: 1px solid var(--border-color);
+            box-shadow: 0 0 30px rgba(0,0,0,0.8);
+            z-index: 200;
+            display: none;
+            opacity: 0;
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+        
+        #settings-modal.open, #modal-overlay.open {
+            display: block;
+            opacity: 1;
+        }
+        
+        #settings-modal.open {
+            transform: translate(-50%, -50%) scale(1);
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .modal-header h2 { margin: 0; font-size: 1.5rem; }
+        
+        .modal-header button {
+            width: auto; padding: 5px 10px;
+            background: transparent; color: var(--text-color);
+            border: none; font-size: 1.5rem;
+        }
+        .modal-header button:hover { color: var(--primary-color); }
+        
+        .modal-body { padding: 1.5rem; }
+        .setting-group { margin-bottom: 1.5rem; }
+        .setting-group h3 {
+            font-size: 1.1rem; color: var(--primary-color);
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem; margin-bottom: 1rem;
+        }
+        .setting-item {
+            display: flex; justify-content: space-between;
+            align-items: center; margin-bottom: 1rem;
+        }
+        .setting-item label { margin: 0; font-size: 1rem; }
+        
+        /* Custom Toggle Switch */
+        .toggle-switch {
+            position: relative; display: inline-block;
+            width: 50px; height: 28px;
+        }
+        .toggle-switch input { opacity: 0; width: 0; height: 0; }
+        .slider {
+            position: absolute; cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #333; transition: .4s;
+            border-radius: 34px;
+        }
+        .slider:before {
+            position: absolute; content: "";
+            height: 20px; width: 20px; left: 4px; bottom: 4px;
+            background-color: white; transition: .4s;
+            border-radius: 50%;
+        }
+        input:checked + .slider { background-color: var(--primary-color); }
+        input:checked + .slider:before {
+            background-color: #000;
+            transform: translateX(22px);
+        }
+        
+        /* Range Slider */
+        .setting-item input[type="range"] {
+            -webkit-appearance: none; width: 120px; height: 8px;
+            background: #333; outline: none; opacity: 0.7;
+            transition: opacity .2s; border-radius: 5px;
+        }
+        .setting-item input[type="range"]:hover { opacity: 1; }
+        .setting-item input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none; appearance: none;
+            width: 20px; height: 20px;
+            background: var(--primary-color);
+            cursor: pointer; border-radius: 50%;
+        }
+        .setting-item input[type="range"]::-moz-range-thumb {
+            width: 20px; height: 20px;
+            background: var(--primary-color);
+            cursor: pointer; border-radius: 50%;
+        }
+        
+        @media (max-width: 900px) {
+            body { margin-left: 0; }
+            body.sidebar-open { margin-left: 0; }
+            /* (PERUBAHAN) Tombol settings tetap muncul di login */
+            #settings-toggle { display: block; }
+        }
+        
+        @media (max-width: 480px) {
+            .container { padding: 1.5rem; }
+            .quick-nav-grid {
+                grid-template-columns: repeat(auto-fit, minmax(70px, 1fr));
+                gap: 0.5rem;
+            }
+            .quick-nav-btn { height: 90px; padding: 0.5rem; }
+            .quick-nav-btn i { font-size: 1.5rem; }
+            .quick-nav-btn span { font-size: 0.7rem; }
+        }
+    </style>
+</head>
+<body class="stars-hidden text-glow"> <canvas id="stars"></canvas>
+
+    <div id="splash-screen">
+        <div class="modern-loader">
+            <div class="loader-ring ring-1"></div>
+            <div class="loader-ring ring-2"></div>
+            <div class="loader-ring ring-3"></div>
+            <div class="loader-logo">SHADOW</div>
+        </div>
+        <div id="splash-loading-text">Memuat...</div>
+    </div>
+    
+    <audio id="bg-music" loop>
+        <source src="https://files.catbox.moe/exgp8t.mp4" type="audio/mpeg">
+    </audio>
+    
+    <button id="settings-toggle"><i class="fas fa-cog"></i></button>
+    
+    <div id="login-page" class="container page" style="max-width: 500px;">
+        <h1>SHADOW</h1>
+        <div id="login-notification" class="notification"></div>
+        <form id="login-form">
+            <div class="form-group">
+                <label for="username">Username</label>
+                <input type="text" id="username" required>
+            </div>
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" required>
+            </div>
+            <button type="submit" id="login-button">Login</button>
+        </form>
+        
+        <footer class="dev-contact">
+            <p>Login menggunakan kredensial dari `users.json`.</p>
+            <p>&copy; 2025 Dibuat oleh wahyz.</p>
+            Kontak Dev:
+            <a href="https://t.me/WahyzMaybe" target="_blank">Telegram</a>
+        </footer>
+    </div>
+
+    <div id="modal-overlay"></div>
+    <div id="settings-modal">
+        <div class="modal-header">
+            <h2>Settings</h2>
+            <button id="modal-close-btn"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="modal-body">
+            
+            <div class="setting-group">
+                <h3><i class="fas fa-paint-brush"></i> Tampilan</h3>
+                <div class="setting-item">
+                    <label for="setting-accent-color">Warna Aksen</label>
+                    <select id="setting-accent-color" name="setting-accent-color">
+                        <option value="#ffffff">Default (Putih)</option>
+                        <option value="#3498db">Biru</option>
+                        <option value="#2ecc71">Hijau</option>
+                        <option value="#e74c3c">Merah</option>
+                        <option value="#cccccc">Abu-abu</option>
+                    </select>
+                </div>
+                <div class="setting-item">
+                    <label for="setting-font-size">Ukuran Font</label>
+                    <select id="setting-font-size" name="setting-font-size">
+                        <option value="14px">Kecil</option>
+                        <option value="16px">Normal</option>
+                        <option value="18px">Besar</option>
+                    </select>
+                </div>
+                <div class="setting-item">
+                    <label for="setting-font-family">Gaya Font</label>
+                    <select id="setting-font-family" name="setting-font-family">
+                        <option value="'Segoe UI', Tahoma, Geneva, Verdana, sans-serif">Default (Segoe UI)</option>
+                        <option value="'Roboto', sans-serif">Roboto</option>
+                        <option value="'Courier New', Courier, monospace">Monospace</option>
+                    </select>
+                </div>
+                 <div class="setting-item">
+                    <label for="setting-text-glow">Teks Glow</label>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="setting-text-glow">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <div class="setting-item">
+                    <label for="setting-stars">Animasi Bintang</label>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="setting-stars">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+            </div>
+            
+            <div class="setting-group">
+                <h3><i class="fas fa-volume-up"></i> Audio & Feedback</h3>
+                 <div class="setting-item">
+                    <label for="setting-music-toggle">Musik Latar</label>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="setting-music-toggle">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <div class="setting-item">
+                    <label for="setting-music-volume">Volume</label>
+                    <input type="range" id="setting-music-volume" min="0" max="1" step="0.1">
+                </div>
+                <div class="setting-item">
+                    <label for="setting-vibration">Vibrasi Tombol (HP)</label>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="setting-vibration">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+            </div>
+            
+             <div class="setting-group">
+                <h3><i class="fas fa-cog"></i> Sistem</h3>
+                 <div class="setting-item">
+                    <label for="setting-dev-mode">Mode Developer</label>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="setting-dev-mode" disabled>
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                 <div class="setting-item">
+                    <label for="setting-skip-splash">Lewati Splash Screen</label>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="setting-skip-splash">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <div class="setting-item">
+                    <label>Hapus Cache Pengaturan</label>
+                    <button class="secondary" id="setting-clear-cache" style="width: auto; padding: 5px 10px; font-size: 0.9rem; border-radius: var(--border-radius-pill);">Reset</button>
+                </div>
+                 <div class="setting-item">
+                    <label>Logout dari Akun</label>
+                    <button class="danger" id="setting-logout-button" style="width: auto; padding: 5px 10px; font-size: 0.9rem; border-radius: var(--border-radius-pill);" disabled>Logout</button>
+                </div>
+            </div>
+            
+        </div>
+    </div>
+
+    <script>
+        // --- PENGATURAN GITLAB (HANYA YANG PERLU LOGIN) ---
+        // -----------------------------------------------------------------
+        const GITLAB_TOKEN = 'glpat-9cZaOPR0hBHj-qiqIqzT9W86MQp1Omlsc2xiCw.01.120onr34s';
+        const GITLAB_PROJECT_ID = '75681438';
+        const GITLAB_BRANCH = 'main';
+        // -----------------------------------------------------------------
+        
+        const USERS_FILE = 'users.json';
+        const GITLAB_BASE_URL = `https://gitlab.com/api/v4/projects/${GITLAB_PROJECT_ID}/repository/files/`;
+        const GITLAB_USERS_URL = `${GITLAB_BASE_URL}${encodeURIComponent(USERS_FILE)}`;
+        // --- AKHIR PENGATURAN GITLAB ---
+
+        // --- ELEMEN DOM (HANYA UNTUK LOGIN & SETTINGS) ---
+        const loginPage = document.getElementById('login-page');
+        const loginForm = document.getElementById('login-form');
+        const loginButton = document.getElementById('login-button');
+        const bgMusic = document.getElementById('bg-music');
+        
+        const settingsToggle = document.getElementById('settings-toggle');
+        const modalOverlay = document.getElementById('modal-overlay');
+        const settingsModal = document.getElementById('settings-modal');
+        const modalCloseBtn = document.getElementById('modal-close-btn');
+
+        const canvas = document.getElementById("stars");
+        const ctx = canvas.getContext("2d");
+        
+        let stars = [];
+        let starsAnimationId;
+        let splashInterval; 
+        let SETTINGS = {};
+        // --- AKHIR ELEMEN DOM ---
+
+        // --- FUNGSI MODAL SETTINGS (Tetap ada) ---
+        function openSettingsModal() {
+            vibrate();
+            settingsModal.classList.add('open');
+            modalOverlay.classList.add('open');
+        }
+        
+        function closeSettingsModal() {
+            settingsModal.classList.remove('open');
+            modalOverlay.classList.remove('open');
+        }
+        
+        settingsToggle.addEventListener('click', openSettingsModal);
+        modalCloseBtn.addEventListener('click', closeSettingsModal);
+        modalOverlay.addEventListener('click', closeSettingsModal);
+        // --- AKHIR FUNGSI MODAL ---
+
+        // --- FUNGSI UTILITAS (Tetap ada) ---
+        function showNotification(id, message, type) {
+            const el = document.getElementById(id);
+            if (!el) return;
+            el.textContent = message;
+            el.className = 'notification ' + type;
+            el.style.display = 'block';
+        }
+        
+        function hideAllNotifications() {
+             document.querySelectorAll('.notification').forEach(el => el.style.display = 'none');
+        }
+        
+        function disableButton(btn) {
+            if (!btn) return; 
+            btn.disabled = true;
+            btn.setAttribute('data-original-text', btn.textContent);
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>'; 
+        }
+        
+        function enableButton(btn, text) {
+            if (!btn) return; 
+            const originalText = btn.getAttribute('data-original-text');
+            if (text) {
+                 if (text.startsWith('<i')) {
+                    btn.innerHTML = text;
+                } else {
+                    btn.textContent = text;
+                }
+            } else if (originalText) {
+                 if (originalText.startsWith('<i')) {
+                    btn.innerHTML = originalText;
+                 } else {
+                    btn.textContent = originalText;
+                 }
+            } else {
+                btn.textContent = "Button"; 
+            }
+            btn.disabled = false;
+        }
+        // --- AKHIR FUNGSI UTILITAS ---
+
+        // =================================================================
+        // --- FUNGSI API GITLAB (GET & UPDATE) ---
+        // =================================================================
+        async function getGitLabFile(fileUrl) {
+            if (GITLAB_TOKEN === 'YOUR_GITLAB_PRIVATE_TOKEN_HERE' || GITLAB_PROJECT_ID === '12345678') {
+                alert("FATAL ERROR: GITLAB_TOKEN atau GITLAB_PROJECT_ID belum diatur! Silakan edit file HTML dan masukkan kredensial Anda.");
+                throw new Error("Token Gagal: Token/Project ID belum diatur.");
+            }
+            
+            try {
+                const response = await fetch(`${fileUrl}?ref=${GITLAB_BRANCH}`, {
+                    method: 'GET', 
+                    headers: { 
+                        'Private-Token': GITLAB_TOKEN, 
+                        'Accept': 'application/json'
+                    }
+                });
+
+                if (response.status === 401 || response.status === 403) {
+                     alert(`[STATUS ${response.status}] Token/Izin GitLab Gagal. Cek token (scope 'api') dan Project ID Anda.`);
+                     throw new Error(`Token Gagal: ${response.status}`);
+                }
+                
+                if (response.status === 404) {
+                    return { data: null, lastCommitId: null };
+                }
+                
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                
+                const data = await response.json(); 
+                const fileName = decodeURIComponent(fileUrl.split('/').pop().split('?')[0]); 
+                let content;
+                
+                if (!data.content) {
+                    if (fileName === USERS_FILE) {
+                        content = { settings: { maintenance: false, maintenanceMsg: "" }, users: [] };
+                    } else {
+                        content = {};
+                    }
+                } else {
+                     let decodedContent = "";
+                     try {
+                         decodedContent = atob(data.content);
+                         content = JSON.parse(decodedContent);
+                     } catch (e) {
+                         console.error(`Gagal parse JSON dari file: ${fileName}. Isi file mentah:`, decodedContent);
+                         throw new Error(`File '${fileName}' di server korup atau bukan JSON. Pastikan isinya sudah benar. (Error: ${e.message})`);
+                     }
+                }
+                
+                return { data: content, lastCommitId: data.last_commit_id };
+
+            } catch (error) {
+                console.error("Failed to fetch GitLab file:", error);
+                const errorMsg = error.message.includes('Failed to fetch') 
+                               ? 'Koneksi Jaringan Gagal.' 
+                               : error.message;
+                if (!error.message.includes('Token Gagal') && !error.message.includes('korup')) {
+                   alert(`[ERROR FETCH] ${errorMsg}`);
+                }
+                throw new Error(errorMsg);
+            }
+        }
+
+        // (BARU) Menambahkan fungsi update dari index.html
+        async function updateGitLabFile(fileUrl, commitMessage, dataObject, lastCommitId, btn) {
+            if (btn) disableButton(btn);
+            let errorOccurred = null; 
+            
+            try {
+                const content = btoa(unescape(encodeURIComponent(JSON.stringify(dataObject, null, 2)))); 
+                const method = lastCommitId ? 'PUT' : 'POST';
+
+                const payload = {
+                    branch: GITLAB_BRANCH,
+                    commit_message: commitMessage,
+                    content: content,
+                    encoding: 'base64' 
+                };
+
+                const response = await fetch(fileUrl, {
+                    method: method,
+                    headers: {
+                        'Private-Token': GITLAB_TOKEN,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                if (response.status === 401 || response.status === 403) {
+                     alert(`[STATUS ${response.status}] FATAL UPDATE ERROR: Token Gagal.`);
+                     throw new Error(`Token Gagal: ${response.status}`);
+                }
+                
+                if (response.status === 400) { 
+                    const errData = await response.json();
+                    let errMsg = errData.message || 'Error 400 Bad Request';
+                    
+                    if (method === 'POST' && errMsg.includes('already exists')) {
+                        console.warn('File sudah ada, mencoba update (PUT) ulang...');
+                        const { lastCommitId: newCommitId } = await getGitLabFile(fileUrl);
+                        return await updateGitLabFile(fileUrl, commitMessage, dataObject, newCommitId, btn);
+                    }
+                    
+                    alert(`[ERROR 400] Gagal update file: ${errMsg}. Coba refresh.`);
+                    throw new Error(`GitLab Update Error: ${errMsg}`);
+                }
+
+                if (response.status === 409) { 
+                    alert(`[ERROR 409] Terjadi konflik saat update file. Coba refresh dan ulangi.`);
+                     throw new Error(`GitLab Update Conflict: ${response.status}`);
+                }
+
+                if (!response.ok) throw new Error(`GitLab Update Failed! Status: ${response.status}`);
+                
+                return true;
+            } catch (error) { 
+                console.error("Failed to update GitLab file:", error);
+                errorOccurred = error; 
+                if (!error.message.includes('GitLab Update Error') && !error.message.includes('Token Gagal')) {
+                   alert(`[ERROR FATAL UPDATE] ${error.message}`);
+                }
+                throw error;
+            } finally {
+                if (btn && (!errorOccurred || !errorOccurred.message.includes('Conflict'))) {
+                   enableButton(btn);
+                }
+            }
+        }
+        // =================================================================
+        // --- AKHIR FUNGSI API GITLAB ---
+        // =================================================================
+
+        // --- FUNGSI TAMPILAN ---
+        function showLoginPage() {
+            loginPage.style.display = 'block';
+            settingsToggle.style.display = 'block';
+            // Hapus referensi ke dashboardPage, menuToggle, dll.
+        }
+
+        // --- FUNGSI LOGIKA LOGIN (DIMODIFIKASI) ---
+        async function handleLogin(e) {
+            e.preventDefault();
+            disableButton(loginButton);
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const notif = 'login-notification';
+            hideAllNotifications();
+            
+            if (bgMusic && SETTINGS.music) {
+                bgMusic.play().catch(() => {});
+            }
+
+            try {
+                // (PERUBAHAN) Ambil 'data' dan 'lastCommitId'
+                const { data: usersData, lastCommitId } = await getGitLabFile(GITLAB_USERS_URL);
+                
+                if (!usersData || !usersData.users) throw new Error('Gagal memuat data pengguna atau data korup.');
+
+                // (BARU) Cek dan tambahkan properti 'coins' ke semua user jika tidak ada
+                let dataWasModified = false;
+                usersData.users.forEach(u => {
+                    if (u.coins === undefined) {
+                        u.coins = 0; // Atur default coin ke 0
+                        dataWasModified = true;
+                    }
+                });
+
+                // (BARU) Jika ada modifikasi, update file di GitLab
+                if (dataWasModified) {
+                    console.log("Menambahkan properti 'coins' default ke users.json...");
+                    try {
+                        // Update file tanpa menonaktifkan tombol login (btn=null)
+                        // 'await' memastikan kita menunggu update selesai sebelum lanjut
+                        await updateGitLabFile(
+                            GITLAB_USERS_URL, 
+                            "SYSTEM: Add default 'coins' property to users", 
+                            usersData, 
+                            lastCommitId, 
+                            null 
+                        );
+                        console.log("Update 'coins' ke GitLab berhasil.");
+                    } catch (updateError) {
+                        console.error("Gagal update 'coins' ke GitLab, tapi login tetap dilanjutkan:", updateError);
+                        // Tidak melempar error fatal, biarkan login tetap berjalan
+                        // Data 'coins: 0' akan ada di localStorage, tapi tidak tersimpan di server saat ini
+                        showNotification(notif, "Peringatan: Gagal sinkronisasi 'coins' ke server. Login dilanjutkan.", 'info');
+                    }
+                }
+
+                // --- Lanjutkan proses login seperti biasa ---
+                const maintenanceSettings = usersData.settings || { maintenance: false, maintenanceMsg: "Server sedang maintenance." };
+                // Cari pengguna DARI usersData yang sudah dimodifikasi di memori
+                const user = usersData.users.find(u => u.username === username && u.password === password);
+                
+                if (maintenanceSettings.maintenance) {
+                    if (user && (user.role === 'admin' || user.role === 'developer')) {
+                        // Tetap tampilkan notifikasi info, tapi jangan sembunyikan dulu
+                        showNotification(notif, `Maintenance Aktif. Login sebagai Admin (${user.username}).`, 'info');
+                    } else {
+                        throw new Error(maintenanceSettings.maintenanceMsg || "Server sedang dalam perbaikan. Hanya Admin yang bisa login.");
+                    }
+                } else {
+                    if (!user) throw new Error('Login Gagal. Username atau password salah.');
+                }
+
+                const now = new Date();
+                const expiredDate = new Date(user.expired);
+                if (now > expiredDate) throw new Error(`Akun Expired sejak ${expiredDate.toDateString()}.`);
+
+                // Simpan data user ke localStorage (user object sudah memiliki properti 'coins')
+                localStorage.setItem('user', JSON.stringify(user));
+                
+                // Tampilkan notifikasi sukses (akan menimpa notif maintenance jika ada)
+                showNotification(notif, `Login Berhasil! Welcome, ${user.username}. Mengarahkan...`, 'success');
+                
+                // (PERUBAHAN) Arahkan ke index.html (Dashboard)
+                setTimeout(() => {
+                    window.location.href = 'index.html'; // Ganti 'index.html' jika nama file dashboard Anda beda
+                }, 1000);
+                
+            } catch (error) {
+                showNotification(notif, error.message, 'error');
+                enableButton(loginButton, 'Login'); // Aktifkan tombol lagi jika gagal
+            }
+        }
+        
+        function logout() {
+            // Fungsi logout di halaman login hanya untuk membersihkan cache
+            localStorage.removeItem('user');
+            // (Tidak perlu redirect, karena sudah di halaman login)
+        }
+        // --- AKHIR FUNGSI LOGIKA ---
+
+
+        // --- FUNGSI EFEK BINTANG (Tetap ada) ---
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            stars = [];
+            for (let i = 0; i < 150; i++) {
+                stars.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height,
+                    radius: Math.random() * 1.5,
+                    speed: Math.random() * 0.5 + 0.2
+                });
+            }
+        }
+        function drawStars() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = "#fff";
+            stars.forEach(star => {
+                ctx.beginPath();
+                ctx.arc(star.x, star.y, star.radius, 0, Math.PI * 2);
+                ctx.fill();
+                star.y += star.speed;
+                if (star.y > canvas.height) star.y = 0;
+            });
+            starsAnimationId = requestAnimationFrame(drawStars);
+        }
+        window.addEventListener("resize", resizeCanvas);
+        
+        function startStars() {
+            document.body.classList.remove('stars-hidden');
+            resizeCanvas();
+            drawStars();
+        }
+        function stopStars() {
+            document.body.classList.add('stars-hidden');
+            if (starsAnimationId) {
+                cancelAnimationFrame(starsAnimationId);
+            }
+        }
+        // --- AKHIR FUNGSI BINTANG ---
+
+        
+        /* --- BAGIAN SETTINGS (Tetap ada) --- */
+        const defaultSettings = {
+            accentColor: '#ffffff',
+            fontSize: '16px',
+            fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif", 
+            textGlow: true,
+            stars: true,
+            music: true,
+            musicVolume: 0.3,
+            vibration: true,
+            devMode: false, 
+            skipSplash: false,
+        };
+
+        function saveSetting(key, value) {
+            SETTINGS[key] = value;
+            localStorage.setItem('XVCT_SETTINGS', JSON.stringify(SETTINGS));
+        }
+        
+        function loadSettings() {
+            const saved = localStorage.getItem('XVCT_SETTINGS');
+            SETTINGS = saved ? JSON.parse(saved) : { ...defaultSettings };
+            
+            for (const key in defaultSettings) {
+                if (SETTINGS[key] === undefined) {
+                    SETTINGS[key] = defaultSettings[key];
+                }
+            }
+            
+            applySettings();
+            updateSettingsUI();
+        }
+        
+        function applySettings() {
+            document.documentElement.style.setProperty('--primary-color', SETTINGS.accentColor);
+            const glow = SETTINGS.accentColor === '#ffffff' ? 'rgba(255, 255, 255, 0.3)' : SETTINGS.accentColor + '66';
+            document.documentElement.style.setProperty('--primary-glow', glow);
+            
+            document.body.style.fontSize = SETTINGS.fontSize;
+            document.body.style.fontFamily = SETTINGS.fontFamily; 
+            
+            if (SETTINGS.textGlow) document.body.classList.add('text-glow');
+            else document.body.classList.remove('text-glow');
+            
+            if (SETTINGS.stars) startStars();
+            else stopStars();
+            
+            bgMusic.volume = SETTINGS.musicVolume;
+            if (SETTINGS.music) bgMusic.play().catch(() => {});
+            else bgMusic.pause();
+            
+            // (Setting devMode & skipSplash tidak di-apply di sini, 
+            //  tapi akan digunakan saat init)
+        }
+        
+        function updateSettingsUI() {
+            document.getElementById('setting-accent-color').value = SETTINGS.accentColor;
+            document.getElementById('setting-font-size').value = SETTINGS.fontSize;
+            document.getElementById('setting-font-family').value = SETTINGS.fontFamily; 
+            document.getElementById('setting-text-glow').checked = SETTINGS.textGlow;
+            document.getElementById('setting-stars').checked = SETTINGS.stars;
+            document.getElementById('setting-music-toggle').checked = SETTINGS.music;
+            document.getElementById('setting-music-volume').value = SETTINGS.musicVolume;
+            document.getElementById('setting-vibration').checked = SETTINGS.vibration;
+            document.getElementById('setting-dev-mode').checked = SETTINGS.devMode; 
+            document.getElementById('setting-skip-splash').checked = SETTINGS.skipSplash;
+        }
+        
+        function vibrate() {
+            if (SETTINGS.vibration && navigator.vibrate) {
+                navigator.vibrate(50);
+            }
+        }
+        
+        // --- Event Listener untuk Settings ---
+        document.getElementById('setting-accent-color').addEventListener('change', (e) => {
+            saveSetting('accentColor', e.target.value);
+            applySettings();
+        });
+        document.getElementById('setting-font-size').addEventListener('change', (e) => {
+            saveSetting('fontSize', e.target.value);
+            applySettings();
+        });
+        document.getElementById('setting-font-family').addEventListener('change', (e) => {
+            saveSetting('fontFamily', e.target.value);
+            applySettings();
+        });
+        document.getElementById('setting-text-glow').addEventListener('change', (e) => {
+            saveSetting('textGlow', e.target.checked);
+            applySettings();
+        });
+        document.getElementById('setting-stars').addEventListener('change', (e) => {
+            saveSetting('stars', e.target.checked);
+            applySettings();
+        });
+        document.getElementById('setting-music-toggle').addEventListener('change', (e) => {
+            saveSetting('music', e.target.checked);
+            applySettings();
+        });
+        document.getElementById('setting-music-volume').addEventListener('input', (e) => {
+            saveSetting('musicVolume', e.target.value);
+            applySettings();
+        });
+        document.getElementById('setting-vibration').addEventListener('change', (e) => {
+            saveSetting('vibration', e.target.checked);
+        });
+        document.getElementById('setting-dev-mode').addEventListener('change', (e) => {
+            saveSetting('devMode', e.target.checked);
+            applySettings();
+        });
+        document.getElementById('setting-skip-splash').addEventListener('change', (e) => {
+            saveSetting('skipSplash', e.target.checked);
+        });
+        
+        document.getElementById('setting-clear-cache').addEventListener('click', () => {
+            if(confirm('Anda yakin ingin mereset semua pengaturan? Halaman akan dimuat ulang.')) {
+                localStorage.removeItem('XVCT_SETTINGS');
+                window.location.reload();
+            }
+        });
+        
+        // (Tombol logout di-disable di UI, jadi listener ini tidak penting di sini)
+        // document.getElementById('setting-logout-button').addEventListener('click', logout);
+        /* --- AKHIR BAGIAN SETTINGS --- */
+        
+
+        // --- FUNGSI INIT (DIPERSIMPLE) ---
+        document.addEventListener('DOMContentLoaded', () => {
+            loadSettings(); 
+            
+            const splash = document.getElementById('splash-screen');
+            if (splash && !SETTINGS.skipSplash) {
+                 // Tampilkan splash screen, lalu sembunyikan
+                 setTimeout(() => splash.classList.add('hidden'), 1500); 
+            } else if (splash) {
+                // Sembunyikan langsung jika di-skip
+                splash.classList.add('hidden');
+            }
+            
+            if (SETTINGS.music) {
+                bgMusic.play().catch(() => {});
+            }
+            
+            init();
+        });
+
+        function init() {
+            if (localStorage.getItem('user')) {
+                // (PERUBAHAN) Jika sudah login, langsung lempar ke dashboard
+                window.location.href = 'index.html'; // Ganti jika nama file dashboard beda
+            } else {
+                // Jika belum login, tampilkan halaman login
+                showLoginPage();
+            }
+        }
+        
+        // Listener utama untuk form login
+        loginForm.addEventListener('submit', handleLogin);
+        
+    </script>
+
+</body>
+</html>

@@ -1,0 +1,1366 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SHADOW | Profile</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        /* CSS GLOBAL (Sama seperti sebelumnya) */
+        :root {
+            --bg-color: #0d0d0d;
+            --container-bg: rgba(26, 26, 26, 0.9);
+            --input-bg: #222222;
+            --border-color: #333;
+            --text-color: #e0e0e0;
+            --primary-color: #ffffff;
+            --primary-glow: rgba(255, 255, 255, 0.3);
+            --success-color: #2ecc71;
+            --danger-color: #e74c3c;
+            --sidebar-width: 250px; 
+            --border-radius-main: 16px;
+            --border-radius-small: 8px;
+            --border-radius-pill: 50px;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow-x: hidden;
+            flex-direction: column;
+            transition: margin-left 0.3s ease, font-family 0.3s ease; 
+        }
+        #sidebar {
+            position: fixed; top: 0; left: 0; 
+            height: 100%; width: var(--sidebar-width);
+            background-color: rgba(10, 10, 10, 0.95); 
+            padding-top: 60px;
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.5); 
+            transform: translateX(-100%); 
+            transition: transform 0.3s ease;
+            z-index: 100;
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+            overflow-y: auto; 
+        }
+        #sidebar.open { transform: translateX(0); }
+        .menu-header {
+            position: absolute; top: 0; left: 0; width: 100%;
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 10px 20px; background: #111; z-index: 101;
+        }
+        .menu-header h3 { color: var(--primary-color); margin: 0; font-size: 1.2rem; border-bottom: none; }
+        .menu-header button { width: auto; padding: 5px 10px; text-transform: none; }
+        .sidebar-nav a, .sidebar-nav button {
+            display: block; width: 100%; text-align: left;
+            padding: 15px 20px; text-decoration: none;
+            color: var(--text-color); background: none;
+            border: none; cursor: pointer; font-size: 1rem;
+            transition: background-color 0.3s, color 0.3s;
+            position: relative;
+        }
+        .sidebar-nav a:hover, .sidebar-nav button:hover, .sidebar-nav a.active {
+            background-color: var(--primary-color);
+            color: var(--bg-color); 
+        }
+        .sidebar-nav a.active { font-weight: bold; }
+        .sidebar-nav a i, .sidebar-nav button i { margin-right: 10px; }
+        .sidebar-close {
+            position: absolute; right: 10px; top: 50%;
+            transform: translateY(-50%); font-size: 0.8rem;
+            color: #aaa; opacity: 0; transition: opacity 0.2s;
+        }
+        .sidebar-nav button:hover .sidebar-close { opacity: 1; }
+        .sidebar-nav a:hover .sidebar-close { opacity: 1; }
+        #menu-toggle {
+            position: fixed; top: 20px; left: 20px; z-index: 102;
+            background: var(--primary-color); color: var(--bg-color); 
+            border: none; padding: 10px 15px;
+            border-radius: var(--border-radius-small);
+            font-size: 1.2rem; cursor: pointer;
+            box-shadow: 0 0 10px var(--primary-glow); 
+            transition: background-color 0.3s, transform 0.2s;
+            display: none; width: auto;
+        }
+        #settings-toggle {
+            position: fixed; top: 20px; right: 20px; z-index: 102;
+            background: #222; color: var(--primary-color); 
+            border: 1px solid var(--border-color);
+            padding: 10px 15px;
+            border-radius: var(--border-radius-small);
+            font-size: 1.2rem; cursor: pointer;
+            box-shadow: 0 0 10px rgba(0,0,0,0.5); 
+            transition: background-color 0.3s, transform 0.2s;
+            display: none; width: auto;
+        }
+        #menu-toggle:hover, #settings-toggle:hover { filter: brightness(1.2); transform: scale(1.05); }
+        #sidebar-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.5); z-index: 99; display: none;
+        }
+        #splash-screen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--bg-color); z-index: 200;
+            display: flex; flex-direction: column;
+            justify-content: center; align-items: center;
+            transition: opacity 1s ease-out, visibility 1s ease-out;
+            visibility: visible; opacity: 1;
+        }
+        #splash-screen.hidden { opacity: 0; visibility: hidden; }
+        .modern-loader {
+            position: relative; width: 150px; height: 150px;
+            display: flex; justify-content: center; align-items: center;
+        }
+        .loader-logo {
+            font-size: 2.5rem; font-weight: bold;
+            color: var(--primary-color); 
+            text-shadow: 0 0 15px var(--primary-glow); 
+            animation: pulse-glow 2s infinite ease-in-out;
+        }
+        .loader-ring {
+            position: absolute; width: 100%; height: 100%;
+            border-radius: 50%; border-style: solid;
+            border-color: transparent;
+            animation: spin 2s linear infinite;
+        }
+        .ring-1 { border-width: 3px; border-top-color: var(--primary-color); animation-duration: 1.5s; }
+        .ring-2 {
+            width: 120px; height: 120px; border-width: 2px;
+            border-right-color: var(--primary-glow); 
+            animation: spin-reverse 2s linear infinite;
+        }
+        .ring-3 {
+            width: 90px; height: 90px; border-width: 1px;
+            border-bottom-color: #fff; animation-duration: 2.5s;
+        }
+        #splash-loading-text {
+            color: #888; margin-top: 20px;
+            font-size: 1rem; transition: opacity 0.3s ease;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        @keyframes spin-reverse { to { transform: rotate(-360deg); } }
+        @keyframes pulse-glow {
+            0% { transform: scale(1); opacity: 1; text-shadow: 0 0 15px var(--primary-glow); }
+            50% { transform: scale(1.05); opacity: 0.9; text-shadow: 0 0 25px var(--primary-glow); }
+            100% { transform: scale(1); opacity: 1; text-shadow: 0 0 15px var(--primary-glow); }
+        }
+        .container {
+            width: 90%; max-width: 1100px; 
+            background-color: var(--container-bg); 
+            border-radius: var(--border-radius-main);
+            padding: 2rem; margin: 2rem 0; z-index: 10;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.8);
+            border: none; 
+        }
+        .page { display: none; }
+        h1 {
+            font-size: 2.5rem; font-weight: bold; letter-spacing: 2px;
+            background: linear-gradient(90deg, #888, #fff, #888, #fff);
+            background-size: 200% auto; color: transparent;
+            -webkit-background-clip: text; background-clip: text;
+            animation: text-shine 5s linear infinite;
+            text-align: center; margin-bottom: 1.5rem;
+        }
+        body.text-glow h1,
+        body.text-glow h2,
+        body.text-glow .loader-logo,
+        body.text-glow .profile-display-card h3 { text-shadow: 0 0 5px var(--primary-glow); }
+        @keyframes text-shine { to { background-position: -200% center; } }
+        h2 {
+            font-size: 1.8rem; color: var(--primary-color); 
+            text-align: center; margin-bottom: 1.5rem;
+        }
+        h3 {
+             font-size: 1.4rem; color: var(--text-color);
+             border-bottom: none; 
+             padding-bottom: 5px; margin-bottom: 1rem;
+        }
+        
+        /* Input styles modern */
+        .form-group { margin-bottom: 1rem; }
+        label {
+            display: block; margin-bottom: 0.5rem;
+            font-weight: 500; color: #ccc;
+        }
+        label i { margin-right: 8px; width: 16px; text-align: center; }
+        input, select, textarea {
+            width: 100%; padding: 0.8rem; font-size: 1rem;
+            border-radius: var(--border-radius-small);
+            border: none;
+            border-bottom: 2px solid var(--border-color);
+            background-color: var(--input-bg);
+            color: var(--text-color);
+            transition: all 0.3s ease;
+            font-family: inherit; 
+        }
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-bottom-color: var(--primary-color); 
+            box-shadow: 0 5px 10px rgba(0,0,0,0.3);
+            background-color: #2a2a2a;
+        }
+        
+        button {
+            width: 100%; padding: 0.8rem; font-size: 1rem;
+            border-radius: var(--border-radius-pill);
+            background-color: var(--primary-color); 
+            color: #000; font-weight: bold;
+            border: none; cursor: pointer;
+            text-transform: uppercase; letter-spacing: 1px;
+            transition: all 0.3s ease;
+            position: relative;
+            font-family: inherit; 
+        }
+        button:hover {
+            box-shadow: 0 0 15px var(--primary-glow); 
+            filter: brightness(1.2);
+            transform: translateY(-2px);
+        }
+        button:disabled {
+            background-color: #555; color: #999;
+            cursor: not-allowed; box-shadow: none; transform: none;
+        }
+        button.secondary {
+            background-color: transparent;
+            border: 1px solid var(--primary-color); 
+            color: var(--primary-color); 
+        }
+        button.secondary:hover { background-color: var(--primary-color); color: #000; }
+        button.danger {
+            background-color: var(--danger-color);
+            border-color: var(--danger-color);
+            color: white;
+        }
+        button.danger:hover { filter: brightness(1.2); box-shadow: 0 0 15px rgba(231, 76, 60, 0.6); }
+        .tab-content { display: none; opacity: 0; transition: opacity 0.3s ease; }
+        .tab-content.active {
+            display: block; opacity: 1;
+            animation: fadeIn 0.5s ease;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .notification {
+            text-align: center; padding: 0.8rem; margin-bottom: 1rem;
+            border-radius: var(--border-radius-small);
+            display: none; font-size: 0.9rem;
+            white-space: pre-wrap; border: 1px solid;
+        }
+        .notification.success { background-color: #0f3d1b; color: #8affab; border-color: #1a7431; }
+        .notification.error { background-color: #3d0f0f; color: #ffa8a8; border-color: #741a1a; }
+        .notification.info { background-color: #0f2a3d; color: #a8dfff; border-color: #1a5674; }
+        
+        /* (BARU) Style khusus untuk halaman profile modern */
+        .profile-grid-layout {
+            display: grid;
+            grid-template-columns: 1fr 1.5fr;
+            gap: 2rem;
+            align-items: flex-start;
+        }
+        .profile-display-card,
+        .profile-edit-card {
+            background-color: #111;
+            padding: 1.5rem;
+            border-radius: var(--border-radius-main);
+            /* (BARU) Efek "bubble" modern */
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5), 0 -4px 12px -8px var(--primary-glow);
+        }
+        .profile-display-card {
+            text-align: center;
+        }
+        #profile-avatar-wrapper {
+            position: relative;
+            width: 150px; height: 150px;
+            margin: 0 auto 1.5rem auto;
+            cursor: pointer;
+        }
+        #profile-avatar-wrapper::after {
+            content: '\f044'; /* fa-edit */
+            font-family: 'Font Awesome 6 Free';
+            font-weight: 900;
+            position: absolute;
+            bottom: 5px; right: 5px;
+            width: 40px; height: 40px;
+            background-color: var(--primary-color);
+            color: #000;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1rem;
+            opacity: 0;
+            transform: scale(0.8);
+            transition: all 0.3s ease;
+        }
+        #profile-avatar-wrapper:hover::after {
+            opacity: 1;
+            transform: scale(1);
+        }
+        #profile-avatar {
+            width: 150px; height: 150px; border-radius: 50%;
+            border: none; /* (BARU) Border hilang */
+            /* (BARU) Efek glow di avatar */
+            box-shadow: 0 0 25px var(--primary-glow), 0 0 10px rgba(0,0,0,0.5); 
+            object-fit: cover; background-color: #222;
+            transition: all 0.3s ease;
+        }
+        #profile-avatar-wrapper:hover #profile-avatar {
+            /* (BARU) Efek hover lebih keren */
+            transform: scale(1.05);
+            box-shadow: 0 0 35px var(--primary-glow), 0 0 15px rgba(0,0,0,0.5);
+        }
+        .profile-display-card h3 { /* Username */
+            font-size: 1.8rem;
+            color: var(--primary-color);
+            margin-bottom: 0.25rem;
+            word-break: break-all;
+        }
+        .profile-display-card p { /* Nama */
+            font-size: 1.1rem;
+            color: #aaa;
+            margin-bottom: 1.5rem;
+        }
+        .profile-stats-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1rem;
+        }
+        
+        /* (BARU) Kartu Statistik Didesain Ulang Total */
+        .profile-stat-card {
+            background: linear-gradient(145deg, #252525, #1f1f1f); /* (BARU) Latar "bubble" */
+            padding: 1.25rem;
+            border-radius: var(--border-radius-main); /* (BARU) Lebih bulat */
+            text-align: left;
+            display: flex; /* (BARU) Layout Flex */
+            align-items: center;
+            gap: 1rem;
+            border: none; /* (BARU) Hapus border */
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+        }
+        .profile-stat-card i {
+            margin-right: 0;
+            font-size: 1.5rem; /* (BARU) Ikon besar */
+            width: 30px;
+            text-align: center;
+            color: var(--primary-color);
+        }
+        .profile-stat-card div { /* (BARU) Wrapper teks */
+            flex: 1;
+        }
+        .profile-stat-card span {
+            display: block;
+            font-size: 0.9rem;
+            color: #888;
+            margin-bottom: 2px;
+        }
+        .profile-stat-card strong {
+            font-size: 1.2rem; /* (BARU) Font lebih besar */
+            color: var(--text-color);
+            word-break: break-word;
+        }
+
+        /* Card Edit (Kanan) */
+        .profile-tabs {
+            display: flex;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 1.5rem;
+        }
+        .profile-tabs button {
+            width: auto;
+            flex-grow: 1;
+            padding: 0.8rem 1rem;
+            border: none;
+            background: none;
+            color: #888;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            border-radius: 0;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s ease;
+        }
+        .profile-tabs button:hover {
+            color: var(--text-color);
+            background: #222;
+        }
+        .profile-tabs button.active {
+            color: var(--primary-color);
+            border-bottom-color: var(--primary-color);
+        }
+        .profile-edit-content {
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+        .profile-edit-content.active {
+            display: block;
+        }
+
+        footer.dev-contact {
+            text-align: center; margin-top: 2rem; padding-top: 1rem;
+            border-top: 1px solid var(--border-color);
+            font-size: 0.9rem; color: #888;
+        }
+        .dev-contact p { margin-bottom: 0.5rem; }
+        .dev-contact a {
+            color: var(--primary-color); text-decoration: none;
+            margin: 0 0.5rem; transition: color 0.3s ease;
+        }
+        .dev-contact a:hover { text-decoration: underline; filter: brightness(1.2); }
+        
+        canvas#stars {
+            position: fixed; top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: -1; pointer-events: none;
+        }
+        body.stars-hidden canvas#stars { display: none; }
+        
+        /* Modal Settings */
+        #modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.7); z-index: 199;
+            display: none; opacity: 0; transition: opacity 0.3s ease;
+        }
+        #settings-modal {
+            position: fixed; top: 50%; left: 50%;
+            transform: translate(-50%, -50%) scale(0.95);
+            width: 90%; max-width: 500px; max-height: 80vh; overflow-y: auto;
+            background: var(--container-bg);
+            border-radius: var(--border-radius-main);
+            border: none; /* (BARU) Hapus border modal */
+            box-shadow: 0 0 30px rgba(0,0,0,0.8);
+            z-index: 200; display: none; opacity: 0;
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+        #settings-modal.open, #modal-overlay.open { display: block; opacity: 1; }
+        #settings-modal.open { transform: translate(-50%, -50%) scale(1); }
+        .modal-header {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .modal-header h2 { margin: 0; font-size: 1.5rem; }
+        .modal-header button {
+            width: auto; padding: 5px 10px;
+            background: transparent; color: var(--text-color);
+            border: none; font-size: 1.5rem;
+        }
+        .modal-header button:hover { color: var(--primary-color); }
+        .modal-body { padding: 1.5rem; }
+        .setting-group { margin-bottom: 1.5rem; }
+        .setting-group h3 {
+            font-size: 1.1rem; color: var(--primary-color);
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem; margin-bottom: 1rem;
+        }
+        .setting-item {
+            display: flex; justify-content: space-between;
+            align-items: center; margin-bottom: 1rem;
+        }
+        .setting-item label { margin: 0; font-size: 1rem; }
+        .toggle-switch {
+            position: relative; display: inline-block;
+            width: 50px; height: 28px;
+        }
+        .toggle-switch input { opacity: 0; width: 0; height: 0; }
+        .slider {
+            position: absolute; cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #333; transition: .4s;
+            border-radius: 34px;
+        }
+        .slider:before {
+            position: absolute; content: "";
+            height: 20px; width: 20px; left: 4px; bottom: 4px;
+            background-color: white; transition: .4s;
+            border-radius: 50%;
+        }
+        input:checked + .slider { background-color: var(--primary-color); }
+        input:checked + .slider:before { background-color: #000; transform: translateX(22px); }
+        .setting-item input[type="range"] {
+            -webkit-appearance: none; width: 120px; height: 8px;
+            background: #333; outline: none; opacity: 0.7;
+            transition: opacity .2s; border-radius: 5px;
+        }
+        .setting-item input[type="range"]:hover { opacity: 1; }
+        .setting-item input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none; appearance: none;
+            width: 20px; height: 20px;
+            background: var(--primary-color);
+            cursor: pointer; border-radius: 50%;
+        }
+        .setting-item input[type="range"]::-moz-range-thumb {
+            width: 20px; height: 20px;
+            background: var(--primary-color);
+            cursor: pointer; border-radius: 50%;
+        }
+        @media (max-width: 900px) {
+            body { margin-left: 0; }
+            body.sidebar-open { margin-left: 0; }
+            #menu-toggle, #settings-toggle { display: block; }
+            
+            /* (BARU) Responsive profile */
+            .profile-grid-layout {
+                grid-template-columns: 1fr;
+            }
+        }
+        @media (max-width: 480px) {
+            .container { padding: 1.5rem; }
+            .profile-stats-grid {
+                grid-template-columns: 1fr; /* Tetap 1 kolom, sudah bagus */
+            }
+        }
+    </style>
+</head>
+<body class="stars-hidden text-glow"> <canvas id="stars"></canvas>
+
+    <div id="splash-screen">
+        <div class="modern-loader">
+            <div class="loader-ring ring-1"></div>
+            <div class="loader-ring ring-2"></div>
+            <div class="loader-ring ring-3"></div>
+            <div class="loader-logo">SHADOW</div>
+        </div>
+        <div id="splash-loading-text">Memuat...</div>
+    </div>
+    
+    <audio id="bg-music" loop>
+        <source src="https://files.catbox.moe/exgp8t.mp4" type="audio/mpeg">
+    </audio>
+    
+    <button id="menu-toggle"><i class="fas fa-bars"></i></button>
+    <button id="settings-toggle"><i class="fas fa-cog"></i></button>
+    
+    <div id="sidebar-overlay"></div>
+    
+    <div id="sidebar">
+        <div class="menu-header">
+            <h3>NAVIGASI</h3>
+            <button class="secondary" id="sidebar-close-btn"><i class="fas fa-times"></i></button>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="index.html" class="tab-link"><i class="fas fa-satellite-dish"></i> LOBBY <span class="sidebar-close">x</span></a>
+            <a href="attack.html" class="tab-link"><i class="fas fa-bolt"></i> ATTACK <span class="sidebar-close">x</span></a>
+            <a href="profile.html" class="tab-link active"><i class="fas fa-user-astronaut"></i> PROFILE <span class="sidebar-close">x</span></a>
+            <a href="ai.html" class="tab-link"><i class="fas fa-robot"></i> AI CHAT <span class="sidebar-close">x</span></a>
+            <a href="quotes.html" class="tab-link"><i class="fas fa-feather-alt"></i> QUOTES GEN <span class="sidebar-close">x</span></a>
+            <a href="logs.html" class="tab-link"><i class="fas fa-history"></i> LOGS <span class="sidebar-close">x</span></a>
+            <a href="tools.html" class="tab-link" id="tools-tab-button"><i class="fas fa-tools"></i> TOOLS <span class="sidebar-close">x</span></a>
+            <a href="admin.html" class="tab-link" id="admin-tab-button" style="display: none;"><i class="fas fa-user-cog"></i> ADMIN <span class="sidebar-close">x</span></a>
+            
+            <button id="sidebar-settings-button" class="tab-link"><i class="fas fa-cog"></i> SETTINGS <span class="sidebar-close">x</span></button>
+        </nav>
+        
+        <footer class="dev-contact" style="position: absolute; bottom: 10px; width: 100%; background: #111; padding: 10px 0;">
+            <p>v2.5 (Lobby Update) by zexxo.</p>
+        </footer>
+    </div>
+
+    <div id="dashboard-page" class="container page" style="display: none;">
+        
+        <div id="profile-panel" class="tab-content active">
+            <h2>User Profile</h2>
+            
+            <div class="profile-grid-layout">
+                
+                <div class="profile-display-card">
+                    <div id="profile-avatar-wrapper" onclick="document.getElementById('profile-tab-btn').click(); document.getElementById('edit-avatar-url').focus();">
+                        <img id="profile-avatar" src="https://i.imgur.com/6b6A9wT.png" alt="Avatar">
+                    </div>
+                    <h3 id="profile-username">Loading...</h3>
+                    <p id="profile-name">Loading...</p>
+
+                    <div class="profile-stats-grid">
+                        <div class="profile-stat-card">
+                            <i class="fas fa-user-shield"></i>
+                            <div>
+                                <span>Role</span>
+                                <strong id="profile-role">Loading...</strong>
+                            </div>
+                        </div>
+                        <div class="profile-stat-card">
+                            <i class="fas fa-calendar-alt"></i>
+                            <div>
+                                <span>Masa Aktif</span>
+                                <strong id="profile-expiry">Loading...</strong>
+                            </div>
+                        </div>
+                        <div class="profile-stat-card">
+                            <i class="fas fa-hourglass-half"></i>
+                            <div>
+                                <span>Sisa Hari</span>
+                                <strong id="profile-days-left">0 Hari</strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="profile-edit-card">
+                    <div id="profile-notification" class="notification"></div>
+
+                    <nav class="profile-tabs">
+                        <button class="tab-btn active" data-tab="profile-edit-content" id="profile-tab-btn">
+                            <i class="fas fa-user-edit"></i> Edit Profile
+                        </button>
+                        <button class="tab-btn" data-tab="password-edit-content">
+                            <i class="fas fa-key"></i> Ubah Password
+                        </button>
+                    </nav>
+
+                    <div id="profile-edit-content" class="profile-edit-content active">
+                        <form id="profile-edit-form">
+                            <div class="form-group">
+                                <label for="edit-name"><i class="fas fa-id-card"></i> Nama Lengkap</label>
+                                <input type="text" id="edit-name" placeholder="Nama lengkap Anda">
+                            </div>
+                            <div class="form-group">
+                                <label for="edit-username"><i class="fas fa-user"></i> Username</label>
+                                <input type="text" id="edit-username" placeholder="Username login" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="edit-avatar-url"><i class="fas fa-image"></i> URL Avatar</label>
+                                <input type="text" id="edit-avatar-url" placeholder="https://link.com/gambar.png">
+                            </div>
+                            <button type="submit" id="profile-save-btn">Simpan Perubahan</button>
+                        </form>
+                    </div>
+
+                    <div id="password-edit-content" class="profile-edit-content">
+                        <form id="password-edit-form">
+                            <div class="form-group">
+                                <label for="edit-new-password"><i class="fas fa-key"></i> Password Baru</label>
+                                <input type="password" id="edit-new-password" placeholder="Minimal 6 karakter" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="edit-confirm-password"><i class="fas fa-check-circle"></i> Konfirmasi Password</label>
+                                <input type="password" id="edit-confirm-password" placeholder="Ulangi password baru" required>
+                            </div>
+                            <button type="submit" id="password-save-btn">Ubah Password</button>
+                        </form>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <footer class="dev-contact">
+            <p>v2.5 (Lobby Update) by zexxo.</p>
+        </footer>
+    </div>
+    
+    <div id="modal-overlay"></div>
+    <div id="settings-modal">
+        <div class="modal-header">
+            <h2>Settings</h2>
+            <button id="modal-close-btn"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="modal-body">
+            <div class="setting-group">
+                <h3><i class="fas fa-paint-brush"></i> Tampilan</h3>
+                <div class="setting-item">
+                    <label for="setting-accent-color">Warna Aksen</label>
+                    <select id="setting-accent-color" name="setting-accent-color">
+                        <option value="#ffffff">Default (Putih)</option>
+                        <option value="#3498db">Biru</option>
+                        <option value="#2ecc71">Hijau</option>
+                        <option value="#e74c3c">Merah</option>
+                        <option value="#cccccc">Abu-abu</option>
+                    </select>
+                </div>
+                <div class="setting-item">
+                    <label for="setting-font-size">Ukuran Font</label>
+                    <select id="setting-font-size" name="setting-font-size">
+                        <option value="14px">Kecil</option>
+                        <option value="16px">Normal</option>
+                        <option value="18px">Besar</option>
+                    </select>
+                </div>
+                <div class="setting-item">
+                    <label for="setting-font-family">Gaya Font</label>
+                    <select id="setting-font-family" name="setting-font-family">
+                        <option value="'Segoe UI', Tahoma, Geneva, Verdana, sans-serif">Default (Segoe UI)</option>
+                        <option value="'Roboto', sans-serif">Roboto</option>
+                        <option value="'Courier New', Courier, monospace">Monospace</option>
+                    </select>
+                </div>
+                 <div class="setting-item">
+                    <label for="setting-text-glow">Teks Glow</label>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="setting-text-glow">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <div class="setting-item">
+                    <label for="setting-stars">Animasi Bintang</label>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="setting-stars">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+            </div>
+            
+            <div class="setting-group">
+                <h3><i class="fas fa-volume-up"></i> Audio & Feedback</h3>
+                 <div class="setting-item">
+                    <label for="setting-music-toggle">Musik Latar</label>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="setting-music-toggle">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <div class="setting-item">
+                    <label for="setting-music-volume">Volume</label>
+                    <input type="range" id="setting-music-volume" min="0" max="1" step="0.1">
+                </div>
+                <div class="setting-item">
+                    <label for="setting-vibration">Vibrasi Tombol (HP)</label>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="setting-vibration">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+            </div>
+            
+             <div class="setting-group">
+                <h3><i class="fas fa-cog"></i> Sistem</h3>
+                 <div class="setting-item">
+                    <label for="setting-dev-mode">Mode Developer</label>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="setting-dev-mode">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                 <div class="setting-item">
+                    <label for="setting-skip-splash">Lewati Splash Screen</label>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="setting-skip-splash">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <div class="setting-item">
+                    <label>Hapus Cache Pengaturan</label>
+                    <button class="secondary" id="setting-clear-cache" style="width: auto; padding: 5px 10px; font-size: 0.9rem; border-radius: var(--border-radius-pill);">Reset</button>
+                </div>
+                 <div class="setting-item">
+                    <label>Logout dari Akun</label>
+                    <button class="danger" id="setting-logout-button" style="width: auto; padding: 5px 10px; font-size: 0.9rem; border-radius: var(--border-radius-pill);">Logout</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- PENGATURAN GITLAB (WAJIB ADA DI SEMUA HALAMAN) ---
+        const GITLAB_TOKEN = 'glpat-9cZaOPR0hBHj-qiqIqzT9W86MQp1Omlsc2xiCw.01.120onr34s';
+        const GITLAB_PROJECT_ID = '75681438';
+        const GITLAB_BRANCH = 'main';
+        
+        const USERS_FILE = 'users.json';
+        const GITLAB_BASE_URL = `https://gitlab.com/api/v4/projects/${GITLAB_PROJECT_ID}/repository/files/`;
+        const GITLAB_USERS_URL = `${GITLAB_BASE_URL}${encodeURIComponent(USERS_FILE)}`;
+        // --- AKHIR PENGATURAN GITLAB ---
+
+        // --- DOM Elements ---
+        const dashboardPage = document.getElementById('dashboard-page');
+        const sidebar = document.getElementById('sidebar');
+        const sidebarOverlay = document.getElementById('sidebar-overlay');
+        const menuToggle = document.getElementById('menu-toggle');
+        const sidebarCloseBtn = document.getElementById('sidebar-close-btn');
+        const adminTabButton = document.getElementById('admin-tab-button');
+        const toolsTabButton = document.getElementById('tools-tab-button');
+        const settingsToggle = document.getElementById('settings-toggle');
+        const sidebarSettingsButton = document.getElementById('sidebar-settings-button');
+        
+        // (DIHAPUS) welcomeUser & welcomeRole dihapus karena headernya tidak ada
+        
+        const bgMusic = document.getElementById('bg-music');
+        const modalOverlay = document.getElementById('modal-overlay');
+        const settingsModal = document.getElementById('settings-modal');
+        const modalCloseBtn = document.getElementById('modal-close-btn');
+        
+        // DOM Elemen Profile
+        const profileEditForm = document.getElementById('profile-edit-form');
+        const passwordEditForm = document.getElementById('password-edit-form');
+        const profileSaveBtn = document.getElementById('profile-save-btn');
+        const passwordSaveBtn = document.getElementById('password-save-btn');
+        const tabButtons = document.querySelectorAll('.profile-tabs .tab-btn');
+        const tabContents = document.querySelectorAll('.profile-edit-content');
+
+        let USER_INFO = null;
+        let SETTINGS = {};
+        let splashInterval; 
+        // --- Akhir DOM Elements ---
+
+        // --- Fungsi Navigasi Sidebar & Modal ---
+        function openSidebar() {
+            sidebar.classList.add('open');
+            sidebarOverlay.style.display = 'block';
+            if (window.innerWidth > 900) {
+                 document.body.style.marginLeft = 'var(--sidebar-width)';
+            }
+        }
+        function closeSidebar() {
+            sidebar.classList.remove('open');
+            sidebarOverlay.style.display = 'none';
+            document.body.style.marginLeft = '0';
+        }
+        function openSettingsModal() {
+            vibrate();
+            settingsModal.classList.add('open');
+            modalOverlay.classList.add('open');
+        }
+        function closeSettingsModal() {
+            settingsModal.classList.remove('open');
+            modalOverlay.classList.remove('open');
+        }
+        menuToggle.addEventListener('click', () => { vibrate(); openSidebar(); });
+        sidebarOverlay.addEventListener('click', closeSidebar);
+        sidebarCloseBtn.addEventListener('click', closeSidebar);
+        settingsToggle.addEventListener('click', openSettingsModal);
+        sidebarSettingsButton.addEventListener('click', () => { closeSidebar(); openSettingsModal(); });
+        modalCloseBtn.addEventListener('click', closeSettingsModal);
+        modalOverlay.addEventListener('click', closeSettingsModal);
+        document.querySelectorAll('button').forEach(btn => {
+            btn.addEventListener('click', () => vibrate());
+        });
+        // --- Akhir Fungsi Navigasi ---
+
+        // --- Fungsi Utilitas ---
+        function showNotification(id, message, type) {
+            const el = document.getElementById(id);
+            if (!el) return;
+            el.textContent = message;
+            el.className = 'notification ' + type;
+            el.style.display = 'block';
+        }
+        function hideAllNotifications() {
+             document.querySelectorAll('.notification').forEach(el => el.style.display = 'none');
+        }
+        function disableButton(btn) {
+            if (!btn) return; 
+            btn.disabled = true;
+            btn.setAttribute('data-original-text', btn.textContent);
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>'; 
+        }
+        function enableButton(btn, text) {
+            if (!btn) return; 
+            const originalText = btn.getAttribute('data-original-text');
+            const newText = text || originalText || "Button";
+            if (newText.startsWith('<i')) {
+                btn.innerHTML = newText;
+            } else {
+                btn.textContent = newText;
+            }
+            btn.disabled = false;
+        }
+
+        function daysUntil(dateString) {
+            if (!dateString) return 0;
+            const oneDay = 24 * 60 * 60 * 1000; 
+            const today = new Date();
+            today.setHours(0, 0, 0, 0); 
+            const expiry = new Date(dateString);
+            expiry.setHours(0, 0, 0, 0); 
+            const diffDays = Math.round((expiry - today) / oneDay);
+            return Math.max(0, diffDays); 
+        }
+        // --- Akhir Fungsi Utilitas ---
+
+        // =================================================================
+        // --- FUNGSI API GITLAB (Lengkap) ---
+        // =================================================================
+        async function getGitLabFile(fileUrl) {
+            if (GITLAB_TOKEN === 'YOUR_GITLAB_PRIVATE_TOKEN_HERE' || GITLAB_PROJECT_ID === '12345678') {
+                alert("FATAL ERROR: GITLAB_TOKEN atau GITLAB_PROJECT_ID belum diatur!");
+                throw new Error("Token Gagal: Token/Project ID belum diatur.");
+            }
+            try {
+                const response = await fetch(`${fileUrl}?ref=${GITLAB_BRANCH}`, {
+                    method: 'GET', 
+                    headers: { 'Private-Token': GITLAB_TOKEN, 'Accept': 'application/json' }
+                });
+                if (response.status === 401 || response.status === 403) {
+                     alert(`[STATUS ${response.status}] Token/Izin GitLab Gagal.`);
+                     throw new Error(`Token Gagal: ${response.status}`);
+                }
+                if (response.status === 404) { return { data: null, lastCommitId: null }; }
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                const data = await response.json(); 
+                const fileName = decodeURIComponent(fileUrl.split('/').pop().split('?')[0]); 
+                let content;
+                if (!data.content) {
+                    if (fileName === USERS_FILE) {
+                        content = { settings: { maintenance: false, maintenanceMsg: "" }, users: [] };
+                    } else { content = {}; }
+                } else {
+                     let decodedContent = "";
+                     try {
+                         decodedContent = atob(data.content);
+                         content = JSON.parse(decodedContent);
+                     } catch (e) {
+                         console.error(`Gagal parse JSON dari file: ${fileName}.`);
+                         throw new Error(`File '${fileName}' di server korup. (Error: ${e.message})`);
+                     }
+                }
+                return { data: content, lastCommitId: data.last_commit_id };
+            } catch (error) {
+                console.error("Failed to fetch GitLab file:", error);
+                const errorMsg = error.message.includes('Failed to fetch') 
+                               ? 'Koneksi Jaringan Gagal.' 
+                               : error.message;
+                if (!error.message.includes('Token Gagal')) {
+                   alert(`[ERROR FETCH] ${errorMsg}`);
+                }
+                throw new Error(errorMsg);
+            }
+        }
+
+        async function updateGitLabFile(fileUrl, commitMessage, dataObject, lastCommitId, btn) {
+            if (btn) disableButton(btn);
+            let errorOccurred = null; 
+            try {
+                const content = btoa(unescape(encodeURIComponent(JSON.stringify(dataObject, null, 2)))); 
+                const method = lastCommitId ? 'PUT' : 'POST';
+                const payload = {
+                    branch: GITLAB_BRANCH,
+                    commit_message: commitMessage,
+                    content: content,
+                    encoding: 'base64' 
+                };
+                if (method === 'PUT') {
+                    payload.last_commit_id = lastCommitId;
+                }
+                
+                const response = await fetch(fileUrl, {
+                    method: method,
+                    headers: {
+                        'Private-Token': GITLAB_TOKEN,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
+                });
+                if (response.status === 401 || response.status === 403) {
+                     alert(`[STATUS ${response.status}] FATAL UPDATE ERROR: Token Gagal.`);
+                     throw new Error(`Token Gagal: ${response.status}`);
+                }
+                if (response.status === 400) { 
+                    const errData = await response.json();
+                    let errMsg = errData.message || 'Error 400 Bad Request';
+                    if (method === 'POST' && errMsg.includes('already exists')) {
+                        console.warn('File sudah ada, mencoba update (PUT) ulang...');
+                        const { lastCommitId: newCommitId } = await getGitLabFile(fileUrl);
+                        if (!newCommitId) throw new Error("Gagal mendapatkan commit_id untuk file yang sudah ada.");
+                        return await updateGitLabFile(fileUrl, commitMessage, dataObject, newCommitId, btn);
+                    }
+                    if (errMsg.includes('you are not alone')) {
+                         alert(`[ERROR 400] Konflik! File telah diubah oleh orang lain. Refresh halaman dan coba lagi.`);
+                         throw new Error(`GitLab Update Conflict: ${errMsg}`);
+                    }
+                    alert(`[ERROR 400] Gagal update file: ${errMsg}. Coba refresh.`);
+                    throw new Error(`GitLab Update Error: ${errMsg}`);
+                }
+                if (response.status === 409) { 
+                    alert(`[ERROR 409] Terjadi konflik saat update file. Coba refresh dan ulangi.`);
+                     throw new Error(`GitLab Update Conflict: ${response.status}`);
+                }
+                if (!response.ok) throw new Error(`GitLab Update Failed! Status: ${response.status}`);
+                return true;
+            } catch (error) { 
+                console.error("Failed to update GitLab file:", error);
+                errorOccurred = error; 
+                if (!error.message.includes('GitLab Update Error') && !error.message.includes('Token Gagal') && !error.message.includes('Conflict')) {
+                   alert(`[ERROR FATAL UPDATE] ${error.message}`);
+                }
+                throw error;
+            } finally {
+                if (btn) {
+                   enableButton(btn);
+                }
+            }
+        }
+        // =================================================================
+        // --- AKHIR FUNGSI API GITLAB ---
+        // =================================================================
+
+        // --- Logika Halaman Profile ---
+        
+        // (BARU) Fungsi update UI yang lebih aman (tanpa header)
+        function updateUIAfterSave(newUserInfo) {
+             // 1. Update global variable
+            USER_INFO = newUserInfo;
+            // 2. Update localStorage
+            localStorage.setItem('user', JSON.stringify(newUserInfo));
+            
+            // 3. Update header (jika ada) - ELEMEN SUDAH DIHAPUS DI HALAMAN INI
+            // (Tidak masalah, JS akan handle elemen null dengan aman)
+            const headerUser = document.getElementById('welcome-user');
+            const headerRole = document.getElementById('welcome-role');
+            if (headerUser) headerUser.textContent = newUserInfo.username;
+            if (headerRole) headerRole.textContent = newUserInfo.role;
+
+            // 4. Update panel profil
+            updateProfilePanel();
+        }
+        
+        function updateProfilePanel() {
+             if (!USER_INFO) return;
+             const defaultAvatar = `https://i.imgur.com/6b6A9wT.png`;
+             
+             // Update Display Card (Kiri)
+             document.getElementById('profile-avatar').src = USER_INFO.avatarUrl || defaultAvatar;
+             document.getElementById('profile-name').textContent = USER_INFO.name || '(Belum diatur)';
+             document.getElementById('profile-username').textContent = USER_INFO.username;
+             document.getElementById('profile-role').textContent = USER_INFO.role.toUpperCase();
+             document.getElementById('profile-expiry').textContent = new Date(USER_INFO.expired).toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' });
+             const daysLeft = daysUntil(USER_INFO.expired);
+             document.getElementById('profile-days-left').textContent = `${daysLeft} Hari`;
+             
+             // Update Edit Form Fields (Kanan)
+             document.getElementById('edit-name').value = USER_INFO.name || '';
+             document.getElementById('edit-username').value = USER_INFO.username || '';
+             document.getElementById('edit-avatar-url').value = USER_INFO.avatarUrl || '';
+        }
+        
+        // Handler untuk ganti tab
+        function setupTabs() {
+            tabButtons.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    vibrate();
+                    // Nonaktifkan semua
+                    tabButtons.forEach(b => b.classList.remove('active'));
+                    tabContents.forEach(c => c.classList.remove('active'));
+                    // Aktifkan yang diklik
+                    btn.classList.add('active');
+                    document.getElementById(btn.dataset.tab).classList.add('active');
+                    hideAllNotifications();
+                });
+            });
+        }
+        
+        // Handler untuk save profile
+        async function handleProfileUpdate(e) {
+            e.preventDefault();
+            const notif = 'profile-notification';
+            hideAllNotifications();
+
+            const newName = document.getElementById('edit-name').value.trim();
+            const newUsername = document.getElementById('edit-username').value.trim();
+            const newAvatar = document.getElementById('edit-avatar-url').value.trim();
+
+            if (!newUsername) {
+                return showNotification(notif, 'Username tidak boleh kosong.', 'error');
+            }
+
+            try {
+                const { data: usersData, lastCommitId } = await getGitLabFile(GITLAB_USERS_URL);
+                if (!usersData || !usersData.users) throw new Error("Data user tidak valid.");
+
+                // Cek duplikat username (jika username diubah)
+                if (newUsername !== USER_INFO.username) {
+                    if (usersData.users.some(u => u.username === newUsername)) {
+                        return showNotification(notif, 'Username tersebut sudah digunakan.', 'error');
+                    }
+                }
+                
+                // Cari user saat ini di data
+                const userIndex = usersData.users.findIndex(u => u.username === USER_INFO.username);
+                if (userIndex === -1) {
+                    throw new Error("User tidak ditemukan di database. Sesi mungkin tidak valid.");
+                }
+
+                // Update data user
+                const updatedUser = {
+                    ...usersData.users[userIndex],
+                    name: newName || 'No Name',
+                    username: newUsername,
+                    avatarUrl: newAvatar || null
+                };
+                usersData.users[userIndex] = updatedUser;
+                
+                // Simpan ke GitLab
+                const commitMessage = `WebProfile: Update profile for ${USER_INFO.username}`;
+                await updateGitLabFile(GITLAB_USERS_URL, commitMessage, usersData, lastCommitId, profileSaveBtn);
+                
+                // Update UI & localStorage
+                updateUIAfterSave(updatedUser);
+                showNotification(notif, 'Profil berhasil diperbarui!', 'success');
+
+            } catch (error) {
+                showNotification(notif, `Gagal update: ${error.message}`, 'error');
+            }
+        }
+        
+        // Handler untuk save password
+        async function handlePasswordUpdate(e) {
+            e.preventDefault();
+            const notif = 'profile-notification';
+            hideAllNotifications();
+
+            const newPass = document.getElementById('edit-new-password').value;
+            const confirmPass = document.getElementById('edit-confirm-password').value;
+
+            if (!newPass || !confirmPass) {
+                return showNotification(notif, 'Password tidak boleh kosong.', 'error');
+            }
+            if (newPass.length < 6) {
+                return showNotification(notif, 'Password minimal 6 karakter.', 'error');
+            }
+            if (newPass !== confirmPass) {
+                return showNotification(notif, 'Konfirmasi password tidak cocok.', 'error');
+            }
+
+            try {
+                const { data: usersData, lastCommitId } = await getGitLabFile(GITLAB_USERS_URL);
+                if (!usersData || !usersData.users) throw new Error("Data user tidak valid.");
+
+                const userIndex = usersData.users.findIndex(u => u.username === USER_INFO.username);
+                if (userIndex === -1) {
+                    throw new Error("User tidak ditemukan di database.");
+                }
+
+                // Update password
+                const updatedUser = {
+                    ...usersData.users[userIndex],
+                    password: newPass
+                };
+                usersData.users[userIndex] = updatedUser;
+                
+                // Simpan ke GitLab
+                const commitMessage = `WebProfile: Update password for ${USER_INFO.username}`;
+                await updateGitLabFile(GITLAB_USERS_URL, commitMessage, usersData, lastCommitId, passwordSaveBtn);
+                
+                // Update UI & localStorage (PENTING!)
+                updateUIAfterSave(updatedUser);
+                showNotification(notif, 'Password berhasil diubah!', 'success');
+                passwordEditForm.reset(); // Kosongkan form
+
+            } catch (error) {
+                showNotification(notif, `Gagal update: ${error.message}`, 'error');
+            }
+        }
+
+        
+        function showDashboardPage() {
+            USER_INFO = JSON.parse(localStorage.getItem('user'));
+            
+            // (DIHAPUS) Tidak perlu update header lagi
+            // welcomeUser.textContent = USER_INFO.username;
+            // welcomeRole.textContent = USER_INFO.role;
+            
+            applySettings(); 
+            
+            // Panggil fungsi untuk mengisi data profile & form
+            updateProfilePanel();
+            
+            // Setup listener untuk tab
+            setupTabs();
+
+            if (USER_INFO.role === 'admin' || USER_INFO.role === 'developer') {
+                adminTabButton.style.display = 'block';
+            } else {
+                adminTabButton.style.display = 'none';
+            }
+            
+            dashboardPage.style.display = 'block';
+            menuToggle.style.display = 'block';
+            settingsToggle.style.display = 'block';
+            hideAllNotifications();
+            
+             if (window.innerWidth > 900) {
+                 document.body.style.marginLeft = 'var(--sidebar-width)';
+                 sidebar.classList.add('open');
+            }
+        }
+        
+        function logout() {
+            vibrate();
+            if(confirm('Anda yakin ingin logout?')) {
+                localStorage.removeItem('user');
+                window.location.href = 'login.html';
+            }
+        }
+        // --- Akhir Logika Halaman ---
+
+        // --- Logika Efek Bintang (Global) ---
+        const canvas = document.getElementById("stars");
+        const ctx = canvas.getContext("2d");
+        let stars = [];
+        let starsAnimationId;
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            stars = [];
+            for (let i = 0; i < 150; i++) {
+                stars.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height,
+                    radius: Math.random() * 1.5,
+                    speed: Math.random() * 0.5 + 0.2
+                });
+            }
+        }
+        function drawStars() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = "#fff";
+            stars.forEach(star => {
+                ctx.beginPath();
+                ctx.arc(star.x, star.y, star.radius, 0, Math.PI * 2);
+                ctx.fill();
+                star.y += star.speed;
+                if (star.y > canvas.height) star.y = 0;
+            });
+            starsAnimationId = requestAnimationFrame(drawStars);
+        }
+        window.addEventListener("resize", resizeCanvas);
+        function startStars() {
+            document.body.classList.remove('stars-hidden');
+            resizeCanvas();
+            drawStars();
+        }
+        function stopStars() {
+            document.body.classList.add('stars-hidden');
+            if (starsAnimationId) {
+                cancelAnimationFrame(starsAnimationId);
+            }
+        }
+        // --- Akhir Efek Bintang ---
+
+        
+        /* --- BAGIAN SETTINGS (Global) --- */
+        const defaultSettings = {
+            accentColor: '#ffffff',
+            fontSize: '16px',
+            fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif", 
+            textGlow: true,
+            stars: true,
+            music: true,
+            musicVolume: 0.3,
+            vibration: true,
+            devMode: false, 
+            skipSplash: false,
+        };
+
+        function saveSetting(key, value) {
+            SETTINGS[key] = value;
+            localStorage.setItem('XVCT_SETTINGS', JSON.stringify(SETTINGS));
+        }
+        
+        function loadSettings() {
+            const saved = localStorage.getItem('XVCT_SETTINGS');
+            SETTINGS = saved ? JSON.parse(saved) : { ...defaultSettings };
+            for (const key in defaultSettings) {
+                if (SETTINGS[key] === undefined) {
+                    SETTINGS[key] = defaultSettings[key];
+                }
+            }
+            applySettings();
+            updateSettingsUI();
+        }
+        
+        function applySettings() {
+            document.documentElement.style.setProperty('--primary-color', SETTINGS.accentColor);
+            const glow = SETTINGS.accentColor === '#ffffff' ? 'rgba(255, 255, 255, 0.3)' : SETTINGS.accentColor + '66';
+            document.documentElement.style.setProperty('--primary-glow', glow);
+            document.body.style.fontSize = SETTINGS.fontSize;
+            document.body.style.fontFamily = SETTINGS.fontFamily; 
+            if (SETTINGS.textGlow) document.body.classList.add('text-glow');
+            else document.body.classList.remove('text-glow');
+            if (SETTINGS.stars) startStars();
+            else stopStars();
+            bgMusic.volume = SETTINGS.musicVolume;
+            if (SETTINGS.music) bgMusic.play().catch(() => {});
+            else bgMusic.pause();
+            
+            const quickNavTools = document.getElementById('quick-nav-tools'); // (Tidak ada di halaman ini)
+            if (toolsTabButton) {
+                toolsTabButton.style.display = SETTINGS.devMode ? 'block' : 'none';
+            }
+            if (quickNavTools) {
+                quickNavTools.style.display = SETTINGS.devMode ? 'flex' : 'none';
+            }
+        }
+        
+        function updateSettingsUI() {
+            document.getElementById('setting-accent-color').value = SETTINGS.accentColor;
+            document.getElementById('setting-font-size').value = SETTINGS.fontSize;
+            document.getElementById('setting-font-family').value = SETTINGS.fontFamily; 
+            document.getElementById('setting-text-glow').checked = SETTINGS.textGlow;
+            document.getElementById('setting-stars').checked = SETTINGS.stars;
+            document.getElementById('setting-music-toggle').checked = SETTINGS.music;
+            document.getElementById('setting-music-volume').value = SETTINGS.musicVolume;
+            document.getElementById('setting-vibration').checked = SETTINGS.vibration;
+            document.getElementById('setting-dev-mode').checked = SETTINGS.devMode; 
+            document.getElementById('setting-skip-splash').checked = SETTINGS.skipSplash;
+        }
+        
+        function vibrate() {
+            if (SETTINGS.vibration && navigator.vibrate) {
+                navigator.vibrate(50);
+            }
+        }
+        
+        // --- Event Listener Settings ---
+        document.getElementById('setting-accent-color').addEventListener('change', (e) => { saveSetting('accentColor', e.target.value); applySettings(); });
+        document.getElementById('setting-font-size').addEventListener('change', (e) => { saveSetting('fontSize', e.target.value); applySettings(); });
+        document.getElementById('setting-font-family').addEventListener('change', (e) => { saveSetting('fontFamily', e.target.value); applySettings(); });
+        document.getElementById('setting-text-glow').addEventListener('change', (e) => { saveSetting('textGlow', e.target.checked); applySettings(); });
+        document.getElementById('setting-stars').addEventListener('change', (e) => { saveSetting('stars', e.target.checked); applySettings(); });
+        document.getElementById('setting-music-toggle').addEventListener('change', (e) => { saveSetting('music', e.target.checked); applySettings(); });
+        document.getElementById('setting-music-volume').addEventListener('input', (e) => { saveSetting('musicVolume', e.target.value); applySettings(); });
+        document.getElementById('setting-vibration').addEventListener('change', (e) => { saveSetting('vibration', e.target.checked); });
+        document.getElementById('setting-dev-mode').addEventListener('change', (e) => { saveSetting('devMode', e.target.checked); applySettings(); });
+        document.getElementById('setting-skip-splash').addEventListener('change', (e) => { saveSetting('skipSplash', e.target.checked); });
+        document.getElementById('setting-clear-cache').addEventListener('click', () => {
+            if(confirm('Anda yakin ingin mereset semua pengaturan? Halaman akan dimuat ulang.')) {
+                localStorage.removeItem('XVCT_SETTINGS');
+                window.location.reload();
+            }
+        });
+        document.getElementById('setting-logout-button').addEventListener('click', logout);
+        /* --- AKHIR BAGIAN SETTINGS --- */
+        
+
+        // --- Fungsi Inisialisasi Utama ---
+        document.addEventListener('DOMContentLoaded', () => {
+            loadSettings(); 
+            const splash = document.getElementById('splash-screen');
+            if (splash && !SETTINGS.skipSplash) {
+                 setTimeout(() => splash.classList.add('hidden'), 1500); 
+            } else if (splash) {
+                splash.classList.add('hidden');
+            }
+            if (SETTINGS.music) {
+                bgMusic.play().catch(() => {});
+            }
+            init();
+        });
+
+        function init() {
+            const user = localStorage.getItem('user');
+            if (!user) {
+                alert("Sesi tidak ditemukan. Harap login kembali.");
+                window.location.href = 'login.html'; 
+            } else {
+                showDashboardPage();
+            }
+            
+            // Event listener untuk form edit
+            profileEditForm.addEventListener('submit', handleProfileUpdate);
+            passwordEditForm.addEventListener('submit', handlePasswordUpdate);
+        }
+    </script>
+
+</body>
+</html>

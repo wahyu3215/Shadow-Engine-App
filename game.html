@@ -1,0 +1,1701 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SHADOW | Game Hub (v3.2)</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    <style>
+        /* --- CSS INTI (Sidebar, Modal, Tombol) --- */
+        :root {
+            --bg-color: #0d0d0d;
+            --container-bg: rgba(26, 26, 26, 0.9);
+            --input-bg: #222222;
+            --border-color: #333;
+            --text-color: #e0e0e0;
+            --primary-color: #ffffff;
+            --primary-glow: rgba(255, 255, 255, 0.3);
+            --success-color: #2ecc71;
+            --danger-color: #e74c3c;
+            --coin-color: #f1c40f; 
+            --sidebar-width: 250px; 
+            --border-radius-main: 16px;
+            --border-radius-small: 8px;
+            --border-radius-pill: 50px;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color); color: var(--text-color);
+            display: flex; justify-content: center; align-items: center;
+            min-height: 100vh; overflow-x: hidden; flex-direction: column;
+            transition: margin-left 0.3s ease, font-family 0.3s ease; 
+        }
+        #sidebar {
+            position: fixed; top: 0; left: 0; height: 100%;
+            width: var(--sidebar-width); background-color: rgba(10, 10, 10, 0.95);
+            padding-top: 60px; box-shadow: 2px 0 10px rgba(0, 0, 0, 0.5);
+            transform: translateX(-100%); transition: transform 0.3s ease;
+            z-index: 100; backdrop-filter: blur(5px); overflow-y: auto;
+        }
+        #sidebar.open { transform: translateX(0); }
+        .menu-header {
+            position: absolute; top: 0; left: 0; width: 100%;
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 10px 20px; background: #111; z-index: 101;
+        }
+        .menu-header h3 { color: var(--primary-color); margin: 0; font-size: 1.2rem; border-bottom: none; }
+        .menu-header button { width: auto; padding: 5px 10px; text-transform: none; background: #333; color: #fff; border:none; cursor: pointer; }
+        .sidebar-nav a, .sidebar-nav button {
+            display: block; width: 100%; text-align: left; padding: 15px 20px;
+            text-decoration: none; color: var(--text-color); background: none;
+            border: none; cursor: pointer; font-size: 1rem;
+            transition: background-color 0.3s, color 0.3s; position: relative;
+        }
+        .sidebar-nav a:hover, .sidebar-nav button:hover, .sidebar-nav a.active {
+            background-color: var(--primary-color); color: var(--bg-color);
+        }
+        .sidebar-nav a.active { font-weight: bold; }
+        .sidebar-nav a i, .sidebar-nav button i { margin-right: 10px; }
+        .sidebar-close {
+            position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+            font-size: 0.8rem; color: #aaa; opacity: 0; transition: opacity 0.2s;
+        }
+        .sidebar-nav button:hover .sidebar-close, .sidebar-nav a:hover .sidebar-close { opacity: 1; }
+        #menu-toggle, #settings-toggle {
+            position: fixed; top: 20px; z-index: 102;
+            border: none; padding: 10px 15px; border-radius: var(--border-radius-small);
+            font-size: 1.2rem; cursor: pointer; transition: all 0.3s; width: auto; display: none;
+        }
+        #menu-toggle { left: 20px; background: var(--primary-color); color: var(--bg-color); box-shadow: 0 0 10px var(--primary-glow); }
+        #settings-toggle { right: 20px; background: #222; color: var(--primary-color); border: 1px solid var(--border-color); box-shadow: 0 0 10px rgba(0,0,0,0.5); }
+        #sidebar-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 99; display: none; }
+        .container {
+            width: 90%; max-width: 1200px; background-color: var(--container-bg);
+            border-radius: var(--border-radius-main); padding: 2rem;
+            margin: 2rem 0; z-index: 10; backdrop-filter: blur(10px);
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.8); border: 1px solid var(--border-color);
+        }
+        .page { display: none; }
+        h1 {
+            font-size: 2.5rem; font-weight: bold; letter-spacing: 2px;
+            background: linear-gradient(90deg, #888, #fff, #888, #fff);
+            background-size: 200% auto; color: transparent;
+            -webkit-background-clip: text; background-clip: text;
+            animation: text-shine 5s linear infinite;
+            text-align: center; margin-bottom: 0.5rem;
+        }
+        @keyframes text-shine { to { background-position: -200% center; } }
+        h2 { font-size: 1.8rem; color: var(--primary-color); text-align: center; margin-bottom: 1.5rem; }
+        h3 { font-size: 1.4rem; color: var(--text-color); border-bottom: 1px solid var(--primary-color); padding-bottom: 5px; margin-bottom: 1rem; }
+        button {
+            width: 100%; padding: 0.8rem; font-size: 1rem; border-radius: var(--border-radius-pill);
+            background-color: var(--primary-color); color: #000; font-weight: bold;
+            border: none; cursor: pointer; text-transform: uppercase; letter-spacing: 1px;
+            transition: all 0.3s ease; position: relative; font-family: inherit;
+        }
+        button:hover { box-shadow: 0 0 15px var(--primary-glow); filter: brightness(1.2); transform: translateY(-2px); }
+        button:disabled { background-color: #555; color: #999; cursor: not-allowed; box-shadow: none; transform: none; }
+        button.secondary { background-color: transparent; border: 1px solid var(--primary-color); color: var(--primary-color); }
+        button.secondary:hover { background-color: var(--primary-color); color: #000; }
+        button.danger { background-color: var(--danger-color); border-color: var(--danger-color); color: white; }
+        
+        .coin-balance-display {
+            text-align: center; font-size: 1.3rem; font-weight: 700;
+            color: var(--coin-color); text-shadow: 0 0 10px rgba(241, 196, 15, 0.5);
+            margin: 0.5rem auto 1.5rem auto; padding: 10px;
+            background: rgba(0,0,0,0.3); border-radius: var(--border-radius-pill);
+            border: 1px solid var(--coin-color); max-width: 300px;
+            transition: all 0.3s ease;
+        }
+        .coin-balance-display i { margin-right: 10px; }
+        
+        #modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.7); z-index: 199;
+            display: none; opacity: 0; transition: opacity 0.3s ease;
+        }
+        #settings-modal, .game-modal {
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.95);
+            width: 90%; max-width: 500px; max-height: 90vh;
+            overflow-y: auto;
+            background: var(--container-bg); border-radius: var(--border-radius-main);
+            border: 1px solid var(--border-color); box-shadow: 0 0 30px rgba(0,0,0,0.8);
+            z-index: 200; display: none; opacity: 0; transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+        #settings-modal.open, .game-modal.open, #modal-overlay.open { display: block; opacity: 1; }
+        #settings-modal.open, .game-modal.open { transform: translate(-50%, -50%) scale(1); }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; padding: 1rem 1.5rem; border-bottom: 1px solid var(--border-color); }
+        .modal-header h2 { margin: 0; font-size: 1.5rem; }
+        .modal-header button { width: auto; padding: 5px 10px; background: transparent; color: var(--text-color); border: none; font-size: 1.5rem; cursor: pointer; }
+        .modal-body { padding: 1.5rem; }
+        .setting-group { margin-bottom: 1.5rem; }
+        .setting-group h3 { font-size: 1.1rem; color: var(--primary-color); border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem; margin-bottom: 1rem; }
+        .setting-item { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+        .setting-item label { margin: 0; font-size: 1rem; }
+        .toggle-switch { position: relative; display: inline-block; width: 50px; height: 28px; }
+        .toggle-switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #333; transition: .4s; border-radius: 34px; }
+        .slider:before { position: absolute; content: ""; height: 20px; width: 20px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: var(--primary-color); }
+        input:checked + .slider:before { background-color: #000; transform: translateX(22px); }
+        canvas#stars { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; pointer-events: none; }
+        body.stars-hidden canvas#stars { display: none; }
+        footer.dev-contact { text-align: center; margin-top: 2rem; padding-top: 1rem; border-top: 1px solid var(--border-color); font-size: 0.9rem; color: #888; }
+        .notification {
+            text-align: center; padding: 0.8rem; margin-bottom: 1rem;
+            border-radius: var(--border-radius-small); display: none;
+            font-size: 0.9rem; border: 1px solid;
+        }
+        .notification.success { background-color: #0f3d1b; color: #8affab; border-color: #1a7431; }
+        .notification.error { background-color: #3d0f0f; color: #ffa8a8; border-color: #741a1a; }
+        .notification.info { background-color: #0f2a3d; color: #a8dfff; border-color: #1a5674; }
+        
+        /* --- CSS KHUSUS GAME HUB --- */
+        .challenge-container {
+            background: var(--input-bg);
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius-main);
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        .challenge-container h3 {
+            text-align: center;
+            border: none;
+            margin-top: 0;
+            color: var(--primary-color);
+        }
+        .challenge-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #111;
+            border-radius: var(--border-radius-small);
+            padding: 1rem;
+            border-left: 4px solid var(--primary-color);
+        }
+        .challenge-details p { font-size: 1rem; margin: 0; }
+        .challenge-details span { font-size: 0.9rem; color: #aaa; }
+        .challenge-reward { font-weight: bold; color: var(--coin-color); font-size: 1.1rem; }
+        .challenge-claim-btn { width: 100px; padding: 0.6rem; font-size: 0.9rem; }
+        .challenge-claim-btn:disabled { background: var(--success-color); color: #fff; }
+        
+        .game-hub-layout { display: grid; grid-template-columns: 1fr; gap: 2rem; } /* (MODIFIKASI) Default 1 kolom (9:16) */
+        .game-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; }
+        .game-card {
+            background: var(--input-bg); border-radius: var(--border-radius-main);
+            border: 1px solid var(--border-color); overflow: hidden;
+            text-decoration: none; color: var(--text-color);
+            transition: all 0.3s ease; display: flex; flex-direction: column;
+        }
+        .game-card:hover { transform: translateY(-5px); box-shadow: 0 0 20px var(--primary-glow); border-color: var(--primary-color); }
+        .game-card-image {
+            width: 100%; height: 120px; background-color: #333;
+            background-size: cover; background-position: center;
+            display: flex; justify-content: center; align-items: center;
+            font-size: 3rem; color: var(--primary-color);
+        }
+        .game-card[data-game="car"] .game-card-image { background-image: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url('https://files.catbox.moe/k6f7i7.png'); }
+        .game-card[data-game="ttt"] .game-card-image { background-image: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url('https://files.catbox.moe/q9p17d.png'); }
+        .game-card[data-game="code"] .game-card-image { background-image: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url('https://files.catbox.moe/819m31.png'); }
+        .game-card[data-game="math"] .game-card-image { background-image: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url('https://files.catbox.moe/3w8f0d.png'); }
+        .game-card-content { padding: 1rem; flex-grow: 1; display: flex; flex-direction: column; }
+        .game-card-content h3 { font-size: 1.2rem; color: var(--primary-color); border: none; margin: 0 0 0.5rem 0; padding: 0; }
+        .game-card-content p { font-size: 0.9rem; color: #aaa; margin-bottom: 1rem; flex-grow: 1; }
+        .game-card-highscore {
+            font-size: 0.8rem;
+            color: var(--coin-color);
+            margin-bottom: 1rem;
+            font-weight: bold;
+            display: block;
+            text-align: center;
+        }
+        .game-card .game-card-content button { width: 100%; padding: 0.6rem; font-size: 0.9rem; margin-top: auto; }
+        .game-card:not(a) { cursor: pointer; }
+
+        .profile-summary-card {
+            background: var(--input-bg); border: 1px solid var(--border-color);
+            border-radius: var(--border-radius-main); padding: 1.5rem;
+            margin-bottom: 1.5rem; text-align: center;
+        }
+        .profile-summary-card #profile-rank-icon { font-size: 4rem; color: #cd7f32; text-shadow: 0 0 10px #cd7f32; margin-bottom: 0.5rem; }
+        .profile-summary-card h3 { border: none; padding: 0; margin: 0; font-size: 1.3rem; color: var(--primary-color); }
+        .profile-summary-card p { font-size: 0.9rem; color: #aaa; margin: 0.2rem 0 1rem 0; }
+        #profile-exp-bar { width: 100%; height: 10px; background: #111; border-radius: 5px; margin-top: 0.5rem; overflow: hidden; }
+        #profile-exp-fill { width: 45%; height: 100%; background: var(--primary-color); border-radius: 5px; box-shadow: 0 0 5px var(--primary-glow); transition: width 0.5s ease; }
+        
+        /* (BARU) Tombol Misi di bawah kartu profil */
+        .profile-card-footer {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1.5rem;
+            border-top: 1px solid var(--border-color);
+            padding-top: 1.5rem;
+        }
+        .profile-card-footer a {
+            text-decoration: none;
+            flex: 1;
+        }
+        .profile-card-footer button {
+            width: 100%;
+            padding: 0.6rem;
+            font-size: 0.9rem;
+        }
+        .season-timer {
+            flex: 1;
+            font-size: 0.9rem;
+            color: var(--text-color);
+            text-align: left;
+            padding-left: 0.5rem;
+            display: flex;
+            align-items: center;
+        }
+        .season-timer strong { color: var(--danger-color); margin-left: 5px; }
+        
+        .social-tabs { background: var(--input-bg); border: 1px solid var(--border-color); border-radius: var(--border-radius-main); overflow: hidden; }
+        .tab-buttons { display: flex; background: #111; }
+        .tab-buttons button { flex: 1; padding: 0.8rem 0.5rem; font-size: 0.9rem; background: transparent; color: #888; border: none; border-radius: 0; border-bottom: 3px solid transparent; }
+        .tab-buttons button.active { color: var(--primary-color); border-bottom-color: var(--primary-color); }
+        .social-tab-content { display: none; padding: 1rem; max-height: 300px; overflow-y: auto; }
+        .social-tab-content.active { display: block; }
+        .friend-list-item, .leaderboard-item { display: flex; align-items: center; justify-content: space-between; padding: 0.7rem 0.5rem; border-bottom: 1px solid var(--border-color); }
+        .friend-list-item:last-child, .leaderboard-item:last-child { border-bottom: none; }
+        .friend-info { display: flex; align-items: center; }
+        .friend-info img { width: 30px; height: 30px; border-radius: 50%; margin-right: 10px; background: #333; }
+        .friend-name { font-weight: bold; }
+        .friend-status { font-size: 0.8rem; }
+        .friend-status.online { color: var(--success-color); }
+        .friend-status.offline { color: #666; }
+        .leaderboard-rank { font-weight: bold; color: var(--primary-color); min-width: 25px; }
+        .leaderboard-name { flex-grow: 1; margin-left: 10px; }
+        .leaderboard-score { font-weight: bold; color: var(--coin-color); }
+        .game-modal-body { padding: 1.5rem; }
+        .game-option-group { margin-bottom: 1.5rem; }
+        .game-option-group label { display: block; margin-bottom: 0.7rem; font-weight: 500; color: #ccc; }
+        .game-option-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.8rem; }
+        .game-option-group select, .game-option-group input[type="range"] {
+            width: 100%; padding: 0.8rem; font-size: 1rem;
+            border-radius: var(--border-radius-small); border: 1px solid var(--border-color);
+            background-color: var(--input-bg); color: var(--text-color);
+        }
+        .game-option-group select option:disabled { color: #666; font-style: italic; }
+        
+        #math-duel-result-modal .modal-body { text-align: center; }
+        #math-duel-result-modal .duel-score-display { display: flex; justify-content: space-around; margin: 1.5rem 0; }
+        .duel-score-box { background: #111; padding: 1rem; border-radius: var(--border-radius-small); border: 1px solid var(--border-color); width: 45%; }
+        .duel-score-box h3 { border: none; margin: 0; padding: 0; font-size: 1rem; color: #aaa; }
+        .duel-score-box p { font-size: 2.5rem; font-weight: bold; color: var(--primary-color); }
+        #duel-winner { font-size: 1.5rem; font-weight: 500; }
+        
+        @media (min-width: 901px) {
+            .game-hub-layout { 
+                grid-template-columns: 2.5fr 1fr; /* 2 kolom di desktop */
+            }
+            .social-stats-container {
+                order: 0; /* Kembali ke kanan di desktop */
+            }
+        }
+        @media (max-width: 480px) {
+            .game-grid { grid-template-columns: 1fr 1fr; gap: 1rem; }
+            .game-card-image { height: 80px; font-size: 2rem; }
+        }
+        
+        /* --- CSS UNTUK KONTAINER GAME --- */
+        .game-container {
+            display: none; width: 100%; height: 100vh;
+            position: fixed; top: 0; left: 0;
+            background: var(--bg-color); z-index: 150; overflow: auto;
+        }
+        .game-header { display: flex; align-items: center; padding: 1rem; background: #111; border-bottom: 1px solid var(--border-color); }
+        .game-header .back-to-hub-btn { width: auto; padding: 0.5rem 1rem; margin-right: 1rem; font-size: 1rem; }
+        .game-header h2 { margin: 0; font-size: 1.5rem; text-align: left; }
+        .game-hud { margin-left: auto; display: flex; gap: 1rem; align-items: center; }
+        .hud-item { font-weight: bold; }
+        .hud-item i { margin-right: 5px; }
+        #game-hud-coins-math { color: var(--coin-color); }
+        #game-hud-exp-math { color: var(--primary-color); }
+        
+        /* --- CSS UNTUK MATH QUIZ --- */
+        #math-quiz-container .game-content { padding: 1rem; max-width: 500px; margin: 2rem auto; text-align: center; }
+        #math-question { font-size: 3rem; font-weight: bold; color: var(--primary-color); margin: 2rem 0; padding: 1rem; background: var(--input-bg); border-radius: var(--border-radius-main); }
+        #math-answer { width: 100%; padding: 1rem; font-size: 2rem; text-align: center; border-radius: var(--border-radius-small); border: 1px solid var(--border-color); background-color: var(--input-bg); color: var(--text-color); }
+        #math-score, #math-timer { font-size: 1.5rem; margin-top: 1rem; }
+    </style>
+</head>
+<body class="stars-hidden"> <canvas id="stars"></canvas>
+
+    <audio id="coin-sfx" src="https://files.catbox.moe/kge8er.mp3"></audio>
+    <audio id="levelup-sfx" src="https://files.catbox.moe/rgt6e6.mp3"></audio>
+
+    <div id="splash-screen" style="display: none;"></div>
+    
+    <audio id="bg-music" loop>
+        <source src="https://files.catbox.moe/exgp8t.mp4" type="audio/mpeg">
+    </audio>
+    
+    <button id="menu-toggle"><i class="fas fa-bars"></i></button>
+    <button id="settings-toggle"><i class="fas fa-cog"></i></button>
+    <div id="sidebar-overlay"></div>
+    
+    <div id="sidebar">
+        <div class="menu-header">
+            <h3>NAVIGASI</h3>
+            <button class="secondary" id="sidebar-close-btn"><i class="fas fa-times"></i></button>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="index.html" class="tab-link"><i class="fas fa-satellite-dish"></i> LOBBY <span class="sidebar-close">x</span></a>
+            <a href="attack.html" class="tab-link"><i class="fas fa-bolt"></i> ATTACK <span class="sidebar-close">x</span></a>
+            <a href="store.html" class="tab-link"><i class="fas fa-store"></i> STORE <span class="sidebar-close">x</span></a>
+            <a href="missions.html" class="tab-link"><i class="fas fa-tasks"></i> MISI <span class="sidebar-close">x</span></a>
+            <a href="profile.html" class="tab-link"><i class="fas fa-user-astronaut"></i> PROFILE <span class="sidebar-close">x</span></a>
+            <a href="ai.html" class="tab-link"><i class="fas fa-robot"></i> AI CHAT <span class="sidebar-close">x</span></a>
+            <a href="quotes.html" class="tab-link"><i class="fas fa-feather-alt"></i> QUOTES GEN <span class="sidebar-close">x</span></a>
+            <a href="logs.html" class="tab-link"><i class="fas fa-history"></i> LOGS <span class="sidebar-close">x</span></a>
+            <a href="tools.html" class="tab-link" id="tools-tab-button" style="display: none;"><i class="fas fa-tools"></i> TOOLS <span class="sidebar-close">x</span></a>
+            
+            <a href="game.html" class="tab-link active"><i class="fas fa-gamepad"></i> GAME HUB <span class="sidebar-close">x</span></a>
+            
+            <a href="admin.html" class="tab-link" id="admin-tab-button" style="display: none;"><i class="fas fa-user-cog"></i> ADMIN <span class="sidebar-close">x</span></a>
+            <button id="sidebar-settings-button" class="tab-link"><i class="fas fa-cog"></i> SETTINGS <span class="sidebar-close">x</span></button>
+        </nav>
+        <footer class="dev-contact" style="position: absolute; bottom: 10px; width: 100%; background: #111; padding: 10px 0;">
+            <p>v3.2 (Game Hub) by zexxo.</p>
+        </footer>
+    </div>
+
+    <div id="game-hub-page" class="container page" style="display: none;">
+        <h1><i class="fas fa-gamepad"></i> Game Hub</h1>
+        
+        <div class="coin-balance-display">
+            <i class="fas fa-coins"></i> <span id="user-coin-balance">...</span> Coins
+        </div>
+        
+        <div class="challenge-container">
+            <h3><i class="fas fa-star"></i> Tantangan Harian</h3>
+            <div id="daily-challenge-list">
+                <p style="text-align: center; color: #888;">Memuat tantangan...</p>
+            </div>
+        </div>
+
+        <div id="hub-notification" class="notification"></div>
+        
+        <div class="game-hub-layout">
+            
+            <div class="social-stats-container">
+                
+                <div class="profile-summary-card">
+                    <div id="profile-rank-icon"><i class="fas fa-trophy"></i></div>
+                    <h3 id="profile-username">User</h3>
+                    <p>Level <span id="profile-level">1</span> - <span id="profile-rank">Loading...</span></p>
+                    <div id="profile-exp-bar">
+                        <div id="profile-exp-fill"></div>
+                    </div>
+                    <p style="font-size: 0.8rem; margin-top: 0.5rem;" id="profile-exp-text">0 / 1000 EXP</p>
+                    
+                    <div class="profile-card-footer">
+                        <div class="season-timer">
+                            <i class="fas fa-clock"></i>
+                            <strong id="season-timer">...</strong>
+                        </div>
+                        <a href="missions.html">
+                            <button class="secondary"><i class="fas fa-tasks"></i> Misi</button>
+                        </a>
+                    </div>
+                </div>
+                
+                <div class="social-tabs">
+                    <div class="tab-buttons">
+                        <button class="social-tab-btn active" data-tab="friends-tab"><i class="fas fa-user-friends"></i> Teman</button>
+                        <button class="social-tab-btn" data-tab="global-tab"><i class="fas fa-globe"></i> Global</button>
+                        <button class="social-tab-btn" data-tab="history-tab"><i class="fas fa-history"></i> Riwayat</button>
+                    </div>
+                    
+                    <div id="friends-tab" class="social-tab-content active">
+                        <div class="friend-list-item">
+                            <div class="friend-info">
+                                <img src="https://files.catbox.moe/fh8u76.jpg" alt="avatar" style="object-fit: cover;">
+                                <span class="friend-name">zexxo</span>
+                            </div>
+                            <span class="friend-status online"><i class="fas fa-circle"></i> Online</span>
+                        </div>
+                        <div class="friend-list-item">
+                            <div class="friend-info">
+                                <img src="https://avatars.githubusercontent.com/u/101339890?v=4" alt="avatar">
+                                <span class="friend-name">SILENTSTR</span>
+                            </div>
+                            <span class="friend-status offline"><i class="fas fa-circle"></i> Offline</span>
+                        </div>
+                    </div>
+                    
+                    <div id="global-tab" class="social-tab-content">
+                        <p style="text-align: center; color: #888; font-size: 0.9rem;">Klik kartu game untuk melihat leaderboard.</p>
+                    </div>
+                    
+                    <div id="history-tab" class="social-tab-content">
+                        <p style="text-align: center; color: #888; font-size: 0.9rem;">Belum ada riwayat.</p>
+                    </div>
+                </div>
+                
+            </div>
+            
+            <div class="game-menu-container">
+                <h3><i class="fas fa-dice"></i> Pilih Permainan</h3>
+                
+                <div class="game-grid">
+                    <a href="car.html" class="game-card" data-game="car">
+                        <div class="game-card-image"><i class="fas fa-car-side"></i></div>
+                        <div class="game-card-content">
+                            <h3>Ultimate Racing</h3>
+                            <p>Kecepatan tinggi, kejar skor, & capai Top Speed!</p>
+                            <span class="game-card-highscore" id="hs-car">Skor Tertinggi: 0</span>
+                            <button class="secondary">Mainkan</button>
+                        </div>
+                    </a>
+                    
+                    <a href="tictactoe.html" class="game-card" data-game="ttt">
+                        <div class="game-card-image"><i class="fas fa-border-all"></i></div>
+                        <div class="game-card-content">
+                            <h3>Tic Tac Toe</h3>
+                            <p>Lawan AI atau teman di halaman khusus.</p>
+                            <span class="game-card-highscore" id="hs-ttt">Menang: 0</span>
+                            <button class="secondary">Mainkan</button>
+                        </div>
+                    </a>
+                    
+                    <a href="code.html" class="game-card" data-game="code">
+                        <div class="game-card-image"><i class="fas fa-bug"></i></div>
+                        <div class="game-card-content">
+                            <h3>Kode Challenge</h3>
+                            <p>Temukan bug & asah logikamu. Dapatkan EXP!</p>
+                            <span class="game-card-highscore" id="hs-code">EXP Didapat: 0</span>
+                            <button class="secondary">Mainkan</button>
+                        </div>
+                    </a>
+                    
+                    <div class="game-card" data-game="math" id="play-math-game">
+                        <div class="game-card-image"><i class="fas fa-calculator"></i></div>
+                        <div class="game-card-content">
+                            <h3>Math Quiz</h3>
+                            <p>Seberapa cepat otakmu menghitung?</p>
+                            <span class="game-card-highscore" id="hs-math">Skor Tertinggi: 0</span>
+                            <button class="secondary">Mainkan</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+        </div>
+    </div>
+    
+    <div id="modal-overlay"></div>
+    <div id="settings-modal">
+        </div>
+    
+    <div id="math-modal" class="game-modal">
+        <div class="modal-header">
+            <h2>Opsi Math Quiz</h2>
+            <button class="modal-close-btn"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="game-modal-body">
+            <div class="game-option-group">
+                <label>Mode Permainan:</label>
+                <div class="game-option-grid">
+                    <button class="secondary" id="math-mode-solo"><i class="fas fa-user"></i> Solo Speed</button>
+                    <button class="secondary" id="math-mode-duel"><i class="fas fa-users"></i> vs. Teman</button>
+                </div>
+            </div>
+            
+            <div id="math-solo-options">
+                <div class="game-option-group">
+                    <label for="math-difficulty">Tingkat Kesulitan (Solo):</label>
+                    <select id="math-difficulty">
+                        <option value="easy">Mudah (Hanya Penjumlahan)</option>
+                        <option value="medium">Sedang (Tambah & Kurang)</option>
+                        <option value="hard">Sulit (Tambah, Kurang, Kali)</option>
+                    </select>
+                </div>
+                <div class="game-option-group">
+                    <label for="math-wager-solo">Pilih Taruhan (Solo):</label>
+                    <select id="math-wager-solo">
+                        <option value="0">Fun Play (Biaya: 0 Koin | Hadiah: 0.5x EXP)</option>
+                        <option value="10">Bronze (Biaya: 10 Koin | Hadiah: 1x EXP & Koin)</option>
+                        <option value="50">Silver (Biaya: 50 Koin | Hadiah: 2x EXP & Koin)</option>
+                    </select>
+                </div>
+            </div>
+
+            <div id="math-duel-options" style="display: none;">
+                <div class="game-option-group">
+                    <label for="math-wager-duel">Taruhan Duel (Winner Takes All):</label>
+                    <select id="math-wager-duel">
+                        <option value="20">Biaya: 20 Koin (Total Hadiah: 40 Koin)</option>
+                        <option value="50">Biaya: 50 Koin (Total Hadiah: 100 Koin)</option>
+                        <option value="100">Biaya: 100 Koin (Total Hadiah: 200 Koin)</option>
+                    </select>
+                </div>
+                 <p style="font-size: 0.9rem; color: #aaa; text-align: center; margin-top: -1rem; margin-bottom: 1.5rem;">
+                    Mode duel hot-seat (bergantian). Pemenang mendapat semua koin taruhan + 100 EXP.
+                </p>
+            </div>
+            
+            <button id="start-math-btn" disabled>Pilih Mode</button>
+        </div>
+    </div>
+    
+    <div id="math-duel-result-modal" class="game-modal">
+        <div class="modal-header">
+            <h2>Hasil Duel</h2>
+            <button class="modal-close-btn"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="modal-body">
+            <h2 id="duel-winner">Pemain 1 Menang!</h2>
+            <p id="duel-winnings" style="font-size: 1.2rem; color: var(--coin-color); font-weight: bold;"></p>
+            <div class="duel-score-display">
+                <div class="duel-score-box">
+                    <h3>Pemain 1</h3>
+                    <p id="duel-p1-score">0</p>
+                </div>
+                <div class="duel-score-box">
+                    <h3>Pemain 2</h3>
+                    <p id="duel-p2-score">0</p>
+                </div>
+            </div>
+            <button id="duel-close-btn" class="secondary" style="margin-top: 1rem;">Tutup</button>
+        </div>
+    </div>
+    
+    <div id="math-quiz-container" class="game-container">
+        <div class="game-header">
+            <button class="secondary back-to-hub-btn"><i class="fas fa-arrow-left"></i> Hub</button>
+            <h2>Math Quiz</h2>
+            <div class="game-hud">
+                <span id="game-hud-coins-math" class="hud-item"><i class="fas fa-coins"></i> 0</span>
+                <span id="game-hud-exp-math" class="hud-item"><i class="fas fa-star"></i> 0</span>
+            </div>
+        </div>
+        <div class="game-content">
+            <div id="math-score">Skor: 0</div>
+            <div id="math-timer">Waktu: 60</div>
+            <div id="math-question">10 + 5 = ?</div>
+            <input type="number" id="math-answer" placeholder="Jawaban..." autocomplete="off">
+        </div>
+    </div>
+
+
+    <script>
+        // --- PENGATURAN GITLAB (LENGKAP) ---
+        const GITLAB_TOKEN = 'glpat-9cZaOPR0hBHj-qiqIqzT9W86MQp1Omlsc2xiCw.01.120onr34s';
+        const GITLAB_PROJECT_ID = '75681438';
+        const GITLAB_BRANCH = 'main';
+        
+        const USERS_FILE = 'users.json';
+        const LEADERBOARD_FILE = 'leaderboard.json';
+        const CHALLENGES_FILE = 'challenges.json'; 
+        const COINS_FILE = 'coins.json'; 
+        
+        const GITLAB_BASE_URL = `https://gitlab.com/api/v4/projects/${GITLAB_PROJECT_ID}/repository/files/`;
+        const GITLAB_USERS_URL = `${GITLAB_BASE_URL}${encodeURIComponent(USERS_FILE)}`;
+        const GITLAB_LEADERBOARD_URL = `${GITLAB_BASE_URL}${encodeURIComponent(LEADERBOARD_FILE)}`;
+        const GITLAB_CHALLENGES_URL = `${GITLAB_BASE_URL}${encodeURIComponent(CHALLENGES_FILE)}`;
+        // --- AKHIR PENGATURAN GITLAB ---
+
+        // --- DOM Elements (Global) ---
+        const gameHubPage = document.getElementById('game-hub-page');
+        const sidebar = document.getElementById('sidebar');
+        const sidebarOverlay = document.getElementById('sidebar-overlay');
+        const menuToggle = document.getElementById('menu-toggle');
+        const sidebarCloseBtn = document.getElementById('sidebar-close-btn');
+        const toolsTabButton = document.getElementById('tools-tab-button');
+        const settingsToggle = document.getElementById('settings-toggle');
+        const sidebarSettingsButton = document.getElementById('sidebar-settings-button');
+        const modalOverlay = document.getElementById('modal-overlay');
+        const settingsModal = document.getElementById('settings-modal');
+        const settingsModalCloseBtn = document.querySelector('#settings-modal .modal-close-btn');
+        const bgMusic = document.getElementById('bg-music');
+        const globalUserCoinBalance = document.getElementById('user-coin-balance');
+        const hubNotification = document.getElementById('hub-notification');
+        
+        const sfx = {
+            coin: document.getElementById('coin-sfx'),
+            levelUp: document.getElementById('levelup-sfx')
+        };
+        
+        let USER_INFO = null;
+        let SETTINGS = {};
+        let LEADERBOARD_DATA = null;
+        let CHALLENGES_DATA = null;
+        let activeGameLoop = null; 
+        
+        let currentGame = {
+            name: null,
+            wager: 0,
+            expMulti: 0.5,
+            coinMulti: 0
+        };
+        
+        // --- Navigasi Game Hub ---
+        const gameContainers = document.querySelectorAll('.game-container');
+        const backToHubBtns = document.querySelectorAll('.back-to-hub-btn');
+        // (DIHAPUS) const playCarBtn = document.getElementById('play-car-game');
+        const playMathBtn = document.getElementById('play-math-game');
+
+        function showHub() {
+            gameHubPage.style.display = 'block';
+            gameContainers.forEach(container => container.style.display = 'none');
+            // (DIHAPUS) if (carGame.gameStarted) { carGame.reset(); }
+            if (mathGame.timerInterval) {
+                clearInterval(mathGame.timerInterval);
+                mathGame.timerInterval = null;
+            }
+            if (USER_INFO) {
+                updateProfileUI(USER_INFO);
+                updateHistoryUI(USER_INFO);
+                updateCoinDisplay(USER_INFO.coins);
+                loadChallenges(); 
+            }
+        }
+        
+        function showGame(containerId) {
+            vibrate();
+            gameHubPage.style.display = 'none';
+            gameContainers.forEach(container => container.style.display = 'none');
+            document.getElementById(containerId).style.display = 'block';
+        }
+        
+        backToHubBtns.forEach(btn => btn.addEventListener('click', showHub));
+        
+        // (DIHAPUS) Listener playCarBtn
+        
+        playMathBtn.addEventListener('click', () => {
+            vibrate();
+            document.getElementById('math-solo-options').style.display = 'block';
+            document.getElementById('math-duel-options').style.display = 'none';
+            document.getElementById('start-math-btn').disabled = true;
+            document.getElementById('start-math-btn').textContent = "Pilih Mode";
+            mathModeSoloBtn.style.borderColor = 'var(--border-color)';
+            mathModeDuelBtn.style.borderColor = 'var(--border-color)';
+            selectedMathMode = null;
+            
+            updateWagerOptions('math-wager-solo', USER_INFO.coins);
+            updateWagerOptions('math-wager-duel', USER_INFO.coins);
+            
+            document.getElementById('math-modal').classList.add('open');
+            modalOverlay.classList.add('open');
+        });
+
+        function updateWagerOptions(selectId, userCoins) {
+            const select = document.getElementById(selectId);
+            if (!select) return;
+            select.querySelectorAll('option').forEach(option => {
+                const cost = parseInt(option.value, 10);
+                option.textContent = option.textContent.replace(" (Koin Kurang)", "");
+                if (cost > userCoins) {
+                    option.disabled = true;
+                    option.textContent += " (Koin Kurang)";
+                } else {
+                    option.disabled = false;
+                }
+            });
+            if (select.options[select.selectedIndex].disabled) {
+                select.value = "0"; 
+            }
+        }
+
+        // --- Fungsi Navigasi Sidebar & Modal ---
+        function openSidebar() { sidebar.classList.add('open'); sidebarOverlay.style.display = 'block'; if (window.innerWidth > 900) { document.body.style.marginLeft = 'var(--sidebar-width)'; } }
+        function closeSidebar() { sidebar.classList.remove('open'); sidebarOverlay.style.display = 'none'; document.body.style.marginLeft = '0'; }
+        function openSettingsModal() { vibrate(); settingsModal.classList.add('open'); modalOverlay.classList.add('open'); }
+        function closeSettingsModal() { settingsModal.classList.remove('open'); modalOverlay.classList.remove('open'); }
+        menuToggle.addEventListener('click', () => { vibrate(); openSidebar(); });
+        sidebarOverlay.addEventListener('click', () => { closeSidebar(); closeGameModals(); modalOverlay.classList.remove('open'); });
+        sidebarCloseBtn.addEventListener('click', closeSidebar);
+        settingsToggle.addEventListener('click', openSettingsModal);
+        sidebarSettingsButton.addEventListener('click', () => { closeSidebar(); openSettingsModal(); });
+        if(settingsModalCloseBtn) settingsModalCloseBtn.addEventListener('click', closeSettingsModal);
+        
+        function closeGameModals() { document.querySelectorAll('.game-modal').forEach(modal => modal.classList.remove('open')); }
+        document.querySelectorAll('.game-modal .modal-close-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                closeGameModals();
+                modalOverlay.classList.remove('open');
+            });
+        });
+        
+        // --- (DIHAPUS) Logika Modal Car Game ---
+        
+        // --- Logika Modal Math ---
+        const mathModeSoloBtn = document.getElementById('math-mode-solo');
+        const mathModeDuelBtn = document.getElementById('math-mode-duel');
+        const mathSoloOptions = document.getElementById('math-solo-options');
+        const mathDuelOptions = document.getElementById('math-duel-options');
+        const mathDifficultyEl = document.getElementById('math-difficulty');
+        const startMathBtn = document.getElementById('start-math-btn');
+        const mathDuelResultModal = document.getElementById('math-duel-result-modal');
+        const duelCloseBtn = document.getElementById('duel-close-btn');
+        
+        let selectedMathMode = null;
+        
+        mathModeSoloBtn.addEventListener('click', () => {
+            vibrate();
+            selectedMathMode = 'solo';
+            startMathBtn.disabled = false;
+            startMathBtn.textContent = "Mulai Solo Speed";
+            mathModeSoloBtn.style.borderColor = 'var(--primary-color)';
+            mathModeDuelBtn.style.borderColor = 'var(--border-color)';
+            mathSoloOptions.style.display = 'block';
+            mathDuelOptions.style.display = 'none';
+        });
+        
+        mathModeDuelBtn.addEventListener('click', () => {
+            vibrate();
+            selectedMathMode = 'duel';
+            startMathBtn.disabled = false;
+            startMathBtn.textContent = "Mulai Duel";
+            mathModeDuelBtn.style.borderColor = 'var(--primary-color)';
+            mathModeSoloBtn.style.borderColor = 'var(--border-color)';
+            mathSoloOptions.style.display = 'none';
+            mathDuelOptions.style.display = 'block';
+        });
+        
+        startMathBtn.addEventListener('click', async () => {
+            try {
+                if (selectedMathMode === 'solo') {
+                    const difficulty = mathDifficultyEl.value;
+                    const select = document.getElementById('math-wager-solo');
+                    const wager = parseInt(select.value, 10);
+                    const selectedOption = select.options[select.selectedIndex];
+                    
+                    currentGame.name = 'math';
+                    currentGame.wager = wager;
+                    currentGame.expMulti = parseFloat(selectedOption.textContent.match(/(\d\.*\d*)x EXP/)[1] || 0.5);
+                    currentGame.coinMulti = parseFloat(selectedOption.textContent.match(/(\d\.*\d*)x EXP/)[1] || 1);
+                    if (wager === 0) currentGame.coinMulti = 0;
+                    
+                    await deductCoins(wager, "Biaya Masuk Math Quiz (Solo)");
+                    
+                    closeGameModals();
+                    modalOverlay.classList.remove('open');
+                    showGame('math-quiz-container');
+                    mathGame.start(difficulty); 
+                    
+                } else if (selectedMathMode === 'duel') {
+                    const select = document.getElementById('math-wager-duel');
+                    const wager = parseInt(select.value, 10);
+                    
+                    currentGame.name = 'math_duel';
+                    currentGame.wager = wager; 
+                    currentGame.expMulti = 1; 
+                    currentGame.coinMulti = 2;
+                    
+                    await deductCoins(wager, "Biaya Masuk Math Quiz (Duel)"); 
+                    
+                    closeGameModals();
+                    modalOverlay.classList.remove('open');
+                    showGame('math-quiz-container');
+                    mathGame.startDuel();
+                }
+            } catch (error) {
+                showNotification('hub-notification', `Gagal: ${error.message}`, 'error');
+                closeGameModals();
+                modalOverlay.classList.remove('open');
+            }
+        });
+        
+        duelCloseBtn.addEventListener('click', () => {
+            closeGameModals();
+            modalOverlay.classList.remove('open');
+            showHub();
+        });
+
+        // --- Logika Tantangan Harian ---
+        async function loadChallenges() {
+            const container = document.getElementById('daily-challenge-list');
+            if (!container) return;
+            container.innerHTML = '<p style="text-align: center; color: #888;">Memuat tantangan...</p>';
+            
+            try {
+                let challenges = [];
+                try {
+                    const { data: serverChallenges } = await getGitLabFile(GITLAB_CHALLENGES_URL);
+                    if (serverChallenges && serverChallenges.daily) {
+                        challenges = serverChallenges.daily;
+                        CHALLENGES_DATA = serverChallenges.daily;
+                    } else {
+                         throw new Error("Format challenges.json tidak valid.");
+                    }
+                } catch (e) {
+                    console.warn("Gagal fetch challenges.json, menggunakan data simulasi.");
+                    challenges = [
+                        { id: "car_50k", game: "car", title: "Skor 50.000 di Racing", target: 50000, reward: 100 },
+                        { id: "math_20", game: "math", title: "Skor 20 di Math (Solo)", target: 20, reward: 50 }
+                    ];
+                }
+                
+                if (!USER_INFO.challenge_progress) USER_INFO.challenge_progress = {};
+                const todayKey = new Date().toISOString().split('T')[0];
+                
+                container.innerHTML = '';
+                if (challenges.length === 0) throw new Error("Tidak ada tantangan harian hari ini.");
+                
+                challenges.forEach(ch => {
+                    const challengeKey = `${ch.id}_${todayKey}`;
+                    const isClaimed = USER_INFO.challenge_progress[challengeKey] === 'claimed';
+                    
+                    const item = document.createElement('div');
+                    item.className = 'challenge-item';
+                    item.innerHTML = `
+                        <div class="challenge-details">
+                            <p>${ch.title}</p>
+                            <span class="challenge-reward"><i class="fas fa-coins"></i> +${ch.reward} Koin</span>
+                        </div>
+                        <button class="challenge-claim-btn secondary" id="btn-ch-${ch.id}" ${isClaimed ? 'disabled' : ''}>
+                            ${isClaimed ? 'Selesai' : 'Klaim'}
+                        </button>
+                    `;
+                    
+                    if (!isClaimed) {
+                        item.querySelector('button').addEventListener('click', (e) => handleChallengeClaim(e, ch, challengeKey));
+                    }
+                    container.appendChild(item);
+                });
+                
+            } catch (error) {
+                container.innerHTML = `<p style="text-align: center; color: var(--danger-color);">${error.message}</p>`;
+            }
+        }
+        
+        async function handleChallengeClaim(e, challenge, challengeKey) {
+            const btn = e.currentTarget;
+            disableButton(btn);
+            hideAllNotifications();
+            
+            try {
+                const progress = checkChallengeProgress(challenge);
+                if (!progress.completed) {
+                    throw new Error(`Belum selesai! (Progres: ${progress.current} / ${challenge.target})`);
+                }
+                
+                await addCoins(challenge.reward, `Klaim Tantangan: ${challenge.title}`);
+                
+                const fileUrl = GITLAB_BASE_URL + encodeURIComponent(USERS_FILE);
+                const { data: usersData, lastCommitId } = await getGitLabFile(fileUrl);
+                const userIndex = usersData.users.findIndex(u => u.username === USER_INFO.username);
+                
+                if (userIndex > -1) {
+                    if (!usersData.users[userIndex].challenge_progress) {
+                        usersData.users[userIndex].challenge_progress = {};
+                    }
+                    usersData.users[userIndex].challenge_progress[challengeKey] = 'claimed';
+                    
+                    await updateGitLabFile(
+                        fileUrl,
+                        `CHALLENGE: ${USER_INFO.username} claimed ${challenge.id}`,
+                        usersData,
+                        lastCommitId,
+                        null
+                    );
+                    
+                    USER_INFO = usersData.users[userIndex];
+                    localStorage.setItem('user', JSON.stringify(USER_INFO));
+                    
+                    btn.textContent = "Selesai";
+                    btn.disabled = true;
+                    showNotification('hub-notification', `+${challenge.reward} Koin! Tantangan Selesai!`, 'success');
+                    
+                } else {
+                    throw new Error("User tidak ditemukan di server.");
+                }
+                
+            } catch (error) {
+                showNotification('hub-notification', `Gagal Klaim: ${error.message}`, 'error');
+                enableButton(btn, "Klaim");
+            }
+        }
+        
+        function checkChallengeProgress(challenge) {
+            const history = USER_INFO.history || [];
+            const todayKey = new Date().toISOString().split('T')[0];
+            let currentProgress = 0;
+            
+            const todayHistory = history.filter(entry => 
+                entry.date.startsWith(todayKey) && entry.game === challenge.game
+            );
+            
+            if (todayHistory.length === 0) {
+                return { current: 0, target: challenge.target, completed: false };
+            }
+            
+            if (challenge.id.includes("skor") || challenge.game === "car" || challenge.game === "math") {
+                currentProgress = Math.max(...todayHistory.map(entry => entry.score));
+            }
+            else if (challenge.id.includes("menang")) {
+                currentProgress = todayHistory.filter(entry => entry.score > 0).length;
+            }
+            
+            return {
+                current: currentProgress,
+                target: challenge.target,
+                completed: currentProgress >= challenge.target
+            };
+        }
+        
+        // --- Logika Tab Sosial ---
+        const socialTabBtnsContainer = document.querySelector('.social-tabs .tab-buttons');
+        if (socialTabBtnsContainer) {
+            socialTabBtnsContainer.addEventListener('click', (e) => {
+                const btn = e.target.closest('.social-tab-btn');
+                if (!btn) return;
+                
+                vibrate();
+                socialTabBtnsContainer.querySelectorAll('.social-tab-btn').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('.social-tab-content').forEach(c => c.classList.remove('active'));
+                
+                btn.classList.add('active');
+                const tabId = btn.dataset.tab;
+                document.getElementById(tabId).classList.add('active');
+                
+                if (tabId === 'global-tab') {
+                    loadGlobalLeaderboard('car'); 
+                    document.querySelectorAll('.game-card[data-game]').forEach(card => {
+                        card.addEventListener('click', () => {
+                            if (document.getElementById('global-tab').classList.contains('active')) {
+                                loadGlobalLeaderboard(card.dataset.game);
+                            }
+                        });
+                    });
+                }
+            });
+        }
+        
+        async function loadGlobalLeaderboard(gameName) {
+            const container = document.getElementById('global-tab');
+            container.innerHTML = `<p style="text-align: center; color: #888; font-size: 0.9rem;">Memuat leaderboard ${gameName}...</p>`;
+            
+            try {
+                if (!LEADERBOARD_DATA) {
+                    const { data } = await getGitLabFile(GITLAB_LEADERBOARD_URL);
+                    LEADERBOARD_DATA = data;
+                }
+                
+                const gameData = LEADERBOARD_DATA[gameName];
+                if (!gameData || gameData.length === 0) {
+                    throw new Error(`Belum ada leaderboard untuk game ${gameName}.`);
+                }
+                
+                container.innerHTML = ''; 
+                gameData.slice(0, 10).forEach((entry, index) => {
+                    const item = document.createElement('div');
+                    item.className = 'leaderboard-item';
+                    item.innerHTML = `
+                        <span class="leaderboard-rank">#${index + 1}</span>
+                        <span class="leaderboard-name">${entry.user}</span>
+                        <span class="leaderboard-score">${entry.score.toLocaleString('id-ID')}</span>
+                    `;
+                    container.appendChild(item);
+                });
+                
+            } catch (error) {
+                container.innerHTML = `<p style="text-align: center; color: #888; font-size: 0.9rem;">${error.message}</p>`;
+            }
+        }
+        
+        
+        // ===============================================================
+        // --- (DIHAPUS) LOGIKA GAME 1: ULTIMATE RACING ---
+        // ===============================================================
+        
+        
+        // ===============================================================
+        // --- LOGIKA GAME 3: MATH QUIZ ---
+        // ===============================================================
+        const mathGame = {
+            scoreEl: document.getElementById('math-score'),
+            timerEl: document.getElementById('math-timer'),
+            questionEl: document.getElementById('math-question'),
+            answerEl: document.getElementById('math-answer'),
+            hudCoins: document.getElementById('game-hud-coins-math'),
+            hudExp: document.getElementById('game-hud-exp-math'),
+            
+            score: 0, timeLeft: 60, timerInterval: null, currentAnswer: 0,
+            difficulty: 'easy', isDuel: false, duelPlayer: 1, player1Score: 0,
+            
+            start(difficulty = 'easy') { 
+                this.isDuel = false; this.score = 0; this.timeLeft = 60; this.difficulty = difficulty; 
+                this.hudCoins.textContent = "0"; this.hudExp.textContent = "0";
+                this.scoreEl.textContent = "Skor: 0"; this.timerEl.textContent = "Waktu: 60";
+                this.answerEl.value = ""; this.answerEl.disabled = false;
+                this.nextQuestion();
+                if (this.timerInterval) clearInterval(this.timerInterval);
+                this.timerInterval = setInterval(() => this.updateTimer(), 1000);
+                setTimeout(() => this.answerEl.focus(), 100);
+            },
+            
+            startDuel() {
+                this.isDuel = true; this.duelPlayer = 1; this.player1Score = 0; this.score = 0;
+                this.timeLeft = 30; this.difficulty = 'medium';
+                this.hudCoins.textContent = (currentGame.wager * 2).toString();
+                this.hudExp.textContent = "100";
+                this.scoreEl.textContent = "Skor P1: 0"; this.timerEl.textContent = "Waktu: 30";
+                this.questionEl.textContent = "Giliran Pemain 1... Mulai!";
+                this.answerEl.disabled = true; this.answerEl.value = "";
+                
+                setTimeout(() => {
+                    this.answerEl.disabled = false;
+                    this.nextQuestion();
+                    if (this.timerInterval) clearInterval(this.timerInterval);
+                    this.timerInterval = setInterval(() => this.updateTimer(), 1000);
+                    this.answerEl.focus();
+                }, 2000);
+            },
+            
+            nextQuestion() { 
+                const a = Math.floor(Math.random() * 10) + 1;
+                const b = Math.floor(Math.random() * 10) + 1;
+                const diff = this.isDuel ? 'medium' : this.difficulty;
+                if (diff === 'easy') {
+                    this.currentAnswer = a + b; this.questionEl.textContent = `${a} + ${b} = ?`;
+                } else if (diff === 'medium') {
+                    if (Math.random() > 0.5) { 
+                        this.currentAnswer = a + b; this.questionEl.textContent = `${a} + ${b} = ?`;
+                    } else { 
+                        const [larger, smaller] = a > b ? [a, b] : [b, a];
+                        this.currentAnswer = larger - smaller; this.questionEl.textContent = `${larger} - ${smaller} = ?`;
+                    }
+                } else if (diff === 'hard') {
+                    const op = Math.floor(Math.random() * 3);
+                    if (op === 0) { 
+                        this.currentAnswer = a + b; this.questionEl.textContent = `${a} + ${b} = ?`;
+                    } else if (op === 1) { 
+                        const [larger, smaller] = a > b ? [a, b] : [b, a];
+                        this.currentAnswer = larger - smaller; this.questionEl.textContent = `${larger} - ${smaller} = ?`;
+                    } else { 
+                        const c = Math.floor(Math.random() * 9) + 2; 
+                        const d = Math.floor(Math.random() * 9) + 2; 
+                        this.currentAnswer = c * d; this.questionEl.textContent = `${c} x ${d} = ?`;
+                    }
+                }
+                this.answerEl.value = "";
+            },
+            
+            updateTimer() {
+                this.timeLeft--;
+                this.timerEl.textContent = `Waktu: ${this.timeLeft}`;
+                if (!this.isDuel) {
+                    const { coins, exp } = calculateWinnings('math', this.score, 0);
+                    this.hudCoins.textContent = coins;
+                    this.hudExp.textContent = exp;
+                }
+                if (this.timeLeft <= 0) { this.endGame(); }
+            },
+            
+            checkAnswer() {
+                if (parseInt(this.answerEl.value) === this.currentAnswer) {
+                    this.score++;
+                    playSound('coin');
+                    if (this.isDuel) { this.scoreEl.textContent = `Skor P${this.duelPlayer}: ${this.score}`; }
+                    else { this.scoreEl.textContent = `Skor: ${this.score}`; }
+                    this.nextQuestion();
+                }
+            },
+            
+            async endGame() {
+                clearInterval(this.timerInterval);
+                this.timerInterval = null;
+                
+                if (this.isDuel) {
+                    if (this.duelPlayer === 1) {
+                        this.player1Score = this.score; this.duelPlayer = 2; this.score = 0;
+                        this.timeLeft = 30; this.scoreEl.textContent = "Skor P2: 0";
+                        this.timerEl.textContent = "Waktu: 30";
+                        this.questionEl.textContent = "Giliran Pemain 2... Mulai!";
+                        this.answerEl.disabled = true; this.answerEl.value = "";
+                        setTimeout(() => {
+                            this.answerEl.disabled = false;
+                            this.nextQuestion();
+                            this.timerInterval = setInterval(() => this.updateTimer(), 1000);
+                            this.answerEl.focus();
+                        }, 2000);
+                    } else {
+                        this.answerEl.disabled = true;
+                        this.questionEl.textContent = "Duel Selesai!";
+                        const p1s = this.player1Score; const p2s = this.score;
+                        let winner = 0; // 0=seri, 1=P1, 2=P2
+                        if (p1s > p2s) winner = 1;
+                        if (p2s > p1s) winner = 2;
+                        const pot = currentGame.wager * 2;
+                        
+                        try {
+                            if (winner === 1) {
+                                await saveGameData('math_duel', p1s, pot, 100);
+                            } else if (winner === 2) {
+                                await saveGameData('math_duel', p2s, 0, 10);
+                            } else {
+                                await addCoins(currentGame.wager, "Pengembalian Dana Duel Seri");
+                                await saveGameData('math_duel', p1s, 0, 20);
+                            }
+                        } catch (e) {
+                            alert(`Error menyimpan hasil duel: ${e.message}`);
+                        }
+                        this.showDuelResult(p1s, p2s, winner, pot);
+                    }
+                } else {
+                    this.questionEl.textContent = "Waktu Habis!";
+                    this.answerEl.value = "";
+                    this.answerEl.disabled = true;
+                    const { coins, exp } = calculateWinnings('math', this.score, 0);
+                    await saveGameData('math', this.score, coins, exp);
+                    setTimeout(() => {
+                        this.answerEl.disabled = false;
+                        showHub();
+                    }, 2000);
+                }
+            },
+            
+            showDuelResult(p1Score, p2Score, winner, pot) {
+                document.getElementById('duel-p1-score').textContent = p1Score;
+                document.getElementById('duel-p2-score').textContent = p2Score;
+                const winnerEl = document.getElementById('duel-winner');
+                const winningsEl = document.getElementById('duel-winnings');
+                if (winner === 1) {
+                    winnerEl.textContent = "Pemain 1 Menang!";
+                    winningsEl.textContent = `Pemain 1 memenangkan ${pot} Koin!`;
+                } else if (winner === 2) {
+                    winnerEl.textContent = "Pemain 2 Menang!";
+                    winningsEl.textContent = `Pemain 2 memenangkan ${pot} Koin!`;
+                } else {
+                    winnerEl.textContent = "Permainan Seri!";
+                    winningsEl.textContent = `Taruhan (${pot / 2} Koin) dikembalikan.`;
+                }
+                mathDuelResultModal.classList.add('open');
+                modalOverlay.classList.add('open');
+            }
+        };
+        document.getElementById('math-answer').addEventListener('input', () => {
+            if(mathGame.timerInterval) mathGame.checkAnswer();
+        });
+
+        // (DIMODIFIKASI) Kalkulasi Hadiah
+        function calculateWinnings(gameName, score, itemsCollected) {
+            let coins = 0; let exp = 0;
+            // (DIHAPUS) if (gameName === 'car') { ... }
+            if (gameName === 'math') {
+                coins = score * 2;
+                exp = score * 10;
+            }
+            coins = Math.floor(coins * currentGame.coinMulti);
+            exp = Math.floor(exp * currentGame.expMulti);
+            return { coins, exp };
+        }
+
+        // --- (FIXED) Fungsi API GITLAB ---
+        async function getGitLabFile(fileUrl) {
+            try {
+                const response = await fetch(`${fileUrl}?ref=${GITLAB_BRANCH}`, {
+                    method: 'GET', 
+                    headers: { 'Private-Token': GITLAB_TOKEN, 'Accept': 'application/json' }
+                });
+                const fileName = decodeURIComponent(fileUrl.split('/').pop().split('?')[0]);
+                const defaultData = {
+                    [USERS_FILE]: { settings: {}, users: [] },
+                    [LEADERBOARD_FILE]: { car: [], ttt: [], code: [], math: [] },
+                    [CHALLENGES_FILE]: { daily: [] },
+                    [COINS_FILE]: { store: [], missions: [] }
+                };
+                if (response.status === 404) {
+                    return { data: defaultData[fileName] || {}, lastCommitId: null };
+                }
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                const data = await response.json(); 
+                if (!data.content) {
+                    return { data: defaultData[fileName] || {}, lastCommitId: data.last_commit_id };
+                }
+                const content = JSON.parse(atob(data.content));
+                return { data: content, lastCommitId: data.last_commit_id };
+            } catch (error) { console.error("Failed to fetch GitLab file:", error); throw error; }
+        }
+        
+        async function updateGitLabFile(fileUrl, commitMessage, dataObject, lastCommitId, btn) {
+            try {
+                const content = btoa(unescape(encodeURIComponent(JSON.stringify(dataObject, null, 2)))); 
+                const method = lastCommitId ? 'PUT' : 'POST';
+                const payload = { branch: GITLAB_BRANCH, commit_message: commitMessage, content: content, encoding: 'base64' };
+                let url = fileUrl;
+                if(method === 'POST') {
+                    payload.file_path = decodeURIComponent(fileUrl.split('/files/')[1]);
+                    url = `${GITLAB_BASE_URL}${encodeURIComponent(payload.file_path)}`;
+                }
+
+                const response = await fetch(url, {
+                    method: method, headers: { 'Private-Token': GITLAB_TOKEN, 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                
+                if (!response.ok) {
+                    const errData = await response.json();
+                    if (method === 'POST' && errData.message && errData.message.includes('already exists')) {
+                        const { lastCommitId: newCommitId } = await getGitLabFile(fileUrl);
+                        return await updateGitLabFile(fileUrl, commitMessage, dataObject, newCommitId, btn);
+                    }
+                    throw new Error(`GitLab Update Failed: ${errData.message || response.status}`);
+                }
+                return true;
+            } catch (error) { console.error("Failed to update GitLab file:", error); throw error; } 
+        }
+        
+        // --- (FIXED) FUNGSI SAVE DATA & KEUANGAN ---
+        async function deductCoins(amount, reason) {
+            if (amount === 0) return true;
+            if (USER_INFO.coins < amount) throw new Error("Koin tidak cukup!");
+            
+            console.log(`[TRANSAKSI] Mengurangi ${amount} koin untuk ${reason}`);
+            
+            try {
+                const fileUrl = GITLAB_USERS_URL;
+                const { data: usersData, lastCommitId } = await getGitLabFile(fileUrl);
+                const userIndex = usersData.users.findIndex(u => u.username === USER_INFO.username);
+                if (userIndex === -1) throw new Error("User tidak ditemukan di server.");
+                
+                const serverUser = usersData.users[userIndex];
+                if ((serverUser.coins || 0) < amount) throw new Error("Koin di server tidak cukup!");
+                
+                serverUser.coins -= amount;
+                
+                await updateGitLabFile(
+                    fileUrl,
+                    `PAYMENT: ${USER_INFO.username} paid ${amount} coins for ${reason}`,
+                    usersData,
+                    lastCommitId,
+                    null
+                );
+                
+                USER_INFO = serverUser;
+                localStorage.setItem('user', JSON.stringify(USER_INFO));
+                updateCoinDisplay(USER_INFO.coins);
+                return true;
+            } catch (e) {
+                console.error("Gagal mengurangi koin:", e); throw e;
+            }
+        }
+        
+        async function addCoins(amount, reason) {
+            if (amount === 0) return true;
+            console.log(`[TRANSAKSI] Menambah ${amount} koin untuk ${reason}`);
+            
+            try {
+                const fileUrl = GITLAB_USERS_URL;
+                const { data: usersData, lastCommitId } = await getGitLabFile(fileUrl);
+                const userIndex = usersData.users.findIndex(u => u.username === USER_INFO.username);
+                if (userIndex === -1) throw new Error("User tidak ditemukan di server.");
+                
+                const serverUser = usersData.users[userIndex];
+                if (!serverUser.coins) serverUser.coins = 0;
+                serverUser.coins += amount;
+                
+                await updateGitLabFile(
+                    fileUrl,
+                    `AWARD: ${USER_INFO.username} received ${amount} coins for ${reason}`,
+                    usersData,
+                    lastCommitId,
+                    null
+                );
+                
+                USER_INFO = serverUser;
+                localStorage.setItem('user', JSON.stringify(USER_INFO));
+                updateCoinDisplay(USER_INFO.coins);
+                return true;
+            } catch (e) {
+                console.error("Gagal menambah koin:", e); throw e;
+            }
+        }
+
+        async function updateGlobalLeaderboard(gameName, score) {
+            if (!USER_INFO) return;
+            let leaderboardData, commitId;
+            const fileUrl = GITLAB_LEADERBOARD_URL;
+            
+            try {
+                const { data, lastCommitId } = await getGitLabFile(fileUrl);
+                leaderboardData = data; commitId = lastCommitId;
+            } catch (e) { console.error("Gagal ambil leaderboard:", e); throw e; }
+            
+            if (!leaderboardData[gameName]) leaderboardData[gameName] = [];
+            const oldEntry = leaderboardData[gameName].find(e => e.user === USER_INFO.username);
+            if (oldEntry && oldEntry.score >= score) {
+                console.log("[Leaderboard] Skor baru tidak lebih tinggi. Batal update.");
+                return;
+            }
+            
+            leaderboardData[gameName] = leaderboardData[gameName].filter(e => e.user !== USER_INFO.username);
+            leaderboardData[gameName].push({ user: USER_INFO.username, score: score, date: new Date().toISOString() });
+            leaderboardData[gameName].sort((a, b) => b.score - a.score);
+            leaderboardData[gameName] = leaderboardData[gameName].slice(0, 10);
+            LEADERBOARD_DATA = leaderboardData;
+            
+            try {
+                await updateGitLabFile( fileUrl, `GAME: ${USER_INFO.username} new score ${score} in ${gameName}`, leaderboardData, commitId, null );
+                console.log("[Leaderboard] Score saved to GitLab!");
+            } catch (e) {
+                console.error("Gagal update leaderboard:", e); throw e;
+            }
+        }
+
+        async function saveGameData(gameName, score, coinsGained, expGained) {
+            if (!USER_INFO) return;
+            console.log(`[SAVE] Game: ${gameName}, Score: ${score}, Coins: ${coinsGained}, EXP: ${expGained}`);
+
+            // (DIMODIFIKASI) Jangan update leaderboard jika game duel
+            if (gameName !== 'math_duel') {
+                try { await updateGlobalLeaderboard(gameName, score); } 
+                catch (e) { console.error("Gagal update global leaderboard, tapi tetap lanjut.", e); }
+            }
+
+            try {
+                const fileUrl = GITLAB_USERS_URL;
+                const { data: usersData, lastCommitId } = await getGitLabFile(fileUrl);
+                const userIndex = usersData.users.findIndex(u => u.username === USER_INFO.username);
+                if (userIndex === -1) throw new Error("User tidak ditemukan di server.");
+                const serverUser = usersData.users[userIndex];
+                
+                if (!serverUser.level) serverUser.level = 1;
+                if (!serverUser.exp) serverUser.exp = 0;
+                if (!serverUser.history) serverUser.history = [];
+                if (!serverUser.coins) serverUser.coins = 0;
+
+                serverUser.coins += coinsGained;
+                serverUser.exp += expGained;
+                
+                serverUser.history.push({
+                    game: gameName, score: score, date: new Date().toISOString(),
+                    wager: currentGame.wager, coins: coinsGained, exp: expGained
+                });
+                if (serverUser.history.length > 20) {
+                    serverUser.history = serverUser.history.slice(-20);
+                }
+
+                let expToNextLevel = serverUser.level * 1000;
+                let leveledUp = false;
+                while (serverUser.exp >= expToNextLevel) {
+                    serverUser.level++;
+                    serverUser.exp -= expToNextLevel;
+                    expToNextLevel = serverUser.level * 1000;
+                    leveledUp = true;
+                }
+                
+                await updateGitLabFile(
+                    fileUrl,
+                    `DATA: ${serverUser.username} finished ${gameName} (Lvl ${serverUser.level})`,
+                    usersData, lastCommitId, null
+                );
+                
+                console.log("[SAVE] User data (EXP, Koin, Level) saved to GitLab.");
+                
+                USER_INFO = serverUser;
+                localStorage.setItem('user', JSON.stringify(USER_INFO));
+                updateProfileUI(USER_INFO);
+                updateHistoryUI(USER_INFO);
+                
+                if (leveledUp) {
+                    playSound('levelup');
+                    showNotification('hub-notification', `NAIK LEVEL! Anda sekarang Level ${USER_INFO.level}!`, 'success');
+                }
+
+            } catch (e) {
+                console.error("FATAL: Gagal save data user (EXP/Koin) ke GitLab:", e);
+                showNotification('hub-notification', `Error Kritis: Gagal menyimpan progres Anda: ${e.message}.`, 'error');
+            }
+        }
+
+
+        // --- (FIXED) Logika Halaman ---
+        function showGameHubPage() {
+            try {
+                USER_INFO = JSON.parse(localStorage.getItem('user'));
+                if (!USER_INFO) throw new Error("Cache user tidak ditemukan.");
+            } catch (e) {
+                alert(`Cache Sesi Error: ${e.message}. Harap login ulang.`);
+                window.location.href = 'login.html';
+                return;
+            }
+            
+            gameHubPage.style.display = 'block';
+            menuToggle.style.display = 'block';
+            settingsToggle.style.display = 'block';
+
+            updateProfileUI(USER_INFO); 
+            updateHistoryUI(USER_INFO);
+            updateCoinDisplay(USER_INFO.coins);
+            updateAllHighScores(USER_INFO.history);
+            
+            applySettings(); 
+            startSeasonTimer();
+            
+            loadChallenges(); 
+            refreshUserInfoFromServer();
+
+            const adminTab = document.getElementById('admin-tab-button');
+            if (adminTab && (USER_INFO.role === 'admin' || USER_INFO.role === 'developer')) {
+                adminTab.style.display = 'block';
+            }
+            if (window.innerWidth > 900) {
+                 document.body.style.marginLeft = 'var(--sidebar-width)';
+                 sidebar.classList.add('open');
+            }
+        }
+        
+        async function refreshUserInfoFromServer() {
+            if (!USER_INFO) return; 
+            
+            try {
+                const { data: usersData } = await getGitLabFile(GITLAB_USERS_URL);
+                if (!usersData || !usersData.users) throw new Error('Data pengguna server tidak valid.');
+
+                const freshUserData = usersData.users.find(u => u.username === USER_INFO.username);
+
+                if (freshUserData) {
+                    if (JSON.stringify(freshUserData) !== JSON.stringify(USER_INFO)) {
+                        console.log('Data pengguna diperbarui dari server.');
+                        USER_INFO = freshUserData;
+                        localStorage.setItem('user', JSON.stringify(USER_INFO)); 
+                        
+                        updateProfileUI(USER_INFO);
+                        updateHistoryUI(USER_INFO);
+                        updateCoinDisplay(USER_INFO.coins);
+                        updateAllHighScores(USER_INFO.history);
+                        loadChallenges();
+                    }
+                } else {
+                    console.warn('Pengguna tidak ditemukan di server. Logout paksa.');
+                    logout(true);
+                }
+            } catch (error) {
+                console.error('Gagal menyinkronkan data pengguna:', error.message);
+            }
+        }
+        
+        function calculateRank(level) {
+            if (level < 10) return 'Bronze';
+            if (level < 20) return 'Silver';
+            if (level < 30) return 'Gold';
+            if (level < 40) return 'Platinum';
+            if (level < 50) return 'Diamond';
+            return 'Master';
+        }
+        
+        function updateProfileUI(userInfo) {
+            if (!userInfo) return;
+            const level = userInfo.level || 1;
+            const exp = userInfo.exp || 0;
+            const expToNextLevel = level * 1000;
+            const rank = calculateRank(level);
+            
+            document.getElementById('profile-username').textContent = userInfo.username;
+            document.getElementById('profile-level').textContent = level;
+            document.getElementById('profile-rank').textContent = rank;
+            
+            const expPercentage = Math.min(100, (exp / expToNextLevel) * 100);
+            document.getElementById('profile-exp-fill').style.width = `${expPercentage}%`;
+            document.getElementById('profile-exp-text').textContent = `${exp} / ${expToNextLevel} EXP`;
+        }
+        
+        function updateHistoryUI(userInfo) {
+            const historyTab = document.getElementById('history-tab');
+            if (!historyTab) return;
+            historyTab.innerHTML = ''; 
+            
+            const history = userInfo.history || [];
+            
+            if (history.length === 0) {
+                historyTab.innerHTML = '<p style="text-align: center; color: #888; font-size: 0.9rem;">Belum ada riwayat.</p>';
+                return;
+            }
+            
+            history.slice().reverse().slice(0, 20).forEach(entry => {
+                const item = document.createElement('div');
+                item.className = 'leaderboard-item'; 
+                
+                let icon = 'fa-question';
+                if (entry.game === 'car') icon = 'fa-car';
+                if (entry.game === 'math' || entry.game === 'math_duel') icon = 'fa-calculator';
+                if (entry.game === 'ttt') icon = 'fa-border-all';
+                if (entry.game === 'code') icon = 'fa-bug';
+                
+                item.innerHTML = `
+                    <span class="leaderboard-rank"><i class="fas ${icon}"></i></span>
+                    <span class="leaderboard-name">${entry.game.toUpperCase()}</span>
+                    <span class="leaderboard-score">${(entry.score || 0).toLocaleString('id-ID')}</span>
+                `;
+                historyTab.appendChild(item);
+            });
+        }
+        
+        function updateAllHighScores(history = []) {
+            const getHighScore = (gameName) => {
+                const gameHistory = history.filter(e => e.game === gameName);
+                if (gameHistory.length === 0) return 0;
+                return Math.max(...gameHistory.map(e => e.score));
+            };
+            const getWins = (gameName) => {
+                return history.filter(e => e.game === gameName && e.score > 0).length;
+            };
+            const getExp = (gameName) => {
+                return history.filter(e => e.game === gameName).reduce((acc, e) => acc + (e.exp || 0), 0);
+            };
+
+            document.getElementById('hs-car').textContent = `Skor Tertinggi: ${getHighScore('car').toLocaleString('id-ID')}`;
+            document.getElementById('hs-math').textContent = `Skor Tertinggi: ${getHighScore('math').toLocaleString('id-ID')}`;
+            document.getElementById('hs-ttt').textContent = `Menang: ${getWins('ttt')}`;
+            document.getElementById('hs-code').textContent = `EXP Didapat: ${getExp('code')}`;
+        }
+
+        
+        function logout(force = false) { 
+            vibrate();
+            if(force || confirm('Anda yakin ingin logout?')) {
+                localStorage.removeItem('user');
+                window.location.href = 'login.html';
+            }
+        }
+        
+        function startSeasonTimer() {
+            const timerEl = document.getElementById('season-timer');
+            if (!timerEl) return;
+            let endDate = new Date(); endDate.setDate(endDate.getDate() + 30); 
+            function updateTimer() {
+                let now = new Date().getTime(); let distance = endDate - now;
+                let days = Math.floor(distance / (1000 * 60 * 60 * 24));
+                let hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                let minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+                if (distance < 0) timerEl.textContent = "SEASON BARU!";
+                else timerEl.innerHTML = `${days}H ${hours}J ${minutes}M`;
+            }
+            updateTimer(); setInterval(updateTimer, 60000);
+        }
+        
+        function playSound(id) {
+            if (!SETTINGS.music) return;
+            const sound = sfx[id];
+            if (sound) {
+                sound.currentTime = 0;
+                sound.volume = SETTINGS.musicVolume;
+                sound.play().catch(e => {});
+            }
+        }
+        
+        // --- Logika Efek Bintang ---
+        const canvas = document.getElementById("stars");
+        const starsCtx = canvas.getContext("2d"); 
+        let stars = []; 
+        let starsAnimationId;
+        function resizeCanvas() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; stars = []; for (let i = 0; i < 150; i++) { stars.push({ x: Math.random() * canvas.width, y: Math.random() * canvas.height, radius: Math.random() * 1.5, speed: Math.random() * 0.5 + 0.2 }); } }
+        function drawStars() { starsCtx.clearRect(0, 0, canvas.width, canvas.height); starsCtx.fillStyle = "#fff"; stars.forEach(star => { starsCtx.beginPath(); starsCtx.arc(star.x, star.y, star.radius, 0, Math.PI * 2); starsCtx.fill(); star.y += star.speed; if (star.y > canvas.height) star.y = 0; }); starsAnimationId = requestAnimationFrame(drawStars); }
+        window.addEventListener("resize", resizeCanvas);
+        function startStars() { document.body.classList.remove('stars-hidden'); resizeCanvas(); drawStars(); }
+        function stopStars() { document.body.classList.add('stars-hidden'); if (starsAnimationId) cancelAnimationFrame(starsAnimationId); }
+        
+        
+        /* --- BAGIAN SETTINGS (Global - Sama) --- */
+        const defaultSettings = {
+            accentColor: '#ffffff', fontSize: '16px', fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif", 
+            textGlow: false, stars: true, music: true, musicVolume: 0.3,
+            vibration: true, devMode: false, skipSplash: false,
+        };
+        function saveSetting(key, value) { SETTINGS[key] = value; localStorage.setItem('XVCT_SETTINGS', JSON.stringify(SETTINGS)); }
+        function loadSettings() {
+            const saved = localStorage.getItem('XVCT_SETTINGS');
+            SETTINGS = saved ? JSON.parse(saved) : { ...defaultSettings };
+            for (const key in defaultSettings) { if (SETTINGS[key] === undefined) SETTINGS[key] = defaultSettings[key]; }
+            applySettings(); updateSettingsUI();
+        }
+        function applySettings() {
+            document.documentElement.style.setProperty('--primary-color', SETTINGS.accentColor);
+            const glow = SETTINGS.accentColor === '#ffffff' ? 'rgba(255, 255, 255, 0.3)' : SETTINGS.accentColor + '66';
+            document.documentElement.style.setProperty('--primary-glow', glow);
+            document.body.style.fontSize = SETTINGS.fontSize; 
+            document.body.style.fontFamily = SETTINGS.fontFamily; 
+            if (SETTINGS.textGlow) document.body.classList.add('text-glow'); else document.body.classList.remove('text-glow'); 
+            if (SETTINGS.stars) startStars(); else stopStars();
+            bgMusic.volume = SETTINGS.musicVolume;
+            if (SETTINGS.music) bgMusic.play().catch(() => {}); else bgMusic.pause();
+            if (toolsTabButton) toolsTabButton.style.display = SETTINGS.devMode ? 'block' : 'none';
+        }
+        function updateSettingsUI() {
+            const el = id => document.getElementById(id);
+            if(el('setting-accent-color')) el('setting-accent-color').value = SETTINGS.accentColor;
+            if(el('setting-font-size')) el('setting-font-size').value = SETTINGS.fontSize;
+            if(el('setting-font-family')) el('setting-font-family').value = SETTINGS.fontFamily; 
+            if(el('setting-text-glow')) el('setting-text-glow').checked = SETTINGS.textGlow;
+            if(el('setting-stars')) el('setting-stars').checked = SETTINGS.stars;
+            if(el('setting-music-toggle')) el('setting-music-toggle').checked = SETTINGS.music;
+            if(el('setting-music-volume')) el('setting-music-volume').value = SETTINGS.musicVolume;
+            if(el('setting-vibration')) el('setting-vibration').checked = SETTINGS.vibration;
+            if(el('setting-dev-mode')) el('setting-dev-mode').checked = SETTINGS.devMode; 
+            if(el('setting-skip-splash')) el('setting-skip-splash').checked = SETTINGS.skipSplash;
+        }
+        function vibrate() { if (SETTINGS.vibration && navigator.vibrate) navigator.vibrate(50); }
+        
+        const el = id => document.getElementById(id);
+        if(el('setting-accent-color')) el('setting-accent-color').addEventListener('change', (e) => { saveSetting('accentColor', e.target.value); applySettings(); });
+        if(el('setting-font-size')) el('setting-font-size').addEventListener('change', (e) => { saveSetting('fontSize', e.target.value); applySettings(); });
+        if(el('setting-font-family')) el('setting-font-family').addEventListener('change', (e) => { saveSetting('fontFamily', e.target.value); applySettings(); });
+        if(el('setting-text-glow')) el('setting-text-glow').addEventListener('change', (e) => { saveSetting('textGlow', e.target.checked); applySettings(); });
+        if(el('setting-stars')) el('setting-stars').addEventListener('change', (e) => { saveSetting('stars', e.target.checked); applySettings(); });
+        if(el('setting-music-toggle')) el('setting-music-toggle').addEventListener('change', (e) => { saveSetting('music', e.target.checked); applySettings(); });
+        if(el('setting-music-volume')) el('setting-music-volume').addEventListener('input', (e) => { saveSetting('musicVolume', e.target.value); applySettings(); });
+        if(el('setting-vibration')) el('setting-vibration').addEventListener('change', (e) => { saveSetting('vibration', e.target.checked); });
+        if(el('setting-dev-mode')) el('setting-dev-mode').addEventListener('change', (e) => { saveSetting('devMode', e.target.checked); applySettings(); });
+        if(el('setting-skip-splash')) el('setting-skip-splash').addEventListener('change', (e) => { saveSetting('skipSplash', e.target.checked); });
+        if(el('setting-clear-cache')) el('setting-clear-cache').addEventListener('click', () => { if(confirm('Reset?')) { localStorage.removeItem('XVCT_SETTINGS'); window.location.reload(); } });
+        if(el('setting-logout-button')) el('setting-logout-button').addEventListener('click', () => logout(false));
+        /* --- AKHIR BAGIAN SETTINGS --- */
+        
+        function updateCoinDisplay(coins) {
+            if (globalUserCoinBalance) {
+                globalUserCoinBalance.textContent = (coins !== undefined) ? coins.toLocaleString('id-ID') : '...';
+            }
+        }
+        function showNotification(id, message, type) {
+            const el = document.getElementById(id);
+            if (!el) return;
+            el.textContent = message;
+            el.className = 'notification ' + type;
+            el.style.display = 'block';
+        }
+        function hideAllNotifications() { document.querySelectorAll('.notification').forEach(el => el.style.display = 'none'); }
+        function disableButton(btn) {
+            if (!btn) return; 
+            btn.disabled = true;
+            btn.setAttribute('data-original-text', btn.textContent);
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>'; 
+        }
+        function enableButton(btn, text) {
+            if (!btn) return; 
+            const originalText = btn.getAttribute('data-original-text');
+            btn.innerHTML = text || originalText || "Button";
+            btn.disabled = false;
+        }
+
+        // --- Fungsi Inisialisasi Utama ---
+        document.addEventListener('DOMContentLoaded', () => {
+             const splash = document.getElementById('splash-screen');
+             if (splash) splash.style.display = 'none';
+             loadSettings(); 
+             if (SETTINGS.music) bgMusic.play().catch(() => {});
+             init();
+        });
+
+        function init() {
+            const user = localStorage.getItem('user');
+            if (!user) {
+                alert("Sesi tidak ditemukan. Harap login kembali.");
+                window.location.href = 'login.html'; 
+            } else {
+                showGameHubPage();
+            }
+        }
+    </script>
+</body>
+</html>

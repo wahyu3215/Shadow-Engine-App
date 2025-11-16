@@ -1,0 +1,1604 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SHADOW | Ultimate Racing (v3.2)</title>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    <style>
+        /* --- CSS INTI (Sidebar, Modal, Tombol) --- */
+        :root {
+            --bg-color: #0d0d0d;
+            --container-bg: rgba(26, 26, 26, 0.9);
+            --input-bg: #222222;
+            --border-color: #333;
+            --text-color: #e0e0e0;
+            --primary-color: #ffffff;
+            --primary-glow: rgba(255, 255, 255, 0.3);
+            --success-color: #2ecc71;
+            --danger-color: #e74c3c;
+            --coin-color: #f1c40f; 
+            --sidebar-width: 250px; 
+            --border-radius-main: 16px;
+            --border-radius-small: 8px;
+            --border-radius-pill: 50px;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color); color: var(--text-color);
+            display: flex; justify-content: center; align-items: center;
+            min-height: 100vh; overflow-x: hidden; flex-direction: column;
+            transition: margin-left 0.3s ease, font-family 0.3s ease; 
+        }
+        #sidebar {
+            position: fixed; top: 0; left: 0; height: 100%;
+            width: var(--sidebar-width); background-color: rgba(10, 10, 10, 0.95);
+            padding-top: 60px; box-shadow: 2px 0 10px rgba(0, 0, 0, 0.5);
+            transform: translateX(-100%); transition: transform 0.3s ease;
+            z-index: 100; backdrop-filter: blur(5px); overflow-y: auto;
+        }
+        #sidebar.open { transform: translateX(0); }
+        .menu-header {
+            position: absolute; top: 0; left: 0; width: 100%;
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 10px 20px; background: #111; z-index: 101;
+        }
+        .menu-header h3 { color: var(--primary-color); margin: 0; font-size: 1.2rem; border-bottom: none; }
+        .menu-header button { width: auto; padding: 5px 10px; text-transform: none; background: #333; color: #fff; border:none; cursor: pointer; }
+        .sidebar-nav a, .sidebar-nav button {
+            display: block; width: 100%; text-align: left; padding: 15px 20px;
+            text-decoration: none; color: var(--text-color); background: none;
+            border: none; cursor: pointer; font-size: 1rem;
+            transition: background-color 0.3s, color 0.3s; position: relative;
+        }
+        .sidebar-nav a:hover, .sidebar-nav button:hover, .sidebar-nav a.active {
+            background-color: var(--primary-color); color: var(--bg-color);
+        }
+        .sidebar-nav a.active { font-weight: bold; }
+        .sidebar-nav a i, .sidebar-nav button i { margin-right: 10px; }
+        .sidebar-close {
+            position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+            font-size: 0.8rem; color: #aaa; opacity: 0; transition: opacity 0.2s;
+        }
+        .sidebar-nav button:hover .sidebar-close, .sidebar-nav a:hover .sidebar-close { opacity: 1; }
+        #menu-toggle, #settings-toggle {
+            position: fixed; top: 20px; z-index: 102;
+            border: none; padding: 10px 15px; border-radius: var(--border-radius-small);
+            font-size: 1.2rem; cursor: pointer; transition: all 0.3s; width: auto; display: none;
+        }
+        #menu-toggle { left: 20px; background: var(--primary-color); color: var(--bg-color); box-shadow: 0 0 10px var(--primary-glow); }
+        #settings-toggle { right: 20px; background: #222; color: var(--primary-color); border: 1px solid var(--border-color); box-shadow: 0 0 10px rgba(0,0,0,0.5); }
+        #sidebar-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 99; display: none; }
+        .container {
+            width: 90%; max-width: 600px;
+            background-color: var(--container-bg);
+            border-radius: var(--border-radius-main); padding: 2rem;
+            margin: 2rem 0; z-index: 10; backdrop-filter: blur(10px);
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.8); border: 1px solid var(--border-color);
+        }
+        .page { display: none; }
+        h1 {
+            font-size: 2.5rem; font-weight: bold; letter-spacing: 2px;
+            background: linear-gradient(90deg, #888, #fff, #888, #fff);
+            background-size: 200% auto; color: transparent;
+            -webkit-background-clip: text; background-clip: text;
+            animation: text-shine 5s linear infinite;
+            text-align: center; margin-bottom: 0.5rem;
+        }
+        @keyframes text-shine { to { background-position: -200% center; } }
+        h2 { font-size: 1.8rem; color: var(--primary-color); text-align: center; margin-bottom: 1.5rem; }
+        h3 { font-size: 1.4rem; color: var(--text-color); border-bottom: 1px solid var(--primary-color); padding-bottom: 5px; margin-bottom: 1rem; }
+        button {
+            width: 100%; padding: 0.8rem; font-size: 1rem; border-radius: var(--border-radius-pill);
+            background-color: var(--primary-color); color: #000; font-weight: bold;
+            border: none; cursor: pointer; text-transform: uppercase; letter-spacing: 1px;
+            transition: all 0.3s ease; position: relative; font-family: inherit;
+        }
+        button:hover { box-shadow: 0 0 15px var(--primary-glow); filter: brightness(1.2); transform: translateY(-2px); }
+        button:disabled { background-color: #555; color: #999; cursor: not-allowed; box-shadow: none; transform: none; }
+        button.secondary { background-color: transparent; border: 1px solid var(--primary-color); color: var(--primary-color); }
+        button.secondary:hover { background-color: var(--primary-color); color: #000; }
+        button.danger { background-color: var(--danger-color); border-color: var(--danger-color); color: white; }
+        
+        .coin-balance-display {
+            text-align: center; font-size: 1.3rem; font-weight: 700;
+            color: var(--coin-color); text-shadow: 0 0 10px rgba(241, 196, 15, 0.5);
+            margin: 0.5rem auto 1.5rem auto; padding: 10px;
+            background: rgba(0,0,0,0.3); border-radius: var(--border-radius-pill);
+            border: 1px solid var(--coin-color); max-width: 300px;
+            transition: all 0.3s ease;
+        }
+        .coin-balance-display i { margin-right: 10px; }
+        
+        #modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.7); z-index: 199;
+            display: none; opacity: 0; transition: opacity 0.3s ease;
+        }
+        #settings-modal, .game-modal {
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.95);
+            width: 90%; max-width: 500px; max-height: 90vh;
+            overflow-y: auto;
+            background: var(--container-bg); border-radius: var(--border-radius-main);
+            border: 1px solid var(--border-color); box-shadow: 0 0 30px rgba(0,0,0,0.8);
+            z-index: 200; display: none; opacity: 0; transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+        #settings-modal.open, .game-modal.open, #modal-overlay.open { display: block; opacity: 1; }
+        #settings-modal.open, .game-modal.open { transform: translate(-50%, -50%) scale(1); }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; padding: 1rem 1.5rem; border-bottom: 1px solid var(--border-color); }
+        .modal-header h2 { margin: 0; font-size: 1.5rem; }
+        .modal-header button { width: auto; padding: 5px 10px; background: transparent; color: var(--text-color); border: none; font-size: 1.5rem; cursor: pointer; }
+        .modal-body { padding: 1.5rem; }
+        .setting-group { margin-bottom: 1.5rem; }
+        .setting-group h3 { font-size: 1.1rem; color: var(--primary-color); border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem; margin-bottom: 1rem; }
+        .setting-item { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+        .setting-item label { margin: 0; font-size: 1rem; }
+        .toggle-switch { position: relative; display: inline-block; width: 50px; height: 28px; }
+        .toggle-switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #333; transition: .4s; border-radius: 34px; }
+        .slider:before { position: absolute; content: ""; height: 20px; width: 20px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: var(--primary-color); }
+        input:checked + .slider:before { background-color: #000; transform: translateX(22px); }
+        canvas#stars { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; pointer-events: none; }
+        body.stars-hidden canvas#stars { display: none; }
+        footer.dev-contact { text-align: center; margin-top: 2rem; padding-top: 1rem; border-top: 1px solid var(--border-color); font-size: 0.9rem; color: #888; }
+        .notification {
+            text-align: center; padding: 0.8rem; margin-bottom: 1rem;
+            border-radius: var(--border-radius-small); display: none;
+            font-size: 0.9rem; border: 1px solid;
+        }
+        .notification.success { background-color: #0f3d1b; color: #8affab; border-color: #1a7431; }
+        .notification.error { background-color: #3d0f0f; color: #ffa8a8; border-color: #741a1a; }
+        .notification.info { background-color: #0f2a3d; color: #a8dfff; border-color: #1a5674; }
+        
+        /* --- CSS KHUSUS GAME HUB --- */
+        .game-option-group { margin-bottom: 1.5rem; }
+        .game-option-group label { display: block; margin-bottom: 0.7rem; font-weight: 500; color: #ccc; }
+        .game-option-group select, .game-option-group input[type="range"] {
+            width: 100%; padding: 0.8rem; font-size: 1rem;
+            border-radius: var(--border-radius-small); border: 1px solid var(--border-color);
+            background-color: var(--input-bg); color: var(--text-color);
+        }
+        .game-option-group select option:disabled { color: #666; font-style: italic; }
+        
+        @media (max-width: 900px) {
+            body { margin-left: 0; }
+            #menu-toggle, #settings-toggle { display: block; }
+        }
+        
+        /* --- CSS UNTUK KONTAINER GAME --- */
+        .game-container {
+            display: none; width: 100%; height: 100vh;
+            position: fixed; top: 0; left: 0;
+            background: var(--bg-color); z-index: 150; overflow: auto;
+        }
+        .game-header { display: flex; align-items: center; padding: 1rem; background: #111; border-bottom: 1px solid var(--border-color); }
+        .game-header .back-to-hub-btn { width: auto; padding: 0.5rem 1rem; margin-right: 1rem; font-size: 1rem; text-decoration: none; }
+        .game-header h2 { margin: 0; font-size: 1.5rem; text-align: left; }
+        .game-hud { margin-left: auto; display: flex; gap: 1rem; align-items: center; }
+        .hud-item { font-weight: bold; }
+        .hud-item i { margin-right: 5px; }
+        #game-hud-coins-car { color: var(--coin-color); }
+        #game-hud-exp-car { color: var(--primary-color); }
+        
+        /* --- ================================== --- */
+        /* --- CSS UNTUK GAME BALAPAN (FIX) --- */
+        /* --- ================================== --- */
+        
+        #car-game-area {
+            position: relative; width: 100%; height: calc(100vh - 70px);
+            background: linear-gradient(#111, #222); overflow: hidden;
+        }
+        #car-game-area .road { position: absolute; width: 100%; height: 100%; background: repeating-linear-gradient(to bottom, #333 0px, #333 40px, #222 40px, #222 80px); }
+        #car-game-area .center-line { position: absolute; left: 50%; width: 6px; height: 100%; background: repeating-linear-gradient(white 0px, white 20px, transparent 20px, transparent 40px); transform: translateX(-50%); opacity: 0.6; }
+        
+        #car-game-area .car, #car-game-area .enemy, #car-game-area .coin, 
+        #car-game-area .boost, #car-game-area .shield, #car-game-area .truck,
+        #car-game-area .oil-slick, #car-game-area .construction-barrier,
+        #car-game-area .fuel { /* (BARU) Tambah .fuel */
+            position: absolute;
+        }
+        
+        /* Base Car (Player, Enemy, Truck) */
+        #car-game-area .car { 
+            width: 40px; 
+            height: 70px; 
+            bottom: 80px; /* <--- (DIUBAH) Posisi mobil lebih ke depan */
+            left: 50%; 
+            transform: translateX(-50%); 
+            z-index: 10; 
+            transition: transform 0.1s ease-out; 
+            border-radius: 8px 8px 4px 4px;
+        }
+        #car-game-area .enemy {
+            width: 40px; 
+            height: 70px; 
+            border-radius: 8px 8px 4px 4px;
+        }
+        #car-game-area .truck {
+            width: 60px;
+            height: 100px;
+            border-radius: 8px;
+        }
+
+        /* CSS Sprite Murni: Mobil Biru (Default) */
+        .car.skin-default {
+            background: linear-gradient(to top, #0077ff, #00ccff); 
+            border: 2px solid #0055aa;
+            box-shadow: 0 0 10px #0ff;
+        }
+        .car.skin-default::before {
+            content: '';
+            position: absolute;
+            top: 10px; left: 50%;
+            transform: translateX(-50%);
+            width: 28px; height: 20px;
+            background: #000;
+            border: 2px solid #aaa;
+            border-radius: 4px;
+        }
+        .car.skin-default::after {
+            content: '';
+            position: absolute;
+            bottom: 4px; left: 4px;
+            width: 8px; height: 5px;
+            background: #ff0;
+            border-radius: 2px;
+            box-shadow: 20px 0 0 #ff0;
+        }
+        
+        /* CSS Sprite Murni: Mobil Merah */
+        .car.skin-red {
+            background: linear-gradient(to top, #aa0000, #ff0000); 
+            border: 2px solid #550000;
+            box-shadow: 0 0 10px #f00;
+        }
+        .car.skin-red::before {
+            content: '';
+            position: absolute;
+            top: 10px; left: 50%;
+            transform: translateX(-50%);
+            width: 28px; height: 20px;
+            background: #111;
+            border: 2px solid #aaa;
+            border-radius: 4px;
+        }
+        .car.skin-red::after {
+            content: '';
+            position: absolute;
+            bottom: 4px; left: 4px;
+            width: 8px; height: 5px;
+            background: #ff0;
+            border-radius: 2px;
+            box-shadow: 20px 0 0 #ff0;
+        }
+
+        /* CSS Sprite Murni: Mobil Monster */
+        .car.skin-monster {
+            width: 55px;
+            height: 85px;
+            background: linear-gradient(to top, #222, #555);
+            border: 2px solid #000;
+            box-shadow: 0 0 10px #fff;
+            border-radius: 8px;
+        }
+        .car.skin-monster::before {
+            content: '';
+            position: absolute;
+            top: 15px; left: 50%;
+            transform: translateX(-50%);
+            width: 40px; height: 25px;
+            background: #000;
+            border: 2px solid #aaa;
+            border-radius: 6px;
+        }
+        .car.skin-monster::after {
+            content: '';
+            position: absolute;
+            z-index: -1;
+            top: 10px; left: -10px;
+            width: 20px; height: 65px;
+            background: #1a1a1a;
+            border: 2px solid #333;
+            border-radius: 8px;
+            box-shadow: 55px 0 0 #1a1a1a;
+        }
+
+        /* CSS Sprite Murni: Mobil Musuh (Merah Tua) */
+        #car-game-area .enemy {
+            background: linear-gradient(to top, #770000, #cc0000); 
+            border: 2px solid #440000;
+        }
+        #car-game-area .enemy::before {
+             content: '';
+            position: absolute;
+            top: 10px; left: 50%;
+            transform: translateX(-50%);
+            width: 28px; height: 20px;
+            background: #111;
+            border: 2px solid #777;
+            border-radius: 4px;
+        }
+
+        /* CSS Sprite Murni: Truk */
+        #car-game-area .truck {
+            background: linear-gradient(to top, #555, #888); 
+            border: 3px solid #333;
+        }
+        #car-game-area .truck::before {
+            content: '';
+            position: absolute;
+            bottom: 0; left: 50%;
+            transform: translateX(-50%);
+            width: 40px; height: 30px;
+            background: #444;
+            border: 2px solid #222;
+            border-radius: 4px 4px 0 0;
+        }
+
+        /* Efek Mobil (Shield & Boost) */
+        #car-game-area .car.shield-active { 
+            box-shadow: 0 0 20px 10px cyan; 
+            outline: 3px solid cyan;
+        }
+        #car-game-area .car.boost-active { animation: car-pulse 0.2s infinite; }
+        
+        /* Efek Spin/Muter */
+        @keyframes spin-effect {
+            0% { transform: translateX(-50%) rotate(0deg); }
+            100% { transform: translateX(-50%) rotate(360deg); }
+        }
+        .car.is-spinning {
+            animation: spin-effect 0.5s linear !important;
+        }
+
+        @keyframes car-pulse { 
+            0%, 100% { transform: translateX(-50%) scale(1); } 
+            50% { transform: translateX(-50%) scale(1.05); } 
+        }
+        .boost-active[style*="rotate(-10deg)"] { animation: car-pulse-left 0.2s infinite; }
+        .boost-active[style*="rotate(10deg)"] { animation: car-pulse-right 0.2s infinite; }
+        
+        @keyframes car-pulse-left { 
+            0%, 100% { transform: translateX(-50%) rotate(-10deg) scale(1); } 
+            50% { transform: translateX(-50%) rotate(-10deg) scale(1.05); } 
+        }
+        @keyframes car-pulse-right { 
+            0%, 100% { transform: translateX(-50%) rotate(10deg) scale(1); } 
+            50% { transform: translateX(-50%) rotate(10deg) scale(1.05); } 
+        }
+
+        /* Rintangan Oli 'Becek' */
+        #car-game-area .oil-slick {
+            width: 60px;
+            height: 40px;
+            background: #2a2a2a;
+            border: 2px solid #111;
+            border-radius: 45% 55% 60% 40% / 70% 30% 70% 30%;
+            opacity: 0.7;
+        }
+
+        /* Rintangan Konstruksi */
+        #car-game-area .construction-barrier {
+            width: 70px;
+            height: 30px;
+            background: repeating-linear-gradient(
+                -45deg,
+                #f39c12,
+                #f39c12 10px,
+                #fff 10px,
+                #fff 20px
+            );
+            border: 2px solid #000;
+            border-radius: 4px;
+        }
+
+        /* Item Lainnya (Koin, Boost, Shield) */
+        #car-game-area .coin { width: 30px; height: 30px; background: gold; border-radius: 50%; border: 3px solid orange; }
+        #car-game-area .boost { width: 35px; height: 60px; background: lime; border: 3px solid green; }
+        #car-game-area .shield { width: 40px; height: 40px; background: cyan; border: 3px solid blue; }
+        
+        /* Animasi Tabrakan & Api */
+        .explosion {
+            position: absolute;
+            width: 80px;
+            height: 80px;
+            background: radial-gradient(circle, #fff, #ffcc00, #ff9900, #ff0000, transparent 70%);
+            border-radius: 50%;
+            z-index: 200;
+            transform: translate(-50%, -50%); /* Pusatkan di titik tabrakan */
+            animation: blast 0.5s ease-out forwards;
+        }
+        @keyframes blast {
+            0% { transform: translate(-50%, -50%) scale(0.2); opacity: 1; }
+            70% { opacity: 1; }
+            100% { transform: translate(-50%, -50%) scale(2.5); opacity: 0; }
+        }
+        .car.is-crashed {
+            /* Efek mobil hancur */
+            filter: grayscale(1) brightness(0.5);
+            transform: translateX(-50%) rotate(15deg) !important; /* Miring acak */
+        }
+
+        /* UI Game */
+        #car-game-area #leftBtn, #car-game-area #rightBtn { position: absolute; bottom: 20px; width: 60px; height: 60px; background: rgba(255, 255, 255, 0.2); color: white; font-size: 40px; text-align: center; line-height: 60px; border-radius: 100%; user-select: none; z-index: 100; cursor: pointer; }
+        #car-game-area #leftBtn { left: 20px; }
+        #car-game-area #rightBtn { right: 20px; }
+        #car-game-area #score { position: absolute; top: 20px; left: 20px; color: #0ff; font-size: 24px; font-weight: bold; z-index: 100; background: rgba(0, 0, 0, 0.3); padding: 10px 15px; border-radius: 10px; }
+        #car-game-area #gameOverScreen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 199; display: none; flex-direction: column; justify-content: center; align-items: center; text-align: center; background: rgba(0, 0, 0, 0.9); color: #ff0000; }
+        #car-game-area #gameOverScreen h2 { font-size: 48px; }
+        #car-game-area #finalScore { font-size: 30px; color: white; margin: 20px 0; }
+        #car-game-area #car-game-winnings { font-size: 1.2rem; color: #fff; margin-top: 10px; }
+        #car-game-area #gameOverScreen button { width: auto; padding: 10px 30px; background: #ff0000; color: white; }
+
+        /* --- (BARU) CSS FITUR TAMBAHAN --- */
+        
+        /* (BARU) CSS UNTUK BENSIN */
+        #fuel-bar-container {
+            position: absolute;
+            top: 70px; /* Posisikan di bawah skor */
+            left: 20px;
+            width: 150px;
+            height: 25px;
+            background: #222;
+            border: 2px solid #555;
+            border-radius: 10px;
+            z-index: 100;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            padding: 2px;
+        }
+        #fuel-bar-container i {
+            color: #e74c3c;
+            margin: 0 5px;
+            z-index: 2;
+        }
+        #fuel-bar-fill {
+            position: absolute;
+            left: 0; top: 0;
+            width: 100%; /* Lebar 100% saat penuh */
+            height: 100%;
+            /* Warna gradasi: Hijau -> Kuning -> Merah */
+            background: linear-gradient(to right, #e74c3c, #f1c40f, #2ecc71);
+            background-size: 300% 100%;
+            background-position: 100% 50%; /* 0% = Habis (Merah), 100% = Penuh (Hijau) */
+            transition: width 0.3s ease, background-position 0.3s ease;
+        }
+
+        /* (BARU) CSS Untuk Item Bensin (Jerigen) */
+        #car-game-area .fuel {
+            width: 35px;
+            height: 45px;
+            background: #c0392b; /* Merah */
+            border: 3px solid #7f271d;
+            border-radius: 6px;
+        }
+        /* Handle jerigen */
+        #car-game-area .fuel::before {
+            content: '';
+            position: absolute;
+            top: -5px;
+            left: 8px;
+            width: 15px;
+            height: 8px;
+            background: #555;
+            border: 2px solid #333;
+            border-radius: 4px 4px 0 0;
+        }
+
+        /* (BARU) Efek Dash 'Fast Hand' */
+        .car.is-dashing {
+            /* Beri efek bayangan putih dan semi-transparan */
+            box-shadow: 0 0 20px 10px #ffffff, 0 0 30px 15px #ffffffaa;
+            opacity: 0.8;
+            transition: transform 0.1s ease-out, opacity 0.1s ease-out, box-shadow 0.1s ease-out;
+        }
+
+    </style>
+</head>
+<body class="stars-hidden"> <canvas id="stars"></canvas>
+
+    <audio id="coin-sfx" src="https://files.catbox.moe/kge8er.mp3"></audio>
+    <audio id="crash-sfx" src="https://files.catbox.moe/atlb7a.mp3"></audio>
+    <audio id="levelup-sfx" src="https://files.catbox.moe/rgt6e6.mp3"></audio>
+
+    <div id="splash-screen" style="display: none;"></div>
+    
+    <audio id="bg-music" loop>
+        <source src="https://files.catbox.moe/exgp8t.mp4" type="audio/mpeg">
+    </audio>
+    
+    <button id="menu-toggle"><i class="fas fa-bars"></i></button>
+    <button id="settings-toggle"><i class="fas fa-cog"></i></button>
+    <div id="sidebar-overlay"></div>
+    
+    <div id="sidebar">
+        <div class="menu-header">
+            <h3>NAVIGASI</h3>
+            <button class="secondary" id="sidebar-close-btn"><i class="fas fa-times"></i></button>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="index.html" class="tab-link"><i class="fas fa-satellite-dish"></i> LOBBY <span class="sidebar-close">x</span></a>
+            <a href="attack.html" class="tab-link"><i class="fas fa-bolt"></i> ATTACK <span class="sidebar-close">x</span></a>
+            <a href="store.html" class="tab-link"><i class="fas fa-store"></i> STORE <span class="sidebar-close">x</span></a>
+            <a href="missions.html" class="tab-link"><i class="fas fa-tasks"></i> MISI <span class="sidebar-close">x</span></a>
+            <a href="profile.html" class="tab-link"><i class="fas fa-user-astronaut"></i> PROFILE <span class="sidebar-close">x</span></a>
+            <a href="ai.html" class="tab-link"><i class="fas fa-robot"></i> AI CHAT <span class="sidebar-close">x</span></a>
+            <a href="quotes.html" class="tab-link"><i class="fas fa-feather-alt"></i> QUOTES GEN <span class="sidebar-close">x</span></a>
+            <a href="logs.html" class="tab-link"><i class="fas fa-history"></i> LOGS <span class="sidebar-close">x</span></a>
+            <a href="tools.html" class="tab-link" id="tools-tab-button" style="display: none;"><i class="fas fa-tools"></i> TOOLS <span class="sidebar-close">x</span></a>
+            
+            <a href="game.html" class="tab-link active"><i class="fas fa-gamepad"></i> GAME HUB <span class="sidebar-close">x</span></a>
+            
+            <a href="admin.html" class="tab-link" id="admin-tab-button" style="display: none;"><i class="fas fa-user-cog"></i> ADMIN <span class="sidebar-close">x</span></a>
+            <button id="sidebar-settings-button" class="tab-link"><i class="fas fa-cog"></i> SETTINGS <span class="sidebar-close">x</span></button>
+        </nav>
+        <footer class="dev-contact" style="position: absolute; bottom: 10px; width: 100%; background: #111; padding: 10px 0;">
+            <p>v3.2 (Car) by zexxo.</p>
+        </footer>
+    </div>
+
+    <div id="car-menu-page" class="container page" style="display: none;">
+        <h1><i class="fas fa-car-side"></i> Ultimate Racing</h1>
+        
+        <div class="coin-balance-display">
+            <i class="fas fa-coins"></i> <span id="user-coin-balance">...</span> Coins
+        </div>
+        
+        <div id="hub-notification" class="notification"></div>
+        
+        <div style="text-align: center; margin-bottom: 2rem;">
+             <a href="game.html" id="back-to-hub-btn" style="text-decoration: none;">
+                <button class="secondary" style="width: auto; padding: 0.6rem 1.2rem;">
+                    <i class="fas fa-arrow-left"></i> Kembali ke Game Hub
+                </button>
+            </a>
+        </div>
+        
+        <div class="game-option-group">
+            <label for="car-wager">Pilih Taruhan (Biaya Masuk):</label>
+            <select id="car-wager">
+                <option value="0">Fun Play (Biaya: 0 Koin | Hadiah: 0.5x EXP)</option>
+                <option value="10">Bronze (Biaya: 10 Koin | Hadiah: 1x EXP & Koin)</option>
+                <option value="50">Silver (Biaya: 50 Koin | Hadiah: 2x EXP & Koin)</option>
+                <option value="100">Gold (Biaya: 100 Koin | Hadiah: 5x EXP & Koin)</option>
+            </select>
+        </div>
+
+        <div class="game-option-group">
+            <label for="car-skin">Pilih Mobil:</label>
+            <select id="car-skin">
+                <option value="skin-default">Biru Klasik</option>
+                <option value="skin-red">Merah Sport</option>
+                <option value="skin-monster">Truk Monster</option>
+            </select>
+        </div>
+        
+        <p style="font-size: 0.9rem; color: #aaa; text-align: center; margin-top: -1rem; margin-bottom: 1.5rem;">
+            Koin didapat dari (Skor / 100) + (Koin Diambil * 10). EXP didapat dari (Skor / 150).
+        </p>
+        
+        <button id="start-car-btn">Mulai Balapan</button>
+        
+    </div>
+    
+    <div id="modal-overlay"></div>
+    <div id="settings-modal">
+        </div>
+    
+    <div id="car-game-container" class="game-container">
+        <div class="game-header">
+            <a href="game.html" class="secondary back-to-hub-btn"><i class="fas fa-arrow-left"></i> Hub</a>
+            <h2>Ultimate Racing</h2>
+            <div class="game-hud">
+                <span id="game-hud-coins-car" class="hud-item"><i class="fas fa-coins"></i> 0</span>
+                <span id="game-hud-exp-car" class="hud-item"><i class="fas fa-star"></i> 0</span>
+                
+                <span id="game-hud-speed-car" class="hud-item" style="color: #f39c12;">
+                    <i class="fas fa-tachometer-alt"></i> 0 KM/H
+                </span>
+            </div>
+        </div>
+        <div id="car-game-area">
+            <div class="road"></div>
+            <div class="center-line"></div>
+            <div id="player" class="car"></div>
+            <div id="score">Score: 0</div>
+            
+            <div id="fuel-bar-container">
+                <i class="fas fa-gas-pump"></i>
+                <div id="fuel-bar-fill"></div>
+            </div>
+
+            <div id="leftBtn">⬅</div>
+            <div id="rightBtn">➡</div>
+            <div id="gameOverScreen">
+              <h2>💥 Game Over! 💥</h2>
+              <div id="finalScore">Final Score: 0</div>
+              <p id="car-game-winnings" style="font-size: 1.2rem; color: #fff; margin-top: 10px;"></p>
+              <button id="restartCarGameBtn">Play Again</button>
+            </div>
+        </div>
+    </div>
+
+
+    <script>
+        // --- PENGATURAN GITLAB (LENGKAP) ---
+        const GITLAB_TOKEN = 'glpat-9cZaOPR0hBHj-qiqIqzT9W86MQp1Omlsc2xiCw.01.120onr34s';
+        const GITLAB_PROJECT_ID = '75681438';
+        const GITLAB_BRANCH = 'main';
+        
+        const USERS_FILE = 'users.json';
+        const LEADERBOARD_FILE = 'leaderboard.json';
+        const CHALLENGES_FILE = 'challenges.json'; 
+        
+        const GITLAB_BASE_URL = `https://gitlab.com/api/v4/projects/${GITLAB_PROJECT_ID}/repository/files/`;
+        const GITLAB_USERS_URL = `${GITLAB_BASE_URL}${encodeURIComponent(USERS_FILE)}`;
+        const GITLAB_LEADERBOARD_URL = `${GITLAB_BASE_URL}${encodeURIComponent(LEADERBOARD_FILE)}`;
+        const GITLAB_CHALLENGES_URL = `${GITLAB_BASE_URL}${encodeURIComponent(CHALLENGES_FILE)}`;
+        // --- AKHIR PENGATURAN GITLAB ---
+
+        // --- DOM Elements (Global) ---
+        const carMenuPage = document.getElementById('car-menu-page'); // (BARU)
+        const sidebar = document.getElementById('sidebar');
+        const sidebarOverlay = document.getElementById('sidebar-overlay');
+        const menuToggle = document.getElementById('menu-toggle');
+        const sidebarCloseBtn = document.getElementById('sidebar-close-btn');
+        const toolsTabButton = document.getElementById('tools-tab-button');
+        const settingsToggle = document.getElementById('settings-toggle');
+        const sidebarSettingsButton = document.getElementById('sidebar-settings-button');
+        const modalOverlay = document.getElementById('modal-overlay');
+        const settingsModal = document.getElementById('settings-modal');
+        const settingsModalCloseBtn = document.querySelector('#settings-modal .modal-close-btn');
+        const bgMusic = document.getElementById('bg-music');
+        const globalUserCoinBalance = document.getElementById('user-coin-balance');
+        const hubNotification = document.getElementById('hub-notification');
+        
+        const sfx = {
+            coin: document.getElementById('coin-sfx'),
+            crash: document.getElementById('crash-sfx'),
+            levelUp: document.getElementById('levelup-sfx')
+        };
+        
+        let USER_INFO = null;
+        let SETTINGS = {};
+        let LEADERBOARD_DATA = null;
+        let CHALLENGES_DATA = null;
+        let activeGameLoop = null; 
+        
+        let currentGame = {
+            name: null,
+            wager: 0,
+            expMulti: 0.5,
+            coinMulti: 0,
+            skin: 'skin-default'
+        };
+        
+        // --- Navigasi Game ---
+        const gameContainer = document.getElementById('car-game-container');
+        const backToHubBtn = document.querySelector('.back-to-hub-btn');
+
+        function showMenu() {
+            carMenuPage.style.display = 'block';
+            gameContainer.style.display = 'none';
+            if (activeGameLoop) {
+                cancelAnimationFrame(activeGameLoop);
+                activeGameLoop = null;
+            }
+            if (carGame.gameStarted) {
+                carGame.reset();
+            }
+            if (USER_INFO) {
+                updateCoinDisplay(USER_INFO.coins);
+                updateWagerOptions('car-wager', USER_INFO.coins);
+            }
+        }
+        
+        function showGame(containerId) {
+            vibrate();
+            carMenuPage.style.display = 'none';
+            gameContainer.style.display = 'block';
+            carGame.player.className = "car";
+            carGame.player.classList.add(currentGame.skin);
+            if (currentGame.skin === 'skin-monster') {
+                carGame.player.style.width = "55px";
+                carGame.player.style.height = "85px";
+            } else {
+                carGame.player.style.width = "40px";
+                carGame.player.style.height = "70px";
+            }
+        }
+        
+        if (backToHubBtn) {
+            backToHubBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                showMenu();
+            });
+        }
+        
+        function updateWagerOptions(selectId, userCoins) {
+            const select = document.getElementById(selectId);
+            if (!select) return;
+            select.querySelectorAll('option').forEach(option => {
+                const cost = parseInt(option.value, 10);
+                option.textContent = option.textContent.replace(" (Koin Kurang)", "");
+                if (cost > userCoins) {
+                    option.disabled = true;
+                    option.textContent += " (Koin Kurang)";
+                } else {
+                    option.disabled = false;
+                }
+            });
+            if (select.options[select.selectedIndex].disabled) {
+                select.value = "0"; 
+            }
+        }
+
+        // --- Fungsi Navigasi Sidebar & Modal ---
+        function openSidebar() { sidebar.classList.add('open'); sidebarOverlay.style.display = 'block'; if (window.innerWidth > 900) { document.body.style.marginLeft = 'var(--sidebar-width)'; } }
+        function closeSidebar() { sidebar.classList.remove('open'); sidebarOverlay.style.display = 'none'; document.body.style.marginLeft = '0'; }
+        function openSettingsModal() { vibrate(); settingsModal.classList.add('open'); modalOverlay.classList.add('open'); }
+        function closeSettingsModal() { settingsModal.classList.remove('open'); modalOverlay.classList.remove('open'); }
+        menuToggle.addEventListener('click', () => { vibrate(); openSidebar(); });
+        sidebarOverlay.addEventListener('click', () => { closeSidebar(); closeGameModals(); modalOverlay.classList.remove('open'); });
+        sidebarCloseBtn.addEventListener('click', closeSidebar);
+        settingsToggle.addEventListener('click', openSettingsModal);
+        sidebarSettingsButton.addEventListener('click', () => { closeSidebar(); openSettingsModal(); });
+        if(settingsModalCloseBtn) settingsModalCloseBtn.addEventListener('click', closeSettingsModal);
+        
+        function closeGameModals() { document.querySelectorAll('.game-modal').forEach(modal => modal.classList.remove('open')); }
+        document.querySelectorAll('.game-modal .modal-close-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                closeGameModals();
+                modalOverlay.classList.remove('open');
+            });
+        });
+        
+        // --- (FIX) Logika Mulai Game TANPA DELAY ---
+        document.getElementById('start-car-btn').addEventListener('click', () => {
+            const select = document.getElementById('car-wager');
+            const wager = parseInt(select.value, 10);
+            const selectedOption = select.options[select.selectedIndex];
+            
+            if (USER_INFO.coins < wager) {
+                showNotification('hub-notification', `Gagal: Koin tidak cukup!`, 'error');
+                return;
+            }
+            
+            const skinSelect = document.getElementById('car-skin');
+            currentGame.skin = skinSelect.value;
+            currentGame.name = 'car';
+            currentGame.wager = wager;
+            currentGame.expMulti = parseFloat(selectedOption.textContent.match(/(\d\.*\d*)x EXP/)[1] || 0.5);
+            currentGame.coinMulti = parseFloat(selectedOption.textContent.match(/(\d\.*\d*)x/)[1] || 1);
+            if (wager === 0) currentGame.coinMulti = 0;
+            
+            USER_INFO.coins -= wager;
+            localStorage.setItem('user', JSON.stringify(USER_INFO));
+            updateCoinDisplay(USER_INFO.coins);
+            
+            showGame('car-game-container');
+            carGame.start();
+            
+            if (wager > 0) {
+                syncCoinTransaction(-wager, "Biaya Masuk Ultimate Racing");
+            }
+        });
+        
+        async function syncCoinTransaction(amount, reason) {
+            if (!USER_INFO || amount === 0) return;
+            
+            try {
+                console.log(`[SYNC] Sinkronisasi ${amount} koin ke GitLab...`);
+                const fileUrl = GITLAB_USERS_URL;
+                const { data: usersData, lastCommitId } = await getGitLabFile(fileUrl);
+                const userIndex = usersData.users.findIndex(u => u.username === USER_INFO.username);
+                
+                if (userIndex === -1) {
+                    console.error("[SYNC] User tidak ditemukan di server.");
+                    return;
+                }
+                
+                const serverUser = usersData.users[userIndex];
+                if (!serverUser.coins) serverUser.coins = 0;
+                
+                if (amount < 0 && serverUser.coins < Math.abs(amount)) {
+                    console.error("[SYNC] Gagal: Koin di server tidak cukup saat sinkronisasi.");
+                    return; 
+                }
+                
+                serverUser.coins += amount;
+                
+                await updateGitLabFile(
+                    fileUrl,
+                    `SYNC: ${USER_INFO.username} ${amount > 0 ? 'received' : 'paid'} ${Math.abs(amount)} coins for ${reason}`,
+                    usersData,
+                    lastCommitId,
+                    null
+                );
+                console.log(`[SYNC] Sukses: ${reason}`);
+                
+            } catch (e) {
+                console.error("[SYNC] Gagal sinkronisasi koin ke GitLab:", e);
+            }
+        }
+        
+        
+        // ===============================================================
+        // --- LOGIKA GAME 1: ULTIMATE RACING (UPDATED) ---
+        // ===============================================================
+        const carGame = {
+            player: document.getElementById("player"),
+            leftBtn: document.getElementById("leftBtn"),
+            rightBtn: document.getElementById("rightBtn"),
+            gameArea: document.getElementById("car-game-area"),
+            scoreText: document.getElementById("score"),
+            road: document.querySelector("#car-game-area .road"),
+            centerLine: document.querySelector("#car-game-area .center-line"),
+            gameOverScreen: document.getElementById("gameOverScreen"),
+            finalScoreEl: document.getElementById("finalScore"),
+            restartBtn: document.getElementById("restartCarGameBtn"),
+            winningsEl: document.getElementById("car-game-winnings"),
+            hudCoins: document.getElementById("game-hud-coins-car"),
+            hudExp: document.getElementById("game-hud-exp-car"),
+            hudSpeed: document.getElementById("game-hud-speed-car"), // (BARU) HUD Kecepatan
+            fuelBar: document.getElementById("fuel-bar-fill"), // (BARU) HUD Bensin
+            
+            px: 0,
+            // (BARU) Tambah fuelItems
+            enemies: [], coins: [], boosts: [], shields: [], trucks: [], oilSlicks: [], constructionBarriers: [], fuelItems: [],
+            score: 0,
+            coinsCollected: 0,
+
+            // (BARU) Variabel Bensin
+            fuel: 100,
+            maxFuel: 100,
+
+            boostActive: false, shieldActive: false,
+            gameStarted: false,
+            leftPressed: false, rightPressed: false,
+            keyMap: { ArrowLeft: false, ArrowRight: false, ' ': false }, // (BARU) Tambah Spasi
+            roadPos: 0, linePos: 0,
+            
+            // (BARU) Variabel Dash
+            isDashing: false,
+            dashCooldown: 0,
+
+            baseGameSpeed: 5,
+            milestoneReached: false,
+            
+            isSpinning: false, 
+            isCrashing: false, 
+            spawnCooldown: 0, 
+            spawnCooldownTime: 20, 
+            
+            init() {
+                this.px = window.innerWidth / 2 - (this.player.offsetWidth / 2);
+                this.leftBtn.addEventListener("touchstart", (e) => { e.preventDefault(); this.leftPressed = true; });
+                this.leftBtn.addEventListener("touchend", (e) => { e.preventDefault(); this.leftPressed = false; });
+                this.rightBtn.addEventListener("touchstart", (e) => { e.preventDefault(); this.rightPressed = true; });
+                this.rightBtn.addEventListener("touchend", (e) => { e.preventDefault(); this.rightPressed = false; });
+                
+                window.addEventListener("keydown", (e) => {
+                    if (this.gameStarted && this.keyMap.hasOwnProperty(e.key)) { e.preventDefault(); this.keyMap[e.key] = true; }
+                });
+                window.addEventListener("keyup", (e) => {
+                    if (this.gameStarted && this.keyMap.hasOwnProperty(e.key)) { e.preventDefault(); this.keyMap[e.key] = false; }
+                });
+                
+                this.restartBtn.addEventListener('click', () => this.start());
+            },
+            
+            start() {
+                this.reset();
+                this.gameOverScreen.style.display = "none";
+                
+                this.player.className = "car";
+                this.player.classList.add(currentGame.skin);
+                
+                if (currentGame.skin === 'skin-monster') {
+                    this.player.style.width = "55px";
+                    this.player.style.height = "85px";
+                } else {
+                    this.player.style.width = "40px";
+                    this.player.style.height = "70px";
+                }
+                
+                this.gameStarted = true;
+                activeGameLoop = requestAnimationFrame(() => this.loop());
+            },
+            
+            reset() {
+                this.gameStarted = false;
+                if(activeGameLoop) cancelAnimationFrame(activeGameLoop);
+                activeGameLoop = null;
+                this.score = 0;
+                this.coinsCollected = 0;
+                this.baseGameSpeed = 5;
+                this.boostActive = false;
+                this.shieldActive = false;
+                this.milestoneReached = false;
+                this.isSpinning = false;
+                this.isCrashing = false;
+                this.isDashing = false; // (BARU)
+                this.dashCooldown = 0; // (BARU)
+                this.spawnCooldown = 0;
+                this.player.className = "car";
+                this.player.style.transform = 'translateX(-50%) rotate(0deg)';
+                this.player.style.animation = '';
+                
+                this.px = window.innerWidth / 2 - (this.player.offsetWidth / 2);
+                this.player.style.left = this.px + "px";
+                this.scoreText.textContent = "Score: 0";
+                this.hudCoins.textContent = "0";
+                this.hudExp.textContent = "0";
+                this.hudSpeed.innerHTML = `<i class="fas fa-tachometer-alt"></i> 0 KM/H`; // (BARU)
+                this.winningsEl.textContent = "";
+
+                // (BARU) Reset Bensin
+                this.fuel = this.maxFuel;
+                this.fuelBar.style.width = '100%';
+                this.fuelBar.style.backgroundPosition = '100% 50%'; // 100% = Hijau
+                
+                // (UPDATE) Hapus 'fuelItems' saat reset
+                [...this.enemies, ...this.coins, ...this.boosts, ...this.shields, ...this.trucks, ...this.oilSlicks, ...this.constructionBarriers, ...this.fuelItems].forEach(el => {
+                    if(el && el.parentNode) el.parentNode.removeChild(el);
+                });
+                // (UPDATE) Kosongkan array 'fuelItems'
+                this.enemies = []; this.coins = []; this.boosts = []; this.shields = []; this.trucks = []; this.oilSlicks = []; this.constructionBarriers = []; this.fuelItems = [];
+            },
+            
+            movePlayer(dir) {
+                let moveSpeed = this.boostActive ? 10 : 6;
+                this.px += dir * moveSpeed;
+                this.px = Math.max(0, Math.min(this.px, window.innerWidth - this.player.offsetWidth));
+                this.player.style.left = this.px + "px";
+            },
+            
+            createObject(className, x, y) {
+                const el = document.createElement("div");
+                el.className = className;
+                el.style.left = x + "px"; el.style.top = y + "px";
+                
+                if (className === 'oil-slick') {
+                    el.style.transform = 'rotate(' + Math.floor(Math.random() * 360) + 'deg)';
+                }
+                
+                this.gameArea.appendChild(el);
+                return el;
+            },
+            
+            randX() { return Math.floor(Math.random() * (window.innerWidth - 70)); },
+            
+            spawnAll() {
+                if (Math.random() < 0.01) this.coins.push(this.createObject("coin", this.randX(), -50));
+                if (Math.random() < 0.005) this.boosts.push(this.createObject("boost", this.randX(), -60));
+                if (Math.random() < 0.003) this.shields.push(this.createObject("shield", this.randX(), -60));
+
+                // (BARU) Spawn Bensin jika bensin < 50%
+                if (this.fuel < 50 && Math.random() < 0.008) {
+                    this.fuelItems.push(this.createObject("fuel", this.randX(), -50));
+                }
+
+                if (this.spawnCooldown > 0) return;
+
+                let chance = Math.random();
+                
+                if (chance < 0.02) {
+                    this.enemies.push(this.createObject("enemy", this.randX(), -80));
+                    this.spawnCooldown = this.spawnCooldownTime;
+                } else if (chance < 0.028) {
+                    this.trucks.push(this.createObject("truck", this.randX(), -100));
+                    this.spawnCooldown = this.spawnCooldownTime;
+                } else if (chance < 0.035) {
+                    this.oilSlicks.push(this.createObject("oil-slick", this.randX(), -60));
+                    this.spawnCooldown = this.spawnCooldownTime;
+                } else if (chance < 0.041) {
+                    this.constructionBarriers.push(this.createObject("construction-barrier", this.randX(), -60));
+                    this.spawnCooldown = this.spawnCooldownTime;
+                }
+            },
+            
+            checkCollision(a, b) {
+                if (!a || !b) return false;
+                const ar = a.getBoundingClientRect();
+                const br = b.getBoundingClientRect();
+
+                const aTop = ar.top + 5;
+                const aBottom = ar.bottom - 5;
+                const aLeft = ar.left + 5;
+                const aRight = ar.right - 5;
+
+                return !(
+                    aBottom < br.top ||
+                    aTop > br.bottom ||
+                    aRight < br.left ||
+                    aLeft > br.right
+                );
+            },
+            
+            // (UPDATE) updateObjects dengan logika Dash
+            updateObjects(list, onHit, currentSpeed) {
+                for (let i = list.length - 1; i >= 0; i--) {
+                    const el = list[i];
+                    if (!el || !el.parentNode) {
+                        list.splice(i, 1);
+                        continue;
+                    }
+                    el.style.top = el.offsetTop + currentSpeed + "px";
+                    if (el.offsetTop > window.innerHeight) {
+                        el.remove(); list.splice(i, 1);
+                    
+                    // (UPDATE) Logika tabrakan
+                    } else if (this.checkCollision(this.player, el)) {
+                        
+                        // (BARU) Cek apakah item ini 'berbahaya'
+                        const isHarmful = el.classList.contains('enemy') || 
+                                          el.classList.contains('truck') || 
+                                          el.classList.contains('oil-slick') || 
+                                          el.classList.contains('construction-barrier');
+
+                        // (BARU) Jika 'isDashing' dan item berbahaya, hancurkan item
+                        if (this.isDashing && isHarmful) {
+                            this.score += 500; // Bonus hancurkan
+                        } else {
+                            // Jika tidak dash, panggil onHit (logika normal)
+                            onHit(el); 
+                        }
+                        
+                        // Hapus item setelah ditabrak (baik dihancurkan atau normal)
+                        if (el && el.parentNode) {
+                            el.remove(); 
+                        }
+                        list.splice(i, 1);
+                    }
+                }
+            },
+            
+            // (UPDATE) Fungsi untuk animasi tabrakan + Bensin Habis
+            startCrashSequence(collidedObject) {
+                // (UPDATE) Jangan tabrak jika ada shield DAN menabrak sesuatu
+                if (this.isCrashing || (this.shieldActive && collidedObject != null)) return; 
+                
+                this.isCrashing = true;
+                this.gameStarted = false;
+                cancelAnimationFrame(activeGameLoop);
+                
+                // (UPDATE) Hanya mainkan sound & ledakan jika BENAR-BENAR menabrak
+                if (collidedObject) {
+                    playSound('crash');
+                    
+                    // Buat mobil hancur
+                    this.player.classList.add('is-crashed');
+                    
+                    // Buat ledakan/api
+                    const playerRect = this.player.getBoundingClientRect();
+                    const explosion = document.createElement('div');
+                    explosion.className = 'explosion';
+                    // Tampilkan di tengah mobil
+                    explosion.style.left = (playerRect.left + playerRect.width / 2) + 'px';
+                    explosion.style.top = (playerRect.top + playerRect.height / 2) + 'px';
+                    this.gameArea.appendChild(explosion);
+                    
+                    // Tunggu animasi selesai, baru panggil gameOver
+                    setTimeout(() => {
+                        if (explosion.parentNode) {
+                            explosion.remove();
+                        }
+                        this.gameOver(); // Panggil layar game over yg asli
+                    }, 1000); // 1 detik
+                } else {
+                    // (BARU) Jika bensin habis (collidedObject == null)
+                    // Langsung mogok dan panggil gameOver
+                    this.player.classList.add('is-crashed');
+                    this.gameOver();
+                }
+            },
+
+            async gameOver() {
+                this.gameStarted = false;
+                if(activeGameLoop) cancelAnimationFrame(activeGameLoop);
+                activeGameLoop = null;
+                
+                this.gameOverScreen.style.display = "flex";
+                // Judul Game Over sudah diatur di startCrashSequence atau loop
+                this.finalScoreEl.textContent = "Final Score: " + this.score;
+                
+                const { coins, exp } = calculateWinnings('car', this.score, this.coinsCollected);
+                this.winningsEl.innerHTML = `
+                    Hadiah: <span style="color: var(--coin-color)">+${coins} <i class="fas fa-coins"></i></span> | 
+                    <span style="color: var(--primary-color)">+${exp} EXP</span>
+                `;
+                
+                try {
+                    await saveGameData('car', this.score, coins, exp);
+                } catch (e) {
+                    this.winningsEl.textContent = `Gagal menyimpan skor: ${e.message}`;
+                }
+            },
+            
+            loop() {
+                if (!this.gameStarted || this.isCrashing) return;
+                
+                if (this.spawnCooldown > 0) this.spawnCooldown--;
+                if (this.dashCooldown > 0) this.dashCooldown--; // (BARU) Kurangi cooldown
+                
+                this.baseGameSpeed += 0.0015; 
+                let currentSpeed = this.boostActive ? this.baseGameSpeed * 2.5 : this.baseGameSpeed;
+
+                // --- (BARU) LOGIKA DASH (Fast Hand) ---
+                // Cek jika Spasi ditekan, tidak sedang dash, dan cooldown selesai
+                if (this.keyMap[' '] && !this.isDashing && this.dashCooldown <= 0) {
+                    this.isDashing = true;
+                    this.dashCooldown = 150; // Cooldown 150 frame
+                    this.player.classList.add('is-dashing');
+                    
+                    // (Sound effect dash bisa ditambah di sini)
+                    
+                    setTimeout(() => {
+                        this.isDashing = false;
+                        this.player.classList.remove('is-dashing');
+                    }, 300); // Durasi dash 300ms
+                }
+                
+                // (UPDATE) Sesuaikan kecepatan jika sedang dash atau boost
+                currentSpeed = this.isDashing ? this.baseGameSpeed * 3.5 : (this.boostActive ? this.baseGameSpeed * 2.5 : this.baseGameSpeed);
+                // --- Akhir Logika Dash ---
+
+
+                // --- (BARU) LOGIKA BENSIN ---
+                // Kurangi bensin. Lebih boros saat nge-boost atau dash.
+                let fuelConsumption = 0.02;
+                if (this.boostActive) fuelConsumption = 0.05;
+                if (this.isDashing) fuelConsumption = 0.08;
+                
+                this.fuel -= fuelConsumption; 
+                this.fuel = Math.max(0, this.fuel); // Jangan sampai minus
+                
+                // Update Fuel Bar
+                let fuelPercent = (this.fuel / this.maxFuel) * 100;
+                this.fuelBar.style.width = fuelPercent + '%';
+                
+                // Update Warna Bar (0% = Merah, 100% = Hijau)
+                this.fuelBar.style.backgroundPosition = fuelPercent + '% 50%';
+
+                // Cek jika bensin habis
+                if (this.fuel <= 0) {
+                    this.gameOverScreen.querySelector('h2').textContent = "⛽ Bensin Habis! ⛽";
+                    this.startCrashSequence(null); // 'null' menandakan bensin habis
+                    return; // Hentikan loop
+                }
+                // --- Akhir Logika Bensin ---
+                
+                if (!this.isSpinning) { 
+                    let isTurning = false;
+                    if (this.leftPressed || this.keyMap["ArrowLeft"]) {
+                        this.movePlayer(-1);
+                        this.player.style.transform = 'translateX(-50%) rotate(-10deg)';
+                        isTurning = true;
+                    } else if (this.rightPressed || this.keyMap["ArrowRight"]) {
+                        this.movePlayer(1);
+                        this.player.style.transform = 'translateX(-50%) rotate(10deg)';
+                        isTurning = true;
+                    } else {
+                        this.player.style.transform = 'translateX(-50%) rotate(0deg)';
+                    }
+                }
+                
+                this.roadPos = (this.roadPos + currentSpeed) % 80;
+                this.linePos = (this.linePos + currentSpeed) % 40;
+                this.road.style.backgroundPositionY = this.roadPos + "px";
+                this.centerLine.style.backgroundPositionY = this.linePos + "px";
+                
+                this.spawnAll();
+                
+                // (UPDATE) onHit sekarang memanggil 'startCrashSequence'
+                // Logika dash dipindah ke updateObjects
+                const deadlyOnHit = (obj) => { 
+                    if (!this.shieldActive) return this.startCrashSequence(obj); 
+                };
+                this.updateObjects(this.enemies, deadlyOnHit, currentSpeed);
+                this.updateObjects(this.trucks, deadlyOnHit, currentSpeed);
+                this.updateObjects(this.constructionBarriers, deadlyOnHit, currentSpeed);
+
+                this.updateObjects(this.oilSlicks, () => {
+                    if (this.shieldActive || this.isSpinning) return;
+                    this.isSpinning = true;
+                    this.player.classList.add('is-spinning');
+                    setTimeout(() => {
+                        this.isSpinning = false;
+                        this.player.classList.remove('is-spinning');
+                    }, 500);
+                }, currentSpeed);
+                
+                // (BARU) Update Item Bensin
+                this.updateObjects(this.fuelItems, () => { 
+                    this.fuel = Math.min(this.maxFuel, this.fuel + 40); // Isi 40 bensin
+                    playSound('coin'); // (Bisa ganti sound effect jika ada)
+                }, currentSpeed);
+
+                this.updateObjects(this.coins, () => { 
+                    this.score += 1000; 
+                    this.coinsCollected += 1;
+                    playSound('coin');
+                }, currentSpeed);
+                this.updateObjects(this.boosts, () => {
+                    if (this.boostActive) return; this.boostActive = true; this.player.classList.add("boost-active");
+                    setTimeout(() => { this.boostActive = false; this.player.classList.remove("boost-active"); }, 3000);
+                }, currentSpeed);
+                this.updateObjects(this.shields, () => {
+                    if (this.shieldActive) return; this.shieldActive = true; this.player.classList.add("shield-active");
+                    setTimeout(() => { this.shieldActive = false; this.player.classList.remove("shield-active"); }, 5000);
+                }, currentSpeed);
+                
+                this.score += Math.floor(currentSpeed);
+                this.scoreText.textContent = "Score: " + this.score;
+
+                // --- (BARU) Update Tampilan Kecepatan ---
+                // Kita anggap 'currentSpeed' 5 = 100 km/h. Jadi, kalikan 20.
+                const speedKmh = Math.floor(currentSpeed * 20); 
+                this.hudSpeed.innerHTML = `<i class="fas fa-tachometer-alt"></i> ${speedKmh} KM/H`;
+                // --- Akhir ---
+                
+                const { coins, exp } = calculateWinnings('car', this.score, this.coinsCollected);
+                this.hudCoins.textContent = coins;
+                this.hudExp.textContent = exp;
+                
+                if (this.score >= 1000000 && !this.milestoneReached) {
+                    this.milestoneReached = true;
+                    this.gameStarted = false; 
+                    if(activeGameLoop) cancelAnimationFrame(activeGameLoop);
+                    activeGameLoop = null;
+
+                    this.gameOverScreen.style.display = "flex";
+                    this.gameOverScreen.querySelector('h2').textContent = "🏆 SELAMAT! 🏆";
+                    this.finalScoreEl.textContent = "Kamu Mencapai 1.000.000 Skor!";
+                    
+                    const bonusCoins = 10000;
+                    const finalCoins = coins + bonusCoins;
+                    
+                    this.winningsEl.innerHTML = `
+                        Hadiah: <span style="color: var(--coin-color)">+${finalCoins} <i class="fas fa-coins"></i></span> | 
+                        <span style="color: var(--primary-color)">+${exp} EXP</span>
+                        <br><small style="color:lime">(Termasuk Bonus Pencapaian 10.000 Koin!)</small>
+                    `;
+                    
+                    saveGameData('car', this.score, finalCoins, exp);
+                    
+                } else {
+                    activeGameLoop = requestAnimationFrame(() => this.loop());
+                }
+            }
+        };
+        carGame.init();
+        
+        function calculateWinnings(gameName, score, itemsCollected) {
+            let coins = 0; let exp = 0;
+            if (gameName === 'car') {
+                coins = Math.floor(score / 100) + (itemsCollected * 10);
+                exp = Math.floor(score / 150);
+            }
+            coins = Math.floor(coins * currentGame.coinMulti);
+            exp = Math.floor(exp * currentGame.expMulti);
+            return { coins, exp };
+        }
+
+        // --- (FIXED) Fungsi API GITLAB ---
+        async function getGitLabFile(fileUrl) {
+            try {
+                const response = await fetch(`${fileUrl}?ref=${GITLAB_BRANCH}`, {
+                    method: 'GET', 
+                    headers: { 'Private-Token': GITLAB_TOKEN, 'Accept': 'application/json' }
+                });
+                const fileName = decodeURIComponent(fileUrl.split('/').pop().split('?')[0]);
+                const defaultData = {
+                    [USERS_FILE]: { settings: {}, users: [] },
+                    [LEADERBOARD_FILE]: { car: [], ttt: [], code: [], math: [] },
+                    [CHALLENGES_FILE]: { daily: [] }
+                };
+                if (response.status === 404) {
+                    return { data: defaultData[fileName] || {}, lastCommitId: null };
+                }
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                const data = await response.json(); 
+                if (!data.content) {
+                    return { data: defaultData[fileName] || {}, lastCommitId: data.last_commit_id };
+                }
+                const content = JSON.parse(atob(data.content));
+                return { data: content, lastCommitId: data.last_commit_id };
+            } catch (error) { console.error("Failed to fetch GitLab file:", error); throw error; }
+        }
+        
+        async function updateGitLabFile(fileUrl, commitMessage, dataObject, lastCommitId, btn) {
+            try {
+                const content = btoa(unescape(encodeURIComponent(JSON.stringify(dataObject, null, 2)))); 
+                const method = lastCommitId ? 'PUT' : 'POST';
+                const payload = { branch: GITLAB_BRANCH, commit_message: commitMessage, content: content, encoding: 'base64' };
+                let url = fileUrl;
+                if(method === 'POST') {
+                    payload.file_path = decodeURIComponent(fileUrl.split('/files/')[1]);
+                    url = `${GITLAB_BASE_URL}${encodeURIComponent(payload.file_path)}`;
+                }
+
+                const response = await fetch(url, {
+                    method: method, headers: { 'Private-Token': GITLAB_TOKEN, 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                
+                if (!response.ok) {
+                    const errData = await response.json();
+                    if (method === 'POST' && errData.message && errData.message.includes('already exists')) {
+                        const { lastCommitId: newCommitId } = await getGitLabFile(fileUrl);
+                        return await updateGitLabFile(fileUrl, commitMessage, dataObject, newCommitId, btn);
+                    }
+                    throw new Error(`GitLab Update Failed: ${errData.message || response.status}`);
+                }
+                return true;
+            } catch (error) { console.error("Failed to update GitLab file:", error); throw error; } 
+        }
+        
+        async function updateGlobalLeaderboard(gameName, score) {
+            if (!USER_INFO) return;
+            let leaderboardData, commitId;
+            const fileUrl = GITLAB_LEADERBOARD_URL;
+            
+            try {
+                const { data, lastCommitId } = await getGitLabFile(fileUrl);
+                leaderboardData = data; commitId = lastCommitId;
+            } catch (e) { console.error("Gagal ambil leaderboard:", e); throw e; }
+            
+            if (!leaderboardData[gameName]) leaderboardData[gameName] = [];
+            const oldEntry = leaderboardData[gameName].find(e => e.user === USER_INFO.username);
+            if (oldEntry && oldEntry.score >= score) {
+                console.log("[Leaderboard] Skor baru tidak lebih tinggi. Batal update.");
+                return;
+            }
+            
+            leaderboardData[gameName] = leaderboardData[gameName].filter(e => e.user !== USER_INFO.username);
+            leaderboardData[gameName].push({ user: USER_INFO.username, score: score, date: new Date().toISOString() });
+            leaderboardData[gameName].sort((a, b) => b.score - a.score);
+            leaderboardData[gameName] = leaderboardData[gameName].slice(0, 10);
+            LEADERBOARD_DATA = leaderboardData;
+            
+            try {
+                await updateGitLabFile( fileUrl, `GAME: ${USER_INFO.username} new score ${score} in ${gameName}`, leaderboardData, commitId, null );
+                console.log("[Leaderboard] Score saved to GitLab!");
+            } catch (e) {
+                console.error("Gagal update leaderboard:", e); throw e;
+            }
+        }
+
+        async function saveGameData(gameName, score, coinsGained, expGained) {
+            if (!USER_INFO) return;
+            console.log(`[SAVE] Game: ${gameName}, Score: ${score}, Coins: ${coinsGained}, EXP: ${expGained}`);
+
+            try { await updateGlobalLeaderboard(gameName, score); } 
+            catch (e) { console.error("Gagal update global leaderboard, tapi tetap lanjut.", e); }
+
+            try {
+                const fileUrl = GITLAB_USERS_URL;
+                const { data: usersData, lastCommitId } = await getGitLabFile(fileUrl);
+                const userIndex = usersData.users.findIndex(u => u.username === USER_INFO.username);
+                if (userIndex === -1) throw new Error("User tidak ditemukan di server.");
+                const serverUser = usersData.users[userIndex];
+                
+                if (!serverUser.level) serverUser.level = 1;
+                if (!serverUser.exp) serverUser.exp = 0;
+                if (!serverUser.history) serverUser.history = [];
+                if (!serverUser.coins) serverUser.coins = 0;
+
+                serverUser.coins += coinsGained;
+                serverUser.exp += expGained;
+                
+                serverUser.history.push({
+                    game: gameName, score: score, date: new Date().toISOString(),
+                    wager: currentGame.wager, coins: coinsGained, exp: expGained
+                });
+                if (serverUser.history.length > 20) {
+                    serverUser.history = serverUser.history.slice(-20);
+                }
+
+                let expToNextLevel = serverUser.level * 1000;
+                let leveledUp = false;
+                while (serverUser.exp >= expToNextLevel) {
+                    serverUser.level++;
+                    serverUser.exp -= expToNextLevel;
+                    expToNextLevel = serverUser.level * 1000;
+                    leveledUp = true;
+                }
+                
+                await updateGitLabFile(
+                    fileUrl,
+                    `DATA: ${serverUser.username} finished ${gameName} (Lvl ${serverUser.level})`,
+                    usersData, lastCommitId, null
+                );
+                
+                console.log("[SAVE] User data (EXP, Koin, Level) saved to GitLab.");
+                
+                USER_INFO = serverUser;
+                localStorage.setItem('user', JSON.stringify(USER_INFO));
+                updateCoinDisplay(USER_INFO.coins);
+                
+                if (leveledUp) {
+                    playSound('levelup');
+                    showNotification('hub-notification', `NAIK LEVEL! Anda sekarang Level ${USER_INFO.level}!`, 'success');
+                }
+
+            } catch (e) {
+                console.error("FATAL: Gagal save data user (EXP/Koin) ke GitLab:", e);
+                showNotification('hub-notification', `Error Kritis: Gagal menyimpan progres Anda: ${e.message}.`, 'error');
+            }
+        }
+
+
+        // --- (FIXED) Logika Halaman ---
+        function showCarMenu() {
+            try {
+                USER_INFO = JSON.parse(localStorage.getItem('user'));
+                if (!USER_INFO) throw new Error("Cache user tidak ditemukan.");
+            } catch (e) {
+                alert(`Cache Sesi Error: ${e.message}. Harap login ulang.`);
+                window.location.href = 'login.html';
+                return;
+            }
+            
+            carMenuPage.style.display = 'block';
+            gameContainer.style.display = 'none';
+            menuToggle.style.display = 'block';
+            settingsToggle.style.display = 'block';
+
+            updateCoinDisplay(USER_INFO.coins);
+            applySettings(); 
+            refreshUserInfoFromServer();
+            updateWagerOptions('car-wager', USER_INFO.coins);
+            
+            const adminTab = document.getElementById('admin-tab-button');
+            if (adminTab && (USER_INFO.role === 'admin' || USER_INFO.role === 'developer')) {
+                adminTab.style.display = 'block';
+            }
+            if (window.innerWidth > 900) {
+                 document.body.style.marginLeft = 'var(--sidebar-width)';
+                 sidebar.classList.add('open');
+            }
+        }
+        
+        async function refreshUserInfoFromServer() {
+            if (!USER_INFO) return; 
+            
+            try {
+                const { data: usersData } = await getGitLabFile(GITLAB_USERS_URL);
+                if (!usersData || !usersData.users) throw new Error('Data pengguna server tidak valid.');
+
+                const freshUserData = usersData.users.find(u => u.username === USER_INFO.username);
+
+                if (freshUserData) {
+                    if (JSON.stringify(freshUserData) !== JSON.stringify(USER_INFO)) {
+                        console.log('Data pengguna diperbarui dari server.');
+                        USER_INFO = freshUserData;
+                        localStorage.setItem('user', JSON.stringify(USER_INFO)); 
+                        
+                        updateCoinDisplay(USER_INFO.coins);
+                        updateWagerOptions('car-wager', USER_INFO.coins);
+                    }
+                } else {
+                    console.warn('Pengguna tidak ditemukan di server. Logout paksa.');
+                    logout(true);
+                }
+            } catch (error) {
+                console.error('Gagal menyinkronkan data pengguna:', error.message);
+            }
+        }
+        
+        function logout(force = false) { 
+            vibrate();
+            if(force || confirm('Anda yakin ingin logout?')) {
+                localStorage.removeItem('user');
+                window.location.href = 'login.html';
+            }
+        }
+        
+        function playSound(id) {
+            if (!SETTINGS.music) return;
+            const sound = sfx[id];
+            if (sound) {
+                sound.currentTime = 0;
+                sound.volume = SETTINGS.musicVolume;
+                sound.play().catch(e => {});
+            }
+        }
+        
+        // --- Logika Efek Bintang ---
+        const canvas = document.getElementById("stars");
+        const starsCtx = canvas.getContext("2d"); 
+        let stars = []; 
+        let starsAnimationId;
+        function resizeCanvas() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; stars = []; for (let i = 0; i < 150; i++) { stars.push({ x: Math.random() * canvas.width, y: Math.random() * canvas.height, radius: Math.random() * 1.5, speed: Math.random() * 0.5 + 0.2 }); } }
+        function drawStars() { starsCtx.clearRect(0, 0, canvas.width, canvas.height); starsCtx.fillStyle = "#fff"; stars.forEach(star => { starsCtx.beginPath(); starsCtx.arc(star.x, star.y, star.radius, 0, Math.PI * 2); starsCtx.fill(); star.y += star.speed; if (star.y > canvas.height) star.y = 0; }); starsAnimationId = requestAnimationFrame(drawStars); }
+        window.addEventListener("resize", resizeCanvas);
+        function startStars() { document.body.classList.remove('stars-hidden'); resizeCanvas(); drawStars(); }
+        function stopStars() { document.body.classList.add('stars-hidden'); if (starsAnimationId) cancelAnimationFrame(starsAnimationId); }
+        
+        
+        /* --- BAGIAN SETTINGS (Global - Sama) --- */
+        const defaultSettings = {
+            accentColor: '#ffffff', fontSize: '16px', fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif", 
+            textGlow: false, stars: true, music: true, musicVolume: 0.3,
+            vibration: true, devMode: false, skipSplash: false,
+        };
+        function saveSetting(key, value) { SETTINGS[key] = value; localStorage.setItem('XVCT_SETTINGS', JSON.stringify(SETTINGS)); }
+        function loadSettings() {
+            const saved = localStorage.getItem('XVCT_SETTINGS');
+            SETTINGS = saved ? JSON.parse(saved) : { ...defaultSettings };
+            for (const key in defaultSettings) { if (SETTINGS[key] === undefined) SETTINGS[key] = defaultSettings[key]; }
+            applySettings(); updateSettingsUI();
+        }
+        function applySettings() {
+            document.documentElement.style.setProperty('--primary-color', SETTINGS.accentColor);
+            const glow = SETTINGS.accentColor === '#ffffff' ? 'rgba(255, 255, 255, 0.3)' : SETTINGS.accentColor + '66';
+            document.documentElement.style.setProperty('--primary-glow', glow);
+            document.body.style.fontSize = SETTINGS.fontSize; 
+            document.body.style.fontFamily = SETTINGS.fontFamily; 
+            if (SETTINGS.textGlow) document.body.classList.add('text-glow'); else document.body.classList.remove('text-glow'); 
+            if (SETTINGS.stars) startStars(); else stopStars();
+            bgMusic.volume = SETTINGS.musicVolume;
+            if (SETTINGS.music) bgMusic.play().catch(() => {}); else bgMusic.pause();
+            if (toolsTabButton) toolsTabButton.style.display = SETTINGS.devMode ? 'block' : 'none';
+        }
+        function updateSettingsUI() {
+        }
+        function vibrate() { if (SETTINGS.vibration && navigator.vibrate) navigator.vibrate(50); }
+        
+        function updateCoinDisplay(coins) {
+            if (globalUserCoinBalance) {
+                globalUserCoinBalance.textContent = (coins !== undefined) ? coins.toLocaleString('id-ID') : '...';
+            }
+        }
+        function showNotification(id, message, type) {
+            const el = document.getElementById(id);
+            if (!el) return;
+            el.textContent = message;
+            el.className = 'notification ' + type;
+            el.style.display = 'block';
+        }
+        function hideAllNotifications() { document.querySelectorAll('.notification').forEach(el => el.style.display = 'none'); }
+        function disableButton(btn) {
+            if (!btn) return; 
+            btn.disabled = true;
+            btn.setAttribute('data-original-text', btn.textContent);
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>'; 
+        }
+        function enableButton(btn, text) {
+            if (!btn) return; 
+            const originalText = btn.getAttribute('data-original-text');
+            btn.innerHTML = text || originalText || "Button";
+            btn.disabled = false;
+        }
+
+        // --- Fungsi Inisialisasi Utama ---
+        document.addEventListener('DOMContentLoaded', () => {
+             const splash = document.getElementById('splash-screen');
+             if (splash) splash.style.display = 'none';
+             loadSettings(); 
+             if (SETTINGS.music) bgMusic.play().catch(() => {});
+             init();
+        });
+
+        function init() {
+            const user = localStorage.getItem('user');
+            if (!user) {
+                alert("Sesi tidak ditemukan. Harap login kembali.");
+                window.location.href = 'login.html'; 
+            } else {
+                showCarMenu();
+            }
+        }
+    </script>
+</body>
+</html>

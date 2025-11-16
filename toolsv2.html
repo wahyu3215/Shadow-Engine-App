@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>SHADOW | Userbot Manager</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg: #050505;
+            --panel: #0a0a0a;
+            --cyan: #00f3ff;
+            --red: #ff003c;
+            --green: #00ff41;
+            --text: #ececec;
+            --border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; outline: none; -webkit-tap-highlight-color: transparent; }
+        body { font-family: 'Rajdhani', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; }
+        
+        /* BACKGROUND */
+        .grid-bg { position: fixed; top:0; left:0; width:100%; height:100%; background-image: linear-gradient(rgba(0, 243, 255, 0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 243, 255, 0.03) 1px, transparent 1px); background-size: 30px 30px; z-index: -1; pointer-events: none; }
+
+        /* NAVBAR */
+        .navbar { height: 70px; padding: 0 20px; display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.9); border-bottom: var(--border); backdrop-filter: blur(5px); position: sticky; top: 0; z-index: 100; }
+        .brand { font-size: 1.5rem; font-weight: 800; color: var(--cyan); letter-spacing: 2px; text-transform: uppercase; }
+        .status-badge { padding: 5px 10px; border-radius: 4px; font-size: 0.8rem; font-weight: bold; background: #333; color: #aaa; font-family: 'JetBrains Mono'; }
+        .status-badge.online { background: rgba(0, 255, 65, 0.1); color: var(--green); border: 1px solid var(--green); }
+
+        /* CONTAINER */
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; width: 100%; }
+
+        /* CARDS */
+        .card { background: var(--panel); border: var(--border); border-radius: 16px; padding: 25px; margin-bottom: 25px; position: relative; overflow: hidden; box-shadow: 0 10px 40px rgba(0,0,0,0.5); }
+        .card-header { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; border-bottom: 1px solid #222; padding-bottom: 15px; }
+        .card-title { font-size: 1.2rem; font-weight: 700; color: var(--text); text-transform: uppercase; }
+        .card-icon { color: var(--cyan); font-size: 1.2rem; }
+
+        /* FORMS */
+        .form-group { margin-bottom: 15px; }
+        label { display: block; font-size: 0.8rem; color: var(--cyan); margin-bottom: 8px; font-weight: bold; letter-spacing: 1px; }
+        input, textarea { width: 100%; background: #000; border: 1px solid #333; color: white; padding: 15px; border-radius: 8px; font-family: 'JetBrains Mono'; font-size: 0.9rem; transition: 0.3s; }
+        input:focus, textarea:focus { border-color: var(--cyan); box-shadow: 0 0 15px rgba(0, 243, 255, 0.1); }
+
+        /* BUTTONS */
+        .btn-row { display: flex; gap: 10px; margin-top: 10px; }
+        button { flex: 1; padding: 15px; border: none; border-radius: 8px; font-weight: 800; cursor: pointer; text-transform: uppercase; font-family: 'Rajdhani'; letter-spacing: 1px; transition: 0.2s; color: #000; font-size: 0.9rem; }
+        .btn-primary { background: var(--cyan); box-shadow: 0 0 20px rgba(0, 243, 255, 0.2); }
+        .btn-danger { background: var(--red); color: white; box-shadow: 0 0 20px rgba(255, 0, 60, 0.2); }
+        .btn-ghost { background: transparent; border: 1px solid #444; color: #aaa; }
+        button:active { transform: scale(0.95); }
+        button:hover { opacity: 0.9; }
+
+        /* LIST (BLACKLIST) */
+        .bl-list { max-height: 200px; overflow-y: auto; background: #000; border: 1px solid #222; border-radius: 8px; margin-top: 10px; }
+        .bl-item { padding: 10px; border-bottom: 1px solid #222; display: flex; justify-content: space-between; align-items: center; font-family: 'JetBrains Mono'; font-size: 0.85rem; }
+        .bl-item:last-child { border-bottom: none; }
+        .bl-remove { color: var(--red); cursor: pointer; font-size: 0.9rem; }
+
+        /* UTILS */
+        .hidden { display: none; }
+        .text-center { text-align: center; }
+        .log-box { background: #000; padding: 10px; border-radius: 8px; font-family: 'JetBrains Mono'; font-size: 0.8rem; color: #0f0; margin-top: 10px; border: 1px dashed #333; }
+    </style>
+</head>
+<body>
+
+    <div class="grid-bg"></div>
+
+    <nav class="navbar">
+        <div class="brand">SHADOW <span style="color:white">UBOT</span></div>
+        <div id="api-badge" class="status-badge">CONNECTING...</div>
+    </nav>
+
+    <div class="container">
+
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-fingerprint card-icon"></i>
+                <div class="card-title">Autentikasi</div>
+            </div>
+
+            <div id="step-phone">
+                <div class="form-group">
+                    <label>NOMOR TELEGRAM</label>
+                    <input type="text" id="ubot-phone" placeholder="+628xxxxx (Gunakan Kode Negara)">
+                </div>
+                <button class="btn-primary" style="width:100%" onclick="reqOtp()">Minta Kode OTP</button>
+            </div>
+
+            <div id="step-otp" class="hidden">
+                <div class="form-group">
+                    <label>KODE OTP (CEK TELEGRAM)</label>
+                    <input type="number" id="ubot-code" placeholder="12345">
+                </div>
+                <div class="form-group">
+                    <label>PASSWORD 2FA (JIKA ADA)</label>
+                    <input type="password" id="ubot-pass" placeholder="Biarkan kosong jika tidak ada">
+                </div>
+                <div class="btn-row">
+                    <button class="btn-primary" onclick="verifyOtp()">VERIFIKASI</button>
+                    <button class="btn-ghost" onclick="resetLogin()">BATAL</button>
+                </div>
+            </div>
+            <div id="login-status" class="text-center" style="margin-top:15px; font-weight:bold; color:var(--cyan)"></div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-sliders-h card-icon"></i>
+                <div class="card-title">Konfigurasi Promo</div>
+            </div>
+
+            <div class="form-group">
+                <label>PESAN PROMOSI</label>
+                <textarea id="promo-msg" rows="4" placeholder="Ketik pesan promosi disini..."></textarea>
+            </div>
+            
+            <div class="form-group">
+                <label>DELAY PER PESAN (DETIK)</label>
+                <input type="number" id="promo-delay" value="60">
+            </div>
+
+            <div class="btn-row">
+                <button class="btn-primary" onclick="action('start')">START PROMO</button>
+                <button class="btn-danger" onclick="action('stop')">STOP PROMO</button>
+            </div>
+            <div class="btn-row">
+                <button class="btn-ghost" style="width:100%" onclick="action('status')">CEK STATUS & REFRESH LOG</button>
+            </div>
+            
+            <div id="ubot-log" class="log-box">Menunggu perintah...</div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-ban card-icon" style="color:var(--red)"></i>
+                <div class="card-title">Blacklist Manager</div>
+            </div>
+            
+            <p style="font-size:0.8rem; color:#aaa; margin-bottom:15px;">
+                Tips: Anda juga bisa mengetik <code>/addbl</code> di dalam group Telegram untuk mem-blacklist group tersebut secara otomatis.
+            </p>
+
+            <div class="form-group">
+                <label>TAMBAH ID GROUP MANUAL</label>
+                <div style="display:flex; gap:10px;">
+                    <input type="text" id="bl-input" placeholder="-100xxxxxxx">
+                    <button class="btn-primary" style="flex:0 0 80px;" onclick="manageBl('add')">ADD</button>
+                </div>
+            </div>
+
+            <label>DAFTAR BLACKLIST SAAT INI:</label>
+            <div id="bl-container" class="bl-list">
+                <div style="padding:10px; color:#555; text-align:center;">Kosong</div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // CONFIG
+        const GITLAB = { ID: '75681438', TOKEN: 'glpat-9cZaOPR0hBHj-qiqIqzT9W86MQp1Omlsc2xiCw.01.120onr34s', FILE: 'server_config.json' };
+        let API_URL = "";
+
+        // INIT
+        window.onload = async () => {
+            try {
+                const r = await fetch(`https://gitlab.com/api/v4/projects/${GITLAB.ID}/repository/files/${encodeURIComponent(GITLAB.FILE)}/raw?ref=main`, {headers:{'PRIVATE-TOKEN':GITLAB.TOKEN}});
+                const d = await r.json();
+                API_URL = d.api_url;
+                
+                const badge = document.getElementById('api-badge');
+                badge.innerText = "ONLINE";
+                badge.classList.add('online');
+                
+                // Auto Check Status
+                action('status');
+            } catch (e) { 
+                document.getElementById('api-badge').innerText = "OFFLINE"; 
+                document.getElementById('api-badge').style.color = "red";
+            }
+        };
+
+        // API HELPER
+        async function api(ep, method='GET', body=null) {
+            const opts = { method, headers: {'Bypass-Tunnel-Reminder':'true', 'Content-Type':'application/json'} };
+            if(body) opts.body = JSON.stringify(body);
+            const url = method==='GET' && body ? `${API_URL}${ep}?${new URLSearchParams(body)}` : `${API_URL}${ep}`;
+            try {
+                const r = await fetch(url, opts);
+                return await r.json();
+            } catch(e) { return { status:false, msg: "Server Error / Offline" }; }
+        }
+
+        // LOGIN LOGIC
+        async function reqOtp() {
+            const phone = document.getElementById('ubot-phone').value;
+            if(!phone) return alert("Nomor Wajib Diisi!");
+            document.getElementById('login-status').innerText = "Meminta OTP...";
+            
+            const r = await api('/api/ubot/login-request', 'POST', {phone});
+            if(r.status) {
+                document.getElementById('step-phone').classList.add('hidden');
+                document.getElementById('step-otp').classList.remove('hidden');
+                document.getElementById('login-status').innerText = r.msg;
+            } else alert(r.msg);
+        }
+
+        async function verifyOtp() {
+            const phone = document.getElementById('ubot-phone').value;
+            const code = document.getElementById('ubot-code').value;
+            const pass = document.getElementById('ubot-pass').value;
+            
+            document.getElementById('login-status').innerText = "Memverifikasi...";
+            const r = await api('/api/ubot/login-verify', 'POST', {phone, code, password: pass});
+            
+            if(r.status) {
+                alert("LOGIN BERHASIL!");
+                document.getElementById('step-otp').classList.add('hidden');
+                document.getElementById('login-status').innerHTML = "<span style='color:#00ff41'>USERBOT TERHUBUNG ✅</span>";
+                action('status'); // Load config
+            } else alert(r.msg);
+        }
+
+        function resetLogin() {
+            document.getElementById('step-otp').classList.add('hidden');
+            document.getElementById('step-phone').classList.remove('hidden');
+            document.getElementById('login-status').innerText = "";
+        }
+
+        // ACTION LOGIC
+        async function action(type) {
+            const log = document.getElementById('ubot-log');
+            
+            if(type === 'start') {
+                await api('/api/ubot/config', 'POST', { 
+                    msg: document.getElementById('promo-msg').value,
+                    delay: document.getElementById('promo-delay').value
+                });
+            }
+            
+            const r = await api(`/api/ubot/action?type=${type}`);
+            
+            // Update UI if Status
+            if(type === 'status' && r.config) {
+                document.getElementById('promo-msg').value = r.config.msg;
+                document.getElementById('promo-delay').value = r.config.delay;
+                renderBlacklist(r.config.blacklisted);
+                
+                log.innerText = `STATUS: ${r.running ? "BERJALAN 🚀" : "BERHENTI 🛑"}\nCONNECTED: ${r.connected ? "YA" : "TIDAK"}`;
+                if(r.connected) {
+                    document.getElementById('step-phone').classList.add('hidden');
+                    document.getElementById('login-status').innerHTML = "<span style='color:#00ff41'>USERBOT TERHUBUNG ✅</span>";
+                }
+            } else {
+                log.innerText = r.msg || "Processing...";
+            }
+        }
+
+        // BLACKLIST LOGIC
+        async function manageBl(act, idToRemove = null) {
+            const input = document.getElementById('bl-input');
+            const id = idToRemove || input.value;
+            
+            if(!id) return alert("ID Kosong!");
+            
+            const r = await api('/api/ubot/blacklist', 'POST', { action: act, id });
+            
+            if(r.status) {
+                renderBlacklist(r.list);
+                input.value = "";
+            } else {
+                alert(r.msg);
+            }
+        }
+
+        function renderBlacklist(list) {
+            const container = document.getElementById('bl-container');
+            container.innerHTML = "";
+            
+            if(!list || list.length === 0) {
+                container.innerHTML = "<div style='padding:10px; color:#555; text-align:center;'>Tidak ada blacklist</div>";
+                return;
+            }
+
+            list.forEach(id => {
+                container.innerHTML += `
+                    <div class="bl-item">
+                        <span>${id}</span>
+                        <i class="fas fa-trash bl-remove" onclick="manageBl('remove', '${id}')"></i>
+                    </div>
+                `;
+            });
+        }
+    </script>
+</body>
+</html>
